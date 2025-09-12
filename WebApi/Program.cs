@@ -1,3 +1,5 @@
+using DietiEstate.WebApi.Configs;
+
 namespace DietiEstate.WebApi;
 
 public static class Program
@@ -18,6 +20,8 @@ public static class Program
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
+        builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+        
         builder.Configuration
             .SetBasePath(builder.Environment.ContentRootPath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
