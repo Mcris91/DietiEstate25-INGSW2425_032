@@ -1,4 +1,5 @@
 using AutoMapper;
+using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.ListingModels;
 
@@ -14,6 +15,8 @@ public class AutoMapperProfile : Profile
     /// </summary>
     public AutoMapperProfile()
     {
+        CreateMap<ListingRequestDto, Listing>();
+        
         CreateMap<Listing, ListingResponseDto>()
             .ForMember(listingDto => listingDto.Type, opt =>
                 opt.MapFrom(src => src.Type.Name))

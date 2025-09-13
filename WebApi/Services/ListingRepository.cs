@@ -1,5 +1,6 @@
 using DietiEstate.Shared.Dtos.Filters;
 using DietiEstate.Shared.Models.ListingModels;
+using DietiEstate.Shared.Models.Shared;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Extensions;
 using DietiEstate.WebApi.Repositories;
@@ -30,18 +31,35 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
-    public async Task<Listing?> AddListingAsync(Listing listing)
+    public async Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images)
+    {
+        // TODO: Add images to the database
+        listing.ListingServices = await context.Service
+            .Where(s => services.Contains(s.Id))
+            .ToListAsync();
+        listing.ListingTags = await context.Tag
+            .Where(t => tags.Contains(t.Id))
+            .ToListAsync();
+        listing.ListingImages = await context.Image
+            .Where(i => images.Contains(i.Url))
+            .ToListAsync();
+        
+        await context.Database.BeginTransactionAsync();
+        await context.Listing.AddAsync(listing);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
+    }
+    
+    public async Task UpdateListingAsync(Listing listing)
     {
         throw new System.NotImplementedException();
     }
     
-    public async Task<Listing?> UpdateListingAsync(Listing listing)
+    public async Task DeleteListingAsync(Listing listing)
     {
-        throw new System.NotImplementedException();
-    }
-    
-    public async Task<Listing?> DeleteListingAsync(Listing listing)
-    {
-        throw new System.NotImplementedException();
+        await context.Database.BeginTransactionAsync();
+        context.Listing.Remove(listing);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
     }
 }

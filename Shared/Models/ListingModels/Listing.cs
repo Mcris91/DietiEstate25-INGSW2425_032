@@ -100,14 +100,14 @@ public class Listing
 
     /// <summary>
     /// Gets or sets a value indicating whether the property is currently available for sale/rent.
-    /// Default value is false.
+    /// The default value is false.
     /// </summary>
     [Required]
     public bool Available { get; set; } = false;
 
     /// <summary>
     /// Gets or sets a value indicating whether the building has an elevator.
-    /// Default value is false.
+    /// The default value is false.
     /// </summary>
     [Required]
     public bool Elevator { get; set; } = false;
@@ -122,7 +122,7 @@ public class Listing
 
     /// <summary>
     /// Gets or sets the number of times this listing has been viewed.
-    /// Default value is 0.
+    /// The default value is 0.
     /// </summary>
     [Required]
     public int Views { get; set; } = 0;
@@ -153,20 +153,20 @@ public class Listing
     /// Gets the collection of images associated with this listing.
     /// Represents a many-to-many relationship with Image entities.
     /// </summary>
-    [Required] 
-    public virtual ICollection<Image> ListingImages { get; } = [];
+    [Required]
+    public virtual ICollection<Image> ListingImages { get; set; } = [];
     
     /// <summary>
     /// Gets the collection of services/amenities available for this listing.
     /// Represents a many-to-many relationship with Service entities.
     /// </summary>
-    [Required] 
-    public virtual ICollection<Service> ListingServices { get; } = [];
+    [Required]
+    public virtual ICollection<Service> ListingServices { get; set; } = [];
     
     /// <summary>
     /// Gets the collection of tags associated with this listing for categorization and filtering.
     /// Represents a many-to-many relationship with Tag entities.
     /// </summary>
-    [Required] 
-    public virtual ICollection<Tag> ListingTags { get; } = [];
+    [Required]
+    public virtual ICollection<Tag> ListingTags { get; set; } = [];
 }

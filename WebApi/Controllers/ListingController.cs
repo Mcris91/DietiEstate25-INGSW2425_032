@@ -1,6 +1,8 @@
 using AutoMapper;
 using DietiEstate.Shared.Dtos.Filters;
+using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
+using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.WebApi.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -54,5 +56,21 @@ public class ListingController(
             return Ok(mapper.Map<ListingResponseDto>(listing));
         
         return NotFound();
+    }
+
+    /// <summary>
+    /// Creates a new listing using the provided request data.
+    /// </summary>
+    /// <param name="request">The details of the listing to be created, encapsulated in a <see cref="ListingRequestDto"/>.</param>
+    /// <returns>
+    /// An <see cref="IActionResult"/> containing a created response with the newly added listing details as a <see cref="ListingResponseDto"/>,
+    /// including its unique identifier, or an error response if the operation fails.
+    /// </returns>
+    [HttpPost]
+    public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
+    {
+        var listing = mapper.Map<Listing>(request);
+        await listingRepository.AddListingAsync(listing, request.Services, request.Tags, request.Images);
+        return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
 }

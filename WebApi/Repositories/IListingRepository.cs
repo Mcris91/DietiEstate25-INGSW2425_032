@@ -25,23 +25,26 @@ public interface IListingRepository
     Task<Listing?> GetListingByIdAsync(Guid listingId);
 
     /// <summary>
-    /// Asynchronously adds a new listing to the system.
+    /// Asynchronously adds a new listing to the system along with associated services, tags, and images.
     /// </summary>
-    /// <param name="listing">An object containing the properties of the listing to be added.</param>
-    /// <returns>A task representing the asynchronous operation. The task result contains the added listing, or null if the operation fails.</returns>
-    Task<Listing?> AddListingAsync(Listing listing);
+    /// <param name="listing">An object representing the listing to be added, containing its properties and details.</param>
+    /// <param name="services">A list of GUIDs representing the services associated with the listing.</param>
+    /// <param name="tags">A list of GUIDs representing the tags associated with the listing.</param>
+    /// <param name="images">A list of strings representing the URLs of the images associated with the listing.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images);
 
     /// <summary>
     /// Asynchronously updates an existing listing with the provided details.
     /// </summary>
     /// <param name="listing">The updated listing object that includes the new details to be applied.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the updated listing object if the update was successful; otherwise, null.</returns>
-    Task<Listing?> UpdateListingAsync(Listing listing);
+    Task UpdateListingAsync(Listing listing);
 
     /// <summary>
     /// Asynchronously deletes a specified listing from the system.
     /// </summary>
     /// <param name="listing">The listing to be deleted.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the deleted listing, or null if the deletion was unsuccessful.</returns>
-    Task<Listing?> DeleteListingAsync(Listing listing);
+    Task DeleteListingAsync(Listing listing);
 }

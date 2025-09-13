@@ -43,4 +43,16 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     /// Gets or sets the DbSet for managing <see cref="PropertyType"/> entities.
     /// </summary>
     public virtual DbSet<PropertyType> PropertyType { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Image>(entity =>
+        {
+            entity.HasIndex(i => i.Url)
+                .IsUnique();
+        });
+    }
+
 }
