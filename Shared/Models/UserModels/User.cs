@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace DietiEstate.Shared.Models.UserModels;
@@ -15,6 +16,10 @@ public class User
     
     [Required]
     public string Email { get; set; } = string.Empty;
+    
+    [Required]
+    [PasswordPropertyText]
+    public string Password { get; set; } = string.Empty;
     
     [Required]
     public UserRole Role { get; set; } = UserRole.Client;

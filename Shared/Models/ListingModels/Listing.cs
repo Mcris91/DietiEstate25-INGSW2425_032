@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using DietiEstate.Shared.Models.Shared;
 using DietiEstate.Shared.Models.UserModels;
 namespace DietiEstate.Shared.Models.ListingModels;
 
@@ -26,7 +27,7 @@ public class Listing
     public Guid TypeId { get; set; }
 
     [ForeignKey(nameof(TypeId))]
-    protected virtual Type Type { get; set; } = null!;
+    protected virtual PropertyType Type { get; set; } = null!;
     
     [Required]
     [Url]
@@ -42,10 +43,10 @@ public class Listing
     public float Longitude { get; set; }
 
     [Required]
-    public float Dimensions { get; set; }
+    public decimal Dimensions { get; set; }
 
     [Required]
-    public float Price { get; set; }
+    public decimal Price { get; set; }
 
     [Required]
     public int Rooms { get; set; }

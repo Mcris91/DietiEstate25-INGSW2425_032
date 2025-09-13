@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DietiEstate.Shared.Models.ListingModels;
+namespace DietiEstate.Shared.Models.Shared;
 
 public class Image
 {

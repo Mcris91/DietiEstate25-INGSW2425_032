@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DietiEstate.Shared.Models.Listing;
+namespace DietiEstate.Shared.Models.ListingModels;
 
-public class Type
+public class PropertyType
 {
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
