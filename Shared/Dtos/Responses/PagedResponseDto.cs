@@ -39,7 +39,7 @@ public record PagedResponseDto<T>
     /// <summary>
     /// Initializes a new instance of the <see cref="PagedResponseDto{T}"/> class.
     /// </summary>
-    /// <param name="query">The source query containing <see cref="BaseModel"/> items to be mapped and paginated.</param>
+    /// <param name="query">The source query containing items fo type <see cref="T"/> to be mapped and paginated.</param>
     /// <param name="responsePageSize">The number of items per page. If null, pagination is not applied.</param>
     /// <param name="responsePageNumber">The requested page number (1-based). If null, pagination is not applied.</param>
     /// <remarks>
@@ -53,18 +53,15 @@ public record PagedResponseDto<T>
         int? responsePageNumber = null)
     {
         var listQuery = query.ToList();
+        Items = listQuery;
         PageSize = responsePageSize;
         PageNumber = responsePageNumber;
-        if (PageNumber.HasValue && PageSize.HasValue)
-        {
-            Items = listQuery.Skip((PageNumber.Value - 1) * PageSize.Value).Take(PageSize.Value);
-            PrevPageNumber = PageNumber <= 1 ? null : PageNumber - 1;
-            TotalPages = (int)Math.Ceiling((double)listQuery.Count / PageSize.Value);
-            NextPageNumber = PageNumber >= TotalPages ? null : PageNumber + 1;
-        }
-        else
-        {
-            Items = listQuery;
-        }
+        
+        if (!PageNumber.HasValue || !PageSize.HasValue) return;
+        
+        Items = listQuery.Skip((PageNumber.Value - 1) * PageSize.Value).Take(PageSize.Value);
+        PrevPageNumber = PageNumber <= 1 ? null : PageNumber - 1;
+        TotalPages = (int)Math.Ceiling((double)listQuery.Count / PageSize.Value);
+        NextPageNumber = PageNumber >= TotalPages ? null : PageNumber + 1;
     }
 }
