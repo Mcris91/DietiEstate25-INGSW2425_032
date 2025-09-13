@@ -22,7 +22,8 @@ public static class Program
     
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddNewtonsoftJson();
         builder.Services.AddOpenApi();
 
         builder.Services.AddScoped<IListingRepository, ListingRepository>();

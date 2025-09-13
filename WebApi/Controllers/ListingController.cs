@@ -4,6 +4,7 @@ using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.WebApi.Repositories;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
@@ -72,5 +73,49 @@ public class ListingController(
         var listing = mapper.Map<Listing>(request);
         await listingRepository.AddListingAsync(listing, request.Services, request.Tags, request.Images);
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
+    }
+
+    /// <summary>
+    /// Applies a JSON Patch document to update an existing listing identified by its unique identifier.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing to be updated.</param>
+    /// <param name="patchDocument">The JSON Patch document containing the changes to be applied to the listing.</param>
+    /// <returns>
+    /// An <see cref="IActionResult"/> indicating the outcome of the operation:
+    /// - <see cref="NotFoundResult"/> if the listing with the specified identifier does not exist.
+    /// - <see cref="BadRequestObjectResult"/> if the patch document is invalid or the model state is not valid after applying the patch.
+    /// - <see cref="NoContentResult"/> if the update is successful.
+    /// </returns>
+    [HttpPatch("{listingId:guid}")]
+    public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] JsonPatchDocument<ListingRequestDto> patchDocument)
+    {
+        if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
+            return NotFound();
+        
+        var listingToPatch = mapper.Map<ListingRequestDto>(listing);
+        patchDocument.ApplyTo(listingToPatch, ModelState);
+        if (!TryValidateModel(listingToPatch))
+            return BadRequest(ModelState);
+        
+        mapper.Map(listingToPatch, listing);
+        await listingRepository.UpdateListingAsync(listing);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deletes an existing listing identified by its unique identifier.
+    /// </summary>
+    /// <param name="listingId">The unique identifier of the listing to delete.</param>
+    /// <returns>
+    /// A <see cref="NoContentResult"/> if the deletion is successful,
+    /// a <see cref="NotFoundResult"/> if the listing does not exist.
+    /// </returns>
+    [HttpDelete("{listingId:guid}")]
+    public async Task<IActionResult> DeleteListing(Guid listingId)
+    {
+        if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
+            return NotFound();
+        await listingRepository.DeleteListingAsync(listing);
+        return NoContent();
     }
 }

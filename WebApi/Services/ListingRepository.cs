@@ -1,6 +1,5 @@
 using DietiEstate.Shared.Dtos.Filters;
 using DietiEstate.Shared.Models.ListingModels;
-using DietiEstate.Shared.Models.Shared;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Extensions;
 using DietiEstate.WebApi.Repositories;
@@ -34,6 +33,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     public async Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images)
     {
         // TODO: Add images to the database
+        listing.Id = Guid.NewGuid();
         listing.ListingServices = await context.Service
             .Where(s => services.Contains(s.Id))
             .ToListAsync();
@@ -52,7 +52,10 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     
     public async Task UpdateListingAsync(Listing listing)
     {
-        throw new System.NotImplementedException();
+        await context.Database.BeginTransactionAsync();
+        context.Listing.Update(listing);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
     }
     
     public async Task DeleteListingAsync(Listing listing)
