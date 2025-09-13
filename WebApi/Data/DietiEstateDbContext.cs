@@ -4,8 +4,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.WebApi.Data;
 
+/// <summary>
+/// Represents the Entity Framework database context for the DietiEstate application, providing access to the database
+/// and defining sets for the application's main entities.
+/// </summary>
+/// <remarks>
+/// This class inherits from <see cref="DbContext"/> and is configured with Entity Framework Core.
+/// It includes DbSet properties corresponding to database tables for handling application data.
+/// </remarks>
 public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
 {
+    /// <summary>
+    /// Paramteless constructor for testing purposes.
+    /// </summary>
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
     
     /// <summary>

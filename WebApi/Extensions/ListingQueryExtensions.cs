@@ -3,9 +3,25 @@ using DietiEstate.Shared.Models.ListingModels;
 
 namespace DietiEstate.WebApi.Extensions;
 
+/// <summary>
+/// Provides extension methods to query and filter listings.
+/// </summary>
 public static class ListingQueryExtensions
 {
-    public static IQueryable<Listing> ApplyFilter(this IQueryable<Listing> query, ListingFilterDto filters)
+    /// <summary>
+    /// Applies the specified filters to an <see cref="IQueryable{T}"/> of <see cref="Listing"/> objects.
+    /// </summary>
+    /// <param name="query">
+    /// The queryable collection of <see cref="Listing"/> objects to which the filters will be applied.
+    /// </param>
+    /// <param name="filters">
+    /// An instance of <see cref="ListingFilterDto"/> containing the filters to be applied,
+    /// such as TypeId, ServiceIds, or TagIds.
+    /// </param>
+    /// <returns>
+    /// A filtered <see cref="IQueryable{T}"/> collection based on the provided <see cref="ListingFilterDto"/>.
+    /// </returns>
+    public static IQueryable<Listing> ApplyFilters(this IQueryable<Listing> query, ListingFilterDto filters)
     {
         if (filters.TypeId.HasValue)
             query = query.Where(l => l.TypeId == filters.TypeId.Value);
@@ -21,6 +37,19 @@ public static class ListingQueryExtensions
         return query;
     }
 
+    /// <summary>
+    /// Applies numeric filters, such as price, room count, and size, to an <see cref="IQueryable{T}"/> of <see cref="Listing"/> objects.
+    /// </summary>
+    /// <param name="query">
+    /// The queryable collection of <see cref="Listing"/> objects to which the numeric filters will be applied.
+    /// </param>
+    /// <param name="filters">
+    /// An instance of <see cref="ListingFilterDto"/> containing the numeric filter criteria,
+    /// such as MinPrice, MaxPrice, MinRooms, MaxRooms, MinSize, and MaxSize.
+    /// </param>
+    /// <returns>
+    /// A filtered <see cref="IQueryable{T}"/> collection based on the provided numeric criteria in <see cref="ListingFilterDto"/>.
+    /// </returns>
     public static IQueryable<Listing> ApplyNumericFilters(this IQueryable<Listing> query, ListingFilterDto filters)
     {
         if (filters.MinPrice.HasValue)
@@ -41,9 +70,24 @@ public static class ListingQueryExtensions
         return query;
     }
 
+    /// <summary>
+    /// Applies sorting to an <see cref="IQueryable{T}"/> of <see cref="Listing"/> objects based on the specified field and sort order.
+    /// </summary>
+    /// <param name="query">
+    /// The queryable collection of <see cref="Listing"/> objects to which the sorting will be applied.
+    /// </param>
+    /// <param name="sortBy">
+    /// The field name by which to sort the collection (e.g., "price", "rooms", "dimensions", "views", "floor").
+    /// </param>
+    /// <param name="sortOrder">
+    /// The sort order to apply, either "asc" for ascending or "desc" for descending. Defaults to ascending if not provided.
+    /// </param>
+    /// <returns>
+    /// A sorted <see cref="IQueryable{T}"/> collection based on the specified field and sort order.
+    /// </returns>
     public static IQueryable<Listing> ApplySorting(this IQueryable<Listing> query, string sortBy, string sortOrder)
     {
-        return sortBy?.ToLower() switch
+        return sortBy.ToLower() switch
         {
             "price" => sortOrder == "desc" ? query.OrderByDescending(l => l.Price) : query.OrderBy(l => l.Price),
             "rooms" => sortOrder == "desc" ? query.OrderByDescending(l => l.Rooms) : query.OrderBy(l => l.Rooms),

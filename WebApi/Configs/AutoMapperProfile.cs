@@ -4,8 +4,14 @@ using DietiEstate.Shared.Models.ListingModels;
 
 namespace DietiEstate.WebApi.Configs;
 
+/// <summary>
+/// Defines the AutoMapper profile to map the entities to DTOs and vice versa.
+/// </summary>
 public class AutoMapperProfile : Profile
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AutoMapperProfile" /> class.
+    /// </summary>
     public AutoMapperProfile()
     {
         CreateMap<Listing, ListingResponseDto>()

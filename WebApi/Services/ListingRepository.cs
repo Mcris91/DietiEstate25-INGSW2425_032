@@ -15,7 +15,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)
-            .ApplyFilter(filters)
+            .ApplyFilters(filters)
             .ApplyNumericFilters(filters)
             .ApplySorting(filters.SortBy, filters.SortOrder)
             .ToListAsync();
