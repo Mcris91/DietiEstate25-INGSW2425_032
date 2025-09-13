@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.WebApi.Data;
 
-internal class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
+public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
 {
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
     

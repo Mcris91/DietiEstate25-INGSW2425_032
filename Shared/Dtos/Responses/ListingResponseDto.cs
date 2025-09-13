@@ -1,6 +1,6 @@
 namespace DietiEstate.Shared.Dtos.Responses;
 
-public class GetListingResponseDto
+public class ListingResponseDto
 {
     public Guid Id { get; init; }
     public required string Name { get; init; }

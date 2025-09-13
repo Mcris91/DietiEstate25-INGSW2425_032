@@ -24,10 +24,11 @@ public class Listing
     public string Description { get; set; } = string.Empty;
 
     [Required]
+    [ForeignKey(nameof(Type))]
     public Guid TypeId { get; set; }
 
-    [ForeignKey(nameof(TypeId))]
-    protected virtual PropertyType Type { get; set; } = null!;
+    [Required]
+    public virtual PropertyType Type { get; set; } = null!;
     
     [Required]
     [Url]
