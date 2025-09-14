@@ -1,6 +1,10 @@
+using System.Text;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Repositories.Implementations;
 using DietiEstate.WebApi.Repositories.Interfaces;
+using DietiEstate.WebApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DietiEstate.WebApi;
 
@@ -10,6 +14,7 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         ConfigureServices(builder);
+        ConfigureAuthentication(builder);
         
         var app = builder.Build();
         ConfigureApplicationAsync(app);
@@ -31,6 +36,30 @@ public static class Program
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables();
+    }
+
+    private static void ConfigureAuthentication(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey("aaa"u8.ToArray()),
+                ValidateIssuer = true,
+                ValidIssuer = "localhost",
+                ValidateAudience = true,
+                ValidAudience = "users",
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
     }
     
     private static void ConfigureApplicationAsync(WebApplication app)

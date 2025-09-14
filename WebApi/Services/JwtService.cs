@@ -23,7 +23,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
     {
         return GenerateJwtToken(userId, JwtTokenType.Refresh, RefreshTokenExpiryInDays * 24 * 60);
     }
-    public string GenerateJwtToken(string userId, JwtTokenType tokenType, int tokenExpiryInMinutes)
+    private static string GenerateJwtToken(string userId, JwtTokenType tokenType, int tokenExpiryInMinutes)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(SecretKey);
@@ -70,7 +70,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
             ? principal 
             : null;
     }
-    public ClaimsPrincipal? ValidateJwtToken(string token)
+    private static ClaimsPrincipal? ValidateJwtToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(SecretKey);
