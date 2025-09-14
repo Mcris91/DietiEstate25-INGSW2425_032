@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using DietiEstate.Shared.Models.AuthModels;
 
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Services.Interfaces;
 
 public interface IJwtService
 {

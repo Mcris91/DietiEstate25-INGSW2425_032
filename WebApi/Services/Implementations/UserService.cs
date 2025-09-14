@@ -1,7 +1,8 @@
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
+using DietiEstate.WebApi.Services.Interfaces;
 
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Services.Implementations;
 
 public class UserService(
     IUserRepository userRepository,

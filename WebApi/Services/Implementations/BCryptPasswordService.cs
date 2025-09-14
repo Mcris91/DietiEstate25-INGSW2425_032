@@ -1,4 +1,6 @@
-namespace DietiEstate.WebApi.Services;
+using DietiEstate.WebApi.Services.Interfaces;
+
+namespace DietiEstate.WebApi.Services.Implementations;
 
 public class BCryptPasswordService : IPasswordService
 {

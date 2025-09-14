@@ -16,7 +16,11 @@ public class AutoMapperProfile : Profile
     /// </summary>
     public AutoMapperProfile()
     {
+        // User
         CreateMap<SignUpRequestDto, User>();
+        CreateMap<User, UserResponseDto>();
+        
+        // Listing
         CreateMap<ListingRequestDto, Listing>();
         CreateMap<Listing, ListingResponseDto>()
             .ForMember(listingDto => listingDto.Type, opt =>

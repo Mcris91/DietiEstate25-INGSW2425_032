@@ -1,4 +1,4 @@
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Services.Interfaces;
 
 public interface IPasswordService
 {

@@ -1,7 +1,8 @@
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Repositories.Implementations;
 using DietiEstate.WebApi.Repositories.Interfaces;
-using DietiEstate.WebApi.Services;
+using DietiEstate.WebApi.Services.Implementations;
+using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 

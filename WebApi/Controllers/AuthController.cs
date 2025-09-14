@@ -3,7 +3,7 @@ using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
-using DietiEstate.WebApi.Services;
+using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;

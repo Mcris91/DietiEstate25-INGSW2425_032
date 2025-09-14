@@ -3,9 +3,10 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using DietiEstate.Shared.Models.AuthModels;
+using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Services.Implementations;
 
 public class JwtService(IConfiguration configuration) : IJwtService
 {

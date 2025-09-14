@@ -1,6 +1,6 @@
 using DietiEstate.Shared.Models.UserModels;
 
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Services.Interfaces;
 
 public interface IUserService
 {
