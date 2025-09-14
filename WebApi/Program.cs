@@ -1,4 +1,3 @@
-using System.Text;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Repositories.Implementations;
 using DietiEstate.WebApi.Repositories.Interfaces;
@@ -29,6 +28,7 @@ public static class Program
         builder.Services.AddOpenApi();
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
+        builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
         
         builder.Configuration

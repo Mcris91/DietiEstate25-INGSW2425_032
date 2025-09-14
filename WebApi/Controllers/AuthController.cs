@@ -1,5 +1,8 @@
+using AutoMapper;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
+using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,31 +10,46 @@ namespace DietiEstate.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class AuthController(IJwtService jwtService) : Controller
+public class AuthController(
+    IPasswordService passwordService,
+    IUserRepository userRepository,
+    IUserService userService,
+    IJwtService jwtService,
+    IMapper mapper) : Controller
 {
     [HttpPost("signup")]
-    public IActionResult SignUp([FromBody] SignUpRequestDto request)
+    public async Task<IActionResult> SignUp([FromBody] SignUpRequestDto request)
     {
-        // TODO: Implement signup logic (create user, add to database, hash password, etc.)
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+            return BadRequest(new {error = "Email already exists."});
+        
+        var passwordValidation = userService.ValidatePassword(request.Password);
+        if (passwordValidation != "")
+            return BadRequest(new {error = passwordValidation});
+        
+        var user = mapper.Map<User>(request);
+        user.Email = user.Email.ToLowerInvariant();
+        user.Password = passwordService.HashPassword(request.Password);
+        await userRepository.AddUserAsync(user);
+        
         var response = new LoginRequestDto
         {
-            Email = request.Email,
-            Password = request.Password,
+            Email = user.Email,
+            Password = user.Password,
         };
         return CreatedAtAction(nameof(GetTokenPair), new { }, response);
     }
 
     [HttpPost("token")]
-    public IActionResult GetTokenPair([FromBody] LoginRequestDto request)
+    public async Task<IActionResult> GetTokenPair([FromBody] LoginRequestDto request)
     {
-        // TODO: Implement login logic (user repository and authentication)
-        var userId = Guid.NewGuid();
-        var response = new LoginResponseDto()
-        {
-            Access = jwtService.GenerateJwtAccessToken(userId.ToString()),
-            Refresh = jwtService.GenerateJwtRefreshToken(userId.ToString())
-        };
-        return Ok(response);
+        var user = await userService.AuthenticateUserAsync(request.Email, request.Password);
+        if (user is null) return BadRequest(new {error = "Invalid email or password."});
+        
+        return Ok(new LoginResponseDto() {
+            Access = jwtService.GenerateJwtAccessToken(user.Id.ToString()),
+            Refresh = jwtService.GenerateJwtRefreshToken(user.Id.ToString())
+        });
     }
     
     [HttpPost("token/refresh")]
