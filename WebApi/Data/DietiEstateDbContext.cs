@@ -1,5 +1,6 @@
 using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.Shared.Models.Shared;
+using DietiEstate.Shared.Models.UserModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.WebApi.Data;
@@ -43,6 +44,11 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     /// Gets or sets the DbSet for managing <see cref="PropertyType"/> entities.
     /// </summary>
     public virtual DbSet<PropertyType> PropertyType { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the DbSet for managing <see cref="User"/> entities.
+    /// </summary>
+    public virtual DbSet<User> User { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

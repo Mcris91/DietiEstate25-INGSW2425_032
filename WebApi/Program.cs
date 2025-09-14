@@ -1,9 +1,10 @@
-using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
-using DietiEstate.WebApi.Data;
-using DietiEstate.WebApi.Repositories;
-using DietiEstate.WebApi.Services;
-using Microsoft.EntityFrameworkCore;
+using DietiEstate.WebApi.Repositories.Implementations;
+using DietiEstate.WebApi.Repositories.Interfaces;
+using DietiEstate.WebApi.Services.Implementations;
+using DietiEstate.WebApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DietiEstate.WebApi;
 
@@ -13,6 +14,7 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         ConfigureServices(builder);
+        ConfigureAuthentication(builder);
         
         var app = builder.Build();
         ConfigureApplicationAsync(app);
@@ -25,17 +27,10 @@ public static class Program
         builder.Services.AddControllers()
             .AddNewtonsoftJson();
         builder.Services.AddOpenApi();
-
+        
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
+        builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
-
-        builder.Services.AddDbContext<DietiEstateDbContext>(options =>
-        {
-            _ = options.UseNpgsql("", options =>
-            {
-                _ = options.MapEnum<UserRole>("user_role");
-            });
-        });
         
         builder.Configuration
             .SetBasePath(builder.Environment.ContentRootPath)
@@ -44,6 +39,31 @@ public static class Program
             .AddEnvironmentVariables();
     }
 
+    private static void ConfigureAuthentication(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey("aaa"u8.ToArray()),
+                ValidateIssuer = true,
+                ValidIssuer = "localhost",
+                ValidateAudience = true,
+                ValidAudience = "users",
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+    }
+    
     private static void ConfigureApplicationAsync(WebApplication app)
     {
         if (app.Environment.IsDevelopment())

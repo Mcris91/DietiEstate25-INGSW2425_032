@@ -2,6 +2,7 @@ using AutoMapper;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.ListingModels;
+using DietiEstate.Shared.Models.UserModels;
 
 namespace DietiEstate.WebApi.Configs;
 
@@ -15,8 +16,12 @@ public class AutoMapperProfile : Profile
     /// </summary>
     public AutoMapperProfile()
     {
-        CreateMap<ListingRequestDto, Listing>();
+        // User
+        CreateMap<SignUpRequestDto, User>();
+        CreateMap<User, UserResponseDto>();
         
+        // Listing
+        CreateMap<ListingRequestDto, Listing>();
         CreateMap<Listing, ListingResponseDto>()
             .ForMember(listingDto => listingDto.Type, opt =>
                 opt.MapFrom(src => src.Type.Name))
