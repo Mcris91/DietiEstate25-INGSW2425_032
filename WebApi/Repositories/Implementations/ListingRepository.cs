@@ -2,10 +2,10 @@ using DietiEstate.Shared.Dtos.Filters;
 using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Extensions;
-using DietiEstate.WebApi.Repositories;
+using DietiEstate.WebApi.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace DietiEstate.WebApi.Services;
+namespace DietiEstate.WebApi.Repositories.Implementations;
 
 public class ListingRepository(DietiEstateDbContext context) : IListingRepository
 {

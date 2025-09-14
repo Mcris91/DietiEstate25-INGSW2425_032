@@ -1,7 +1,7 @@
 using DietiEstate.Shared.Dtos.Filters;
 using DietiEstate.Shared.Models.ListingModels;
 
-namespace DietiEstate.WebApi.Repositories;
+namespace DietiEstate.WebApi.Repositories.Interfaces;
 
 /// <summary>
 /// Represents the contract for managing listing-related data in the system.

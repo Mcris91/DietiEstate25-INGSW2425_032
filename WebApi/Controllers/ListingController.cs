@@ -3,7 +3,7 @@ using DietiEstate.Shared.Dtos.Filters;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.ListingModels;
-using DietiEstate.WebApi.Repositories;
+using DietiEstate.WebApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 

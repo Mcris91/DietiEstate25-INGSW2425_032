@@ -1,9 +1,6 @@
-using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
-using DietiEstate.WebApi.Data;
-using DietiEstate.WebApi.Repositories;
-using DietiEstate.WebApi.Services;
-using Microsoft.EntityFrameworkCore;
+using DietiEstate.WebApi.Repositories.Implementations;
+using DietiEstate.WebApi.Repositories.Interfaces;
 
 namespace DietiEstate.WebApi;
 
@@ -25,17 +22,9 @@ public static class Program
         builder.Services.AddControllers()
             .AddNewtonsoftJson();
         builder.Services.AddOpenApi();
-
+        
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
-
-        builder.Services.AddDbContext<DietiEstateDbContext>(options =>
-        {
-            _ = options.UseNpgsql("", options =>
-            {
-                _ = options.MapEnum<UserRole>("user_role");
-            });
-        });
         
         builder.Configuration
             .SetBasePath(builder.Environment.ContentRootPath)
@@ -43,7 +32,7 @@ public static class Program
             .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables();
     }
-
+    
     private static void ConfigureApplicationAsync(WebApplication app)
     {
         if (app.Environment.IsDevelopment())
