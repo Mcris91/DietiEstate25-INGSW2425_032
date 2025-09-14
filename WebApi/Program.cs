@@ -41,6 +41,7 @@ public static class Program
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
         builder.Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

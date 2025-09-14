@@ -13,11 +13,12 @@ public class AuthController(IJwtService jwtService) : Controller
     public IActionResult SignUp([FromBody] SignUpRequestDto request)
     {
         // TODO: Implement signup logic (create user, add to database, hash password, etc.)
-        return GetTokenPair(new LoginRequestDto
+        var response = new LoginRequestDto
         {
             Email = request.Email,
             Password = request.Password,
-        });
+        };
+        return CreatedAtAction(nameof(GetTokenPair), new { }, response);
     }
 
     [HttpPost("token")]
@@ -27,8 +28,8 @@ public class AuthController(IJwtService jwtService) : Controller
         var userId = Guid.NewGuid();
         var response = new LoginResponseDto()
         {
-            Token = jwtService.GenerateJwtAccessToken(userId.ToString()),
-            RefreshToken = jwtService.GenerateJwtRefreshToken(userId.ToString())
+            Access = jwtService.GenerateJwtAccessToken(userId.ToString()),
+            Refresh = jwtService.GenerateJwtRefreshToken(userId.ToString())
         };
         return Ok(response);
     }
@@ -41,7 +42,7 @@ public class AuthController(IJwtService jwtService) : Controller
 
         var userId = principal.Identity!.Name;
         if (userId != null)
-            return Ok(new { token = jwtService.GenerateJwtAccessToken(userId) });
+            return Ok(new { access = jwtService.GenerateJwtAccessToken(userId) });
         
         return Unauthorized();
     }
