@@ -16,6 +16,8 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        Env.Load();
+        
         var builder = WebApplication.CreateBuilder(args);
         ConfigureServices(builder);
         ConfigureAuthentication(builder);
@@ -28,8 +30,6 @@ public static class Program
     
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
-        Env.Load();
-
         builder.Services.AddDbContext<DietiEstateDbContext>(options =>
         {
             options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"), dboptions =>

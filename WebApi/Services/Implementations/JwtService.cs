@@ -8,26 +8,26 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace DietiEstate.WebApi.Services.Implementations;
 
-public class JwtService(IConfiguration configuration) : IJwtService
+public class JwtService : IJwtService
 {
-    private const string SecretKey = "aaa";
-    private const string Issuer = "aaa";
-    private const string Audience = "aaa";
-    private const int AccessTokenExpiryInMinutes = 30;
-    private const int RefreshTokenExpiryInDays = 7;
+    private readonly string _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret";
+    private readonly string _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "issuer";
+    private readonly string _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "audience";
+    private readonly int _accessTokenExpiryInMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_MINUTES_EXPIRY") ?? "15");
+    private readonly int _refreshTokenExpiryInDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_DAYS_EXPIRY") ?? "30");
     
     public string GenerateJwtAccessToken(string userId)
     {
-        return GenerateJwtToken(userId, JwtTokenType.Access, AccessTokenExpiryInMinutes);
+        return GenerateJwtToken(userId, JwtTokenType.Access, _accessTokenExpiryInMinutes);
     }
     public string GenerateJwtRefreshToken(string userId)
     {
-        return GenerateJwtToken(userId, JwtTokenType.Refresh, RefreshTokenExpiryInDays * 24 * 60);
+        return GenerateJwtToken(userId, JwtTokenType.Refresh, _refreshTokenExpiryInDays * 24 * 60);
     }
-    private static string GenerateJwtToken(string userId, JwtTokenType tokenType, int tokenExpiryInMinutes)
+    private string GenerateJwtToken(string userId, JwtTokenType tokenType, int tokenExpiryInMinutes)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(SecretKey);
+        var key = Encoding.UTF8.GetBytes(_secretKey);
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, userId),
@@ -42,8 +42,8 @@ public class JwtService(IConfiguration configuration) : IJwtService
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
-            Issuer = Issuer,
-            Audience = Audience,
+            Issuer = _issuer,
+            Audience = _audience,
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
@@ -71,10 +71,10 @@ public class JwtService(IConfiguration configuration) : IJwtService
             ? principal 
             : null;
     }
-    private static ClaimsPrincipal? ValidateJwtToken(string token)
+    private ClaimsPrincipal? ValidateJwtToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(SecretKey);
+        var key = Encoding.UTF8.GetBytes(_secretKey);
 
         try
         {
@@ -83,9 +83,9 @@ public class JwtService(IConfiguration configuration) : IJwtService
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = Issuer,
+                ValidIssuer = _issuer,
                 ValidateAudience = true,
-                ValidAudience = Audience,
+                ValidAudience = _audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             }, out var validatedToken);
