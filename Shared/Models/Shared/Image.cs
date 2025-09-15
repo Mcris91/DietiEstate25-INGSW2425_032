@@ -20,4 +20,13 @@ public class Image
     [Required]
     [Url]
     public string Url { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collection of listings associated with the image.
+    /// </summary>
+    /// <remarks>
+    /// This property establishes a relationship between the image entity and the listing entity,
+    /// allowing multiple listings to be associated with a single image.
+    /// </remarks>
+    public virtual ICollection<ListingModels.Listing> Listings { get; set; } = [];
 }

@@ -54,6 +54,11 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Listing>()
+            .HasMany(l => l.ListingImages)
+            .WithMany(i => i.Listings)
+            .UsingEntity("ListingImage");
+        
         modelBuilder.Entity<Image>(entity =>
         {
             entity.HasIndex(i => i.Url)
