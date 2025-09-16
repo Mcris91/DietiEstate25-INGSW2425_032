@@ -37,7 +37,7 @@ public class AuthController(
             Email = user.Email,
             Password = user.Password,
         };
-        return CreatedAtAction(nameof(GetTokenPair), new { }, response);
+        return CreatedAtAction(nameof(GetTokenPair), new { response });
     }
 
     [HttpPost("token")]

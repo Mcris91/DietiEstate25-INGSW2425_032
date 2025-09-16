@@ -6,6 +6,7 @@ using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Implementations;
 using DietiEstate.WebApi.Services.Interfaces;
 using DotNetEnv;
+using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -36,6 +37,7 @@ public static class Program
             {
                 dboptions.MapEnum<UserRole>("user_role")
                     .EnableRetryOnFailure();
+                dboptions.EnableRetryOnFailure(0);
             });
         }, ServiceLifetime.Transient);
         
@@ -86,6 +88,7 @@ public static class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            app.MapScalarApiReference();
         }
 
         if (!app.Environment.IsStaging())

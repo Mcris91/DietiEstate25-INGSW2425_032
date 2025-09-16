@@ -3,7 +3,6 @@ using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Extensions;
 using DietiEstate.WebApi.Repositories.Interfaces;
-using DietiEstate.WebApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.WebApi.Repositories.Implementations;
@@ -21,12 +20,12 @@ public class UserRepository(
 
     public async Task<User?> GetUserByIdAsync(Guid userId)
     {
-        throw new NotImplementedException();
+        return await context.User.FindAsync(userId);
     }
     
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        throw new NotImplementedException();
+        return await context.User.FirstOrDefaultAsync(u => u.Email == email);
     }
     
     public async Task AddUserAsync(User user)
@@ -40,11 +39,17 @@ public class UserRepository(
 
     public async Task UpdateUserAsync(User user)
     {
-        throw new NotImplementedException();
+        await context.Database.BeginTransactionAsync();
+        context.User.Update(user);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
     }
 
     public async Task DeleteUserAsync(User user)
     {
-        throw new NotImplementedException();
+        await context.Database.BeginTransactionAsync();
+        context.User.Remove(user);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();   
     }
 }
