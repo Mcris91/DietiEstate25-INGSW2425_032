@@ -10,6 +10,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
 
+/// <summary>
+/// A controller responsible for managing listing-related endpoints, including retrieval, creation, updating, and deletion of listings.
+/// This controller supports various operations such as paginated data retrieval, modification, and detailed information fetching.
+/// </summary>
 [Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]

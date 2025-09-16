@@ -58,7 +58,7 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         var principal = ValidateJwtToken(token);
         if (principal is null) return null;
         
-        return (principal!.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Access), StringComparison.CurrentCultureIgnoreCase) 
+        return (principal.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Access), StringComparison.CurrentCultureIgnoreCase) 
             ? principal 
             : null;
     }
@@ -67,20 +67,19 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         var principal = ValidateJwtToken(token);
         if (principal is null) return null;
         
-        return (principal!.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Refresh), StringComparison.CurrentCultureIgnoreCase) 
+        return (principal.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Refresh), StringComparison.CurrentCultureIgnoreCase) 
             ? principal 
             : null;
     }
     private ClaimsPrincipal? ValidateJwtToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_secretKey);
 
         try
         {
             var principal = tokenHandler.ValidateToken(
                 token, jwtConfiguration.GetTokenValidationParameters(), 
-                out var validatedToken);
+                out _);
 
             return principal;
         }

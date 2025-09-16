@@ -5,18 +5,35 @@ using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
 
-[Route("api/v1/[controller]")]
+/// <summary>
+/// Handles user-related operations such as CRUD operations and user queries.
+/// </summary>
+/// <remarks>
+/// This controller manages operations for user data, including fetching user details,
+/// creating new users, updating existing user information, and deleting users. It also
+/// supports user search with optional pagination functionality.
+/// </remarks>
+[Authorize]
 [ApiController]
+[Route("api/v1/[controller]")]
 public class UserController(
     IMapper mapper,
     IPasswordService passwordService,
     IUserService userService,
     IUserRepository userRepository) : Controller
 {
+    /// <summary>
+    /// Retrieves a paginated list of users based on the provided filters.
+    /// </summary>
+    /// <param name="filterDto">The filter criteria to be applied for querying users.</param>
+    /// <param name="pageNumber">The page number for pagination. Must be greater than zero if pagination is used.</param>
+    /// <param name="pageSize">The size of each page for pagination. Must be greater than zero if pagination is used.</param>
+    /// <returns>A paginated response containing a list of users that match the provided criteria, or a bad request if invalid pagination parameters are provided.</returns>
     [HttpGet]
     public async Task<ActionResult<PagedResponseDto<UserResponseDto>>> GetUsers(
         [FromQuery] UserFilterDto filterDto,
@@ -33,17 +50,28 @@ public class UserController(
             listings.ToList().Select(mapper.Map<UserResponseDto>), 
             pageSize, pageNumber));
     }
-    
+
+    /// <summary>
+    /// Retrieves detailed information about a specific user by their unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to retrieve.</param>
+    /// <returns>A response containing the user's details if found; otherwise, a not found response.</returns>
     [HttpGet("{userId:guid}")]
     public async Task<ActionResult<UserResponseDto>> GetUserById(Guid userId)
     {
         var user = await userRepository.GetUserByIdAsync(userId);
-        if (user is null) 
+        if (user is null)
             return NotFound();
-        
+
         return Ok(mapper.Map<UserResponseDto>(user));
     }
 
+    /// <summary>
+    /// Handles the creation of a new user based on the provided request data.
+    /// </summary>
+    /// <param name="request">The user data required for creating a new user, including email and password.</param>
+    /// <returns>An HTTP response indicating the result of the operation.
+    /// Returns a 201 Created response with the created user's details when successful. Returns a 400 Bad Request response if the email already exists or if the password does not meet validation criteria.</returns>
     [HttpPost]
     public async Task<ActionResult> PostUser(UserRequestDto request)
     {
@@ -62,12 +90,22 @@ public class UserController(
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
     }
 
+    /// <summary>
+    /// Updates an existing user's information based on the provided request data.
+    /// </summary>
+    /// <param name="request">The data containing the updated user information, including email, password, first name, and last name.</param>
+    /// <returns>An IActionResult indicating the success or failure of the update operation.</returns>
     [HttpPut("userId:Guid")]
     public async Task<IActionResult> PutUser(UserRequestDto request)
     {
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// Deletes a user with the specified unique identifier.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to be deleted.</param>
+    /// <returns>No content if the user is successfully deleted, or NotFound if the user does not exist.</returns>
     [HttpDelete]
     public async Task<ActionResult> DeleteUser(Guid userId)
     {

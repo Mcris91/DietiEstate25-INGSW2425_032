@@ -2,6 +2,9 @@ using DietiEstate.WebApi.Services.Interfaces;
 
 namespace DietiEstate.WebApi.Services.Implementations;
 
+/// <summary>
+/// A service that provides password hashing and verification functionality using the BCrypt algorithm.
+/// </summary>
 public class BCryptPasswordService : IPasswordService
 {
     private const int WorkFactor = 12;
