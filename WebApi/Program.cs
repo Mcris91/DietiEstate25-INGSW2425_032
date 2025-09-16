@@ -1,3 +1,4 @@
+using System.Text;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
@@ -43,7 +44,10 @@ public static class Program
         
         builder.Services.AddControllers()
             .AddNewtonsoftJson();
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer<JwtSecuritySchemeTransformer>();
+        });
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -60,6 +64,15 @@ public static class Program
 
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
+        var jwtConfig = new JwtConfiguration(
+            Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret",
+            Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "secret",
+            Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "secret",
+            int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_MINUTES_EXPIRY") ?? "15"),
+            int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_DAYS_EXPIRY") ?? "30")
+        );
+        builder.Services.AddSingleton(jwtConfig);
+        
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
         builder.Services.AddAuthentication(options =>
@@ -67,19 +80,10 @@ public static class Program
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
-        .AddJwtBearer(options =>
+        .AddJwtBearer(jwtOptions =>
         {
-            options.TokenValidationParameters = new TokenValidationParameters()
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey("aaa"u8.ToArray()),
-                ValidateIssuer = true,
-                ValidIssuer = "localhost",
-                ValidateAudience = true,
-                ValidAudience = "users",
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            };
+            jwtOptions.TokenValidationParameters = jwtConfig.GetTokenValidationParameters();
+            jwtOptions.MapInboundClaims = false;
         });
     }
     
@@ -99,6 +103,8 @@ public static class Program
         }
         
         //app.UseHttpsRedirection();
+        app.UseRouting();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
     }

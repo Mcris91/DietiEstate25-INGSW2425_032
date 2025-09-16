@@ -4,13 +4,15 @@ using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
 
-[Route("api/v1/[controller]")]
+[Authorize]
 [ApiController]
+[Route("api/v1/[controller]")]
 public class ListingController(
     IListingRepository listingRepository,
     IMapper mapper) : Controller

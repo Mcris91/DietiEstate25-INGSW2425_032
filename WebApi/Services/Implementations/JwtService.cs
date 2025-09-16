@@ -1,20 +1,20 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using DietiEstate.Shared.Models.AuthModels;
+using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DietiEstate.WebApi.Services.Implementations;
 
-public class JwtService : IJwtService
+public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
 {
-    private readonly string _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret";
-    private readonly string _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "issuer";
-    private readonly string _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "audience";
-    private readonly int _accessTokenExpiryInMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_MINUTES_EXPIRY") ?? "15");
-    private readonly int _refreshTokenExpiryInDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_DAYS_EXPIRY") ?? "30");
+    private readonly string _secretKey = jwtConfiguration.SecretSecretKey;
+    private readonly string _issuer = jwtConfiguration.Issuer;
+    private readonly string _audience = jwtConfiguration.Audience;
+    private readonly int _accessTokenExpiryInMinutes = jwtConfiguration.AccessExpiresInMinutes;
+    private readonly int _refreshTokenExpiryInDays = jwtConfiguration.RefreshExpiresInDays;
     
     public string GenerateJwtAccessToken(string userId)
     {
@@ -78,17 +78,9 @@ public class JwtService : IJwtService
 
         try
         {
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidIssuer = _issuer,
-                ValidateAudience = true,
-                ValidAudience = _audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            }, out var validatedToken);
+            var principal = tokenHandler.ValidateToken(
+                token, jwtConfiguration.GetTokenValidationParameters(), 
+                out var validatedToken);
 
             return principal;
         }

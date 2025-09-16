@@ -17,7 +17,7 @@ public class BCryptPasswordService : IPasswordService
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }
