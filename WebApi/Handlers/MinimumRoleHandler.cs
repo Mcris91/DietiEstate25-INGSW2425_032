@@ -1,8 +1,9 @@
 using System.Security.Claims;
 using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.WebApi.Configs;
 using Microsoft.AspNetCore.Authorization;
 
-namespace DietiEstate.WebApi.Configs;
+namespace DietiEstate.WebApi.Handlers;
 
 /// <summary>
 /// A custom authorization handler that validates a user's role against a minimum role requirement.
@@ -16,7 +17,7 @@ namespace DietiEstate.WebApi.Configs;
 /// <example>
 /// This handler is typically registered as a service in the application's dependency
 /// injection container and used in conjunction with authorization policies.
-/// Refer to the application's configuration in Program.cs to see usage of this handler.
+/// Refer to the application's configuration in Program.cs to see the usage of this handler.
 /// </example>
 public class MinimumRoleHandler : AuthorizationHandler<MinimumRoleRequirement>
 {
