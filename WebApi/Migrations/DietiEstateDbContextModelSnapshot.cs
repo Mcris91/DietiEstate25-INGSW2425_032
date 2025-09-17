@@ -96,7 +96,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("Listing");
+                    b.ToTable("Listing", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.ListingModels.PropertyType", b =>
@@ -117,7 +117,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PropertyType");
+                    b.ToTable("PropertyType", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.ListingModels.Service", b =>
@@ -133,7 +133,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Service");
+                    b.ToTable("Service", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.ListingModels.Tag", b =>
@@ -149,7 +149,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tag", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.Shared.Image", b =>
@@ -167,7 +167,7 @@ namespace DietiEstate.WebApi.Migrations
                     b.HasIndex("Url")
                         .IsUnique();
 
-                    b.ToTable("Image");
+                    b.ToTable("Image", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.UserModels.User", b =>
@@ -197,7 +197,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("ListingImage", b =>
@@ -212,7 +212,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasIndex("ListingsId");
 
-                    b.ToTable("ListingImage");
+                    b.ToTable("ListingImage", (string)null);
                 });
 
             modelBuilder.Entity("ListingService", b =>
@@ -227,7 +227,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasIndex("ListingsId");
 
-                    b.ToTable("ListingService");
+                    b.ToTable("ListingService", (string)null);
                 });
 
             modelBuilder.Entity("ListingTag", b =>
@@ -242,7 +242,7 @@ namespace DietiEstate.WebApi.Migrations
 
                     b.HasIndex("ListingsId");
 
-                    b.ToTable("ListingTag");
+                    b.ToTable("ListingTag", (string)null);
                 });
 
             modelBuilder.Entity("DietiEstate.Shared.Models.ListingModels.Listing", b =>

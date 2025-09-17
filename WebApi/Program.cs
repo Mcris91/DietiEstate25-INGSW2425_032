@@ -1,4 +1,3 @@
-using System.Text;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
@@ -9,8 +8,8 @@ using DietiEstate.WebApi.Services.Interfaces;
 using DotNetEnv;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace DietiEstate.WebApi;
 
@@ -23,6 +22,7 @@ public static class Program
         var builder = WebApplication.CreateBuilder(args);
         ConfigureServices(builder);
         ConfigureAuthentication(builder);
+        ConfigureAuthorization(builder);
         
         var app = builder.Build();
         await ConfigureApplicationAsync(app);
@@ -53,7 +53,6 @@ public static class Program
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
-
         
         builder.Configuration
             .SetBasePath(builder.Environment.ContentRootPath)
@@ -76,15 +75,39 @@ public static class Program
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
         builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(jwtOptions =>
-        {
-            jwtOptions.TokenValidationParameters = jwtConfig.GetTokenValidationParameters();
-            jwtOptions.MapInboundClaims = false;
-        });
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(jwtOptions =>
+            {
+                jwtOptions.TokenValidationParameters = jwtConfig.GetTokenValidationParameters();
+                jwtOptions.MapInboundClaims = false;
+            });
+    }
+    
+    private static void ConfigureAuthorization(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IAuthorizationHandler, MinimumRoleHandler>();
+        builder.Services.AddAuthorizationBuilder()
+            .SetDefaultPolicy(new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddRequirements(new MinimumRoleRequirement(UserRole.Client))
+                .Build())
+            .AddPolicy("SuperAdminOnly", policy =>
+                policy.RequireRole(nameof(UserRole.SuperAdmin)))
+            .AddPolicy("SupportOrSuperAdmin", policy =>
+                policy.RequireRole(nameof(UserRole.SuperAdmin), nameof(UserRole.Admin)))
+            .AddPolicy("SupportAdminOnly", policy =>
+                policy.RequireRole(nameof(UserRole.Admin)))
+            .AddPolicy("AgentOnly", policy =>
+                policy.RequireRole(nameof(UserRole.Agent)))
+            .AddPolicy("MinimumClient", policy => 
+                policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Client)))
+            .AddPolicy("MinimumAgent", policy => 
+                policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Agent)))
+            .AddPolicy("MinimumSupportAdmin", policy => 
+                policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Admin)));
     }
     
     private static async Task ConfigureApplicationAsync(WebApplication app)

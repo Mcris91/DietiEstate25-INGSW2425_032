@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using DietiEstate.Shared.Models.AuthModels;
+using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
@@ -16,21 +17,22 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
     private readonly int _accessTokenExpiryInMinutes = jwtConfiguration.AccessExpiresInMinutes;
     private readonly int _refreshTokenExpiryInDays = jwtConfiguration.RefreshExpiresInDays;
     
-    public string GenerateJwtAccessToken(string userId)
+    public string GenerateJwtAccessToken(User user)
     {
-        return GenerateJwtToken(userId, JwtTokenType.Access, _accessTokenExpiryInMinutes);
+        return GenerateJwtToken(user, JwtTokenType.Access, _accessTokenExpiryInMinutes);
     }
-    public string GenerateJwtRefreshToken(string userId)
+    public string GenerateJwtRefreshToken(User user)
     {
-        return GenerateJwtToken(userId, JwtTokenType.Refresh, _refreshTokenExpiryInDays * 24 * 60);
+        return GenerateJwtToken(user, JwtTokenType.Refresh, _refreshTokenExpiryInDays * 24 * 60);
     }
-    private string GenerateJwtToken(string userId, JwtTokenType tokenType, int tokenExpiryInMinutes)
+    private string GenerateJwtToken(User user, JwtTokenType tokenType, int tokenExpiryInMinutes)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_secretKey);
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, userId),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Role, user.Role.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(JwtRegisteredClaimNames.Iat, 
                 new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), 

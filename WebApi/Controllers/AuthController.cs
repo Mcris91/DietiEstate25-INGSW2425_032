@@ -4,11 +4,13 @@ using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/v1/[controller]")]
 public class AuthController(
     IPasswordService passwordService,
@@ -18,8 +20,11 @@ public class AuthController(
     IMapper mapper) : Controller
 {
     [HttpPost("signup")]
-    public async Task<IActionResult> SignUp([FromBody] SignUpRequestDto request)
+    public async Task<IActionResult> SignUp([FromBody] UserRequestDto request)
     {
+        if (request.Role != UserRole.Client)
+            return BadRequest(new {error = "Only clients can be created."});
+        
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest(new {error = "Email already exists."});
         
@@ -47,21 +52,26 @@ public class AuthController(
         if (user is null) return BadRequest(new {error = "Invalid email or password."});
         
         return Ok(new LoginResponseDto() {
-            Access = jwtService.GenerateJwtAccessToken(user.Id.ToString()),
-            Refresh = jwtService.GenerateJwtRefreshToken(user.Id.ToString())
+            Access = jwtService.GenerateJwtAccessToken(user),
+            Refresh = jwtService.GenerateJwtRefreshToken(user)
         });
     }
     
     [HttpPost("token/refresh")]
-    public IActionResult RefreshAccessToken([FromBody] string refreshToken)
+    public async Task<IActionResult> RefreshAccessToken([FromBody] string refreshToken)
     {
         var principal = jwtService.ValidateJwtRefreshToken(refreshToken);
-        if (principal is null) return Unauthorized();
+        if (principal is null) 
+            return Unauthorized();
 
         var userId = principal.Identity!.Name;
-        if (userId != null)
-            return Ok(new { access = jwtService.GenerateJwtAccessToken(userId) });
+        if (userId == null) 
+            return Unauthorized();
         
-        return Unauthorized();
+        var user = await userRepository.GetUserByIdAsync(Guid.Parse(userId));
+        if (user == null)
+            return BadRequest(new {error = "Invalid refresh token. User not found."});
+        
+        return Ok(new { Access = jwtService.GenerateJwtAccessToken(user) });
     }
 }

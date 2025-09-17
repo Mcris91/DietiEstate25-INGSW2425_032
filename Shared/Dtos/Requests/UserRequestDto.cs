@@ -1,3 +1,5 @@
+using DietiEstate.Shared.Models.UserModels;
+
 namespace DietiEstate.Shared.Dtos.Requests;
 
 public class UserRequestDto
@@ -6,4 +8,5 @@ public class UserRequestDto
     public string Password { get; init; } = string.Empty;
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
+    public UserRole Role { get; init; } = UserRole.Client;
 }

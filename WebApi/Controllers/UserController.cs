@@ -18,7 +18,6 @@ namespace DietiEstate.WebApi.Controllers;
 /// creating new users, updating existing user information, and deleting users. It also
 /// supports user search with optional pagination functionality.
 /// </remarks>
-[Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
 public class UserController(
@@ -67,14 +66,46 @@ public class UserController(
     }
 
     /// <summary>
-    /// Handles the creation of a new user based on the provided request data.
+    /// Creates a new support admin user based on the provided user data.
     /// </summary>
-    /// <param name="request">The user data required for creating a new user, including email and password.</param>
-    /// <returns>An HTTP response indicating the result of the operation.
-    /// Returns a 201 Created response with the created user's details when successful. Returns a 400 Bad Request response if the email already exists or if the password does not meet validation criteria.</returns>
+    /// <param name="request">The data required for creating a new user, including email, password, and user role. The role must be set to Admin.</param>
+    /// <returns>An HTTP response indicating the result of the operation. Returns a 201 Created response with the created user's details when successful.
+    /// Returns a 400 Bad Request if the email already exists, the role is not Admin, or the password does not meet validation criteria.</returns>
     [HttpPost]
-    public async Task<ActionResult> PostUser(UserRequestDto request)
+    [Authorize(Roles = "SuperAdminOnly")]
+    public async Task<ActionResult> CreateSupportAdminUser(UserRequestDto request)
     {
+        if (request.Role != UserRole.Admin)
+            return BadRequest(new { error = "Only support admins can be created." });
+
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+            return BadRequest(new { error = "Email already exists." });
+
+        var passwordValidation = userService.ValidatePassword(request.Password);
+        if (passwordValidation != "")
+            return BadRequest(new {error = passwordValidation});
+        
+        var user = mapper.Map<User>(request);
+        user.Email = user.Email.ToLowerInvariant();
+        user.Password = passwordService.HashPassword(request.Password);
+        await userRepository.AddUserAsync(user);
+
+        return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
+    }
+
+    /// <summary>
+    /// Creates a new agent user based on the provided request data.
+    /// </summary>
+    /// <param name="request">The request data containing email, password, and role.</param>
+    /// <returns>An ActionResult representing the result of the operation, including a created response if successful,
+    /// or a bad request if validation fails or the email already exists.</returns>
+    [HttpPost]
+    [Authorize(Roles = "SupportAdminOnly")]
+    public async Task<ActionResult> CreateAgentUser(UserRequestDto request)
+    {
+        if (request.Role != UserRole.Agent)
+            return BadRequest(new {error = "Only agents can be created."});
+        
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest(new {error = "Email already exists."});
         
@@ -89,7 +120,7 @@ public class UserController(
 
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
     }
-
+    
     /// <summary>
     /// Updates an existing user's information based on the provided request data.
     /// </summary>

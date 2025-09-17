@@ -14,7 +14,6 @@ namespace DietiEstate.WebApi.Controllers;
 /// A controller responsible for managing listing-related endpoints, including retrieval, creation, updating, and deletion of listings.
 /// This controller supports various operations such as paginated data retrieval, modification, and detailed information fetching.
 /// </summary>
-[Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
 public class ListingController(
@@ -74,6 +73,7 @@ public class ListingController(
     /// including its unique identifier, or an error response if the operation fails.
     /// </returns>
     [HttpPost]
+    [Authorize(Roles = "SupportAdminOnly")]
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);
@@ -93,6 +93,7 @@ public class ListingController(
     /// - <see cref="NoContentResult"/> if the update is successful.
     /// </returns>
     [HttpPatch("{listingId:guid}")]
+    [Authorize(Roles = "SupportAdminOnly")]
     public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] JsonPatchDocument<ListingRequestDto> patchDocument)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -117,6 +118,7 @@ public class ListingController(
     /// a <see cref="NotFoundResult"/> if the listing does not exist.
     /// </returns>
     [HttpDelete("{listingId:guid}")]
+    [Authorize(Roles = "SupportAdminOnly")]
     public async Task<IActionResult> DeleteListing(Guid listingId)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)

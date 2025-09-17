@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using DietiEstate.Shared.Models.AuthModels;
+using DietiEstate.Shared.Models.UserModels;
 
 namespace DietiEstate.WebApi.Services.Interfaces;
 
@@ -10,19 +11,19 @@ namespace DietiEstate.WebApi.Services.Interfaces;
 public interface IJwtService
 {
     /// <summary>
-    /// Generates a JWT (JSON Web Token) access token for the given user ID.
+    /// Generates a JWT (JSON Web Token) access token for the specified user.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user for whom the access token is being generated.</param>
+    /// <param name="user">The user object containing the details of the user for whom the access token is being generated.</param>
     /// <returns>A string representation of the generated JWT access token.</returns>
-    string GenerateJwtAccessToken(string userId);
+    string GenerateJwtAccessToken(User user);
 
     /// <summary>
-    /// Generates a JWT (JSON Web Token) refresh token for a specified user.
-    /// The token is typically used to request a new access token after the original access token expires.
+    /// Generates a JWT (JSON Web Token) refresh token for the specified user.
+    /// The refresh token is leveraged to obtain a new access token after the preceding one expires.
     /// </summary>
-    /// <param name="userId">The unique identifier of the user for whom the refresh token is being generated.</param>
+    /// <param name="user">The user entity for whom the refresh token is being generated.</param>
     /// <returns>A string containing the generated JWT refresh token.</returns>
-    string GenerateJwtRefreshToken(string userId);
+    string GenerateJwtRefreshToken(User user);
 
     /// <summary>
     /// Validates a JWT access token and determines its validity by ensuring the token type is
