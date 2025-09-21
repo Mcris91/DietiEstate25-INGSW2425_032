@@ -60,7 +60,7 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         var principal = ValidateJwtToken(token);
         if (principal is null) return null;
         
-        return (principal.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Access), StringComparison.CurrentCultureIgnoreCase) 
+        return (principal.FindFirst("tokenType")?.Value)!.Equals(nameof(JwtTokenType.Access), StringComparison.CurrentCultureIgnoreCase) 
             ? principal 
             : null;
     }
@@ -69,7 +69,7 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         var principal = ValidateJwtToken(token);
         if (principal is null) return null;
         
-        return (principal.FindFirst("token_type")?.Value)!.Equals(nameof(JwtTokenType.Refresh), StringComparison.CurrentCultureIgnoreCase) 
+        return (principal.FindFirst("tokenType")?.Value)!.Equals(nameof(JwtTokenType.Refresh), StringComparison.CurrentCultureIgnoreCase) 
             ? principal 
             : null;
     }
