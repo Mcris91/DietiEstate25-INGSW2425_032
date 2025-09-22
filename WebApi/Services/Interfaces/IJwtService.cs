@@ -11,6 +11,13 @@ namespace DietiEstate.WebApi.Services.Interfaces;
 public interface IJwtService
 {
     /// <summary>
+    /// Generates a JWT (JSON Web Token) id token for the specified user.
+    /// </summary>
+    /// <param name="user">The user object containing the details of the user for whom the access token is being generated.</param>
+    /// <returns>A string representation of the generated JWT access token.</returns>
+    string GenerateJwtIdToken(User user);
+    
+    /// <summary>
     /// Generates a JWT (JSON Web Token) access token for the specified user.
     /// </summary>
     /// <param name="user">The user object containing the details of the user for whom the access token is being generated.</param>
