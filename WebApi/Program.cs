@@ -3,6 +3,7 @@ using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Handlers;
+using DietiEstate.WebApi.Middlewares;
 using DietiEstate.WebApi.Repositories.Implementations;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Implementations;
@@ -174,6 +175,7 @@ public static class Program
         //app.UseHttpsRedirection();
         app.UseRouting();
         app.UseAuthentication();
+        app.UseMiddleware<UserSessionAuthMiddleware>();
         app.UseAuthorization();
         app.MapControllers();
     }

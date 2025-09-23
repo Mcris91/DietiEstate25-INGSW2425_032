@@ -50,6 +50,11 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     /// </summary>
     public virtual DbSet<User> User { get; set; }
     
+    /// <summary>
+    /// Gets or sets the DbSet for managing <see cref="UserSession"/> entities.
+    /// </summary>
+    public virtual DbSet<UserSession> UserSession { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
