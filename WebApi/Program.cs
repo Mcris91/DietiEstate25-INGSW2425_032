@@ -59,8 +59,6 @@ public static class Program
         
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
-        builder.Services.AddScoped<IAuthorizationHandler, UserScopeHandler>();
-        builder.Services.AddScoped<IUserScopeService, UserScopeService>();
         builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         builder.Services.AddScoped<IUserService, UserService>();
         
@@ -177,8 +175,8 @@ public static class Program
         
         //app.UseHttpsRedirection();
         app.UseRouting();
-        app.UseAuthentication();
         app.UseMiddleware<UserSessionAuthMiddleware>();
+        app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
     }

@@ -31,6 +31,7 @@ public class ListingController(
     /// with the filtered listings, or a bad request response if the pagination parameters are invalid.
     /// </returns>
     [HttpGet]
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListings(
         [FromQuery] ListingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -56,6 +57,7 @@ public class ListingController(
     /// or a not found response if the listing does not exist.
     /// </returns>
     [HttpGet("{listingId:guid}")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<IActionResult> GetListingById(Guid listingId) 
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is { } listing)
@@ -73,7 +75,7 @@ public class ListingController(
     /// including its unique identifier, or an error response if the operation fails.
     /// </returns>
     [HttpPost]
-    [Authorize(Roles = "SupportAdminOnly")]
+    [Authorize(Policy = "WriteListing")]
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);

@@ -51,6 +51,6 @@ public class UserSessionAuthMiddleware(
         
         context.Request.Headers.Authorization = $"Bearer {sessionData!.AccessToken}";
         
-        await next(context);
+         await next(context);
     }
 }

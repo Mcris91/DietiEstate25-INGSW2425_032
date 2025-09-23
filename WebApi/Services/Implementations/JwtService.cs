@@ -12,30 +12,23 @@ namespace DietiEstate.WebApi.Services.Implementations;
 
 public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
 {
-    private readonly string _secretKey = jwtConfiguration.SecretSecretKey;
-    private readonly string _issuer = jwtConfiguration.Issuer;
-    private readonly string _audience = jwtConfiguration.Audience;
-    private readonly int _accessTokenExpiryInMinutes = jwtConfiguration.AccessExpiresInMinutes;
-    private readonly int _refreshTokenExpiryInDays = jwtConfiguration.RefreshExpiresInDays;
-    private readonly int _idTokenExpiryInMinutes = jwtConfiguration.IdExpiresInMinutes;
-
     public string GenerateJwtIdToken(User user)
     {
-        return GenerateJwtToken(user, JwtTokenType.Id, _idTokenExpiryInMinutes);
+        return GenerateJwtToken(user, JwtTokenType.Id, jwtConfiguration.IdExpiresInMinutes);
     }
     
     public string GenerateJwtAccessToken(User user)
     {
-        return GenerateJwtToken(user, JwtTokenType.Access, _accessTokenExpiryInMinutes);
+        return GenerateJwtToken(user, JwtTokenType.Access, jwtConfiguration.AccessExpiresInMinutes);
     }
     public string GenerateJwtRefreshToken(User user)
     {
-        return GenerateJwtToken(user, JwtTokenType.Refresh, _refreshTokenExpiryInDays * 24 * 60);
+        return GenerateJwtToken(user, JwtTokenType.Refresh, jwtConfiguration.RefreshExpiresInDays * 24 * 60);
     }
     private string GenerateJwtToken(User user, JwtTokenType tokenType, int tokenExpiryInMinutes)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_secretKey);
+        var key = Encoding.UTF8.GetBytes(jwtConfiguration.SecretSecretKey);
         var claims = new List<Claim>()
         {
             new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -67,8 +60,8 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(tokenExpiryInMinutes),
-            Issuer = _issuer,
-            Audience = _audience,
+            Issuer = jwtConfiguration.Issuer,
+            Audience = jwtConfiguration.Audience,
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
