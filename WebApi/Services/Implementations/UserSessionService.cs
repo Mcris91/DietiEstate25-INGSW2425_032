@@ -11,7 +11,7 @@ namespace DietiEstate.WebApi.Services.Implementations;
 public class UserSessionService(
     DietiEstateDbContext context,
     IUserRepository userRepository,
-    JwtService jwtService,
+    IJwtService jwtService,
     JwtConfiguration jwtConfiguration) : IUserSessionService
 {
     public async Task<string> CreateSessionAsync(User user, string accessToken, string refreshToken)
@@ -48,7 +48,11 @@ public class UserSessionService(
         }
 
         var user = await userRepository.GetUserByIdAsync(session.UserId);
-        if (user is null) return false;
+        if (user is null)
+        {
+            await InvalidateSessionAsync(sessionId);
+            return false;
+        }
 
         try
         {

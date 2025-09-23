@@ -4,6 +4,7 @@ using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DietiEstate.WebApi.Migrations
 {
     [DbContext(typeof(DietiEstateDbContext))]
-    partial class DietiEstateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250923122002_AddedUserSessionTable")]
+    partial class AddedUserSessionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

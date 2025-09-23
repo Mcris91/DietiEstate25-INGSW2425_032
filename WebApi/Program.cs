@@ -56,7 +56,14 @@ public static class Program
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+        
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        builder.Services.AddScoped<IAuthorizationHandler, UserScopeHandler>();
+        builder.Services.AddScoped<IUserScopeService, UserScopeService>();
+        builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
         
         builder.Services.Configure<AuthConfig>(
@@ -71,8 +78,7 @@ public static class Program
 
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IJwtService, JwtService>();
-        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        
         var jwtConfig = new JwtConfiguration(
             Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret",
             Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "secret",
@@ -108,9 +114,6 @@ public static class Program
     private static void ConfigureAuthorization(WebApplicationBuilder builder)
     {
         var authConfig = builder.Configuration.GetSection("Authentication").Get<AuthConfig>();
-        builder.Services.AddScoped<IAuthorizationHandler, UserScopeHandler>();
-        builder.Services.AddScoped<IUserScopeService, UserScopeService>();
-
         if (authConfig?.BypassAuth == true)
         {
             builder.Services.AddAuthorizationBuilder()

@@ -7,35 +7,32 @@ public class UserSessionAuthMiddleware(
     IServiceProvider serviceProvider,
     ILogger<UserSessionAuthMiddleware> logger)
 {
-    private readonly RequestDelegate _next = next;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly ILogger<UserSessionAuthMiddleware> _logger = logger;
     
     public async Task InvokeAsync(HttpContext context)
     {
         // Skip for anonymus requests
-        // if (!context.Request.Path.StartsWithSegments("/api") || 
-        //     context.Request.Path.StartsWithSegments("/api/auth/login"))
-        // {
-        //     await _next(context);
-        //     return;
-        // }
+        if (context.Request.Path.StartsWithSegments("/api/v1/Auth/login"))
+        {
+            await next(context);
+            return;
+        }
         
         var sessionId = context.Request.Cookies["session_id"];
         if (string.IsNullOrEmpty(sessionId))
         {
-            await _next(context);
+            await next(context);
             return;
         }
         
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var sessionService = scope.ServiceProvider.GetRequiredService<IUserSessionService>();
         
         var sessionData = await sessionService.GetSessionAsync(new Guid(sessionId));
         if (sessionData == null)
         {
             context.Response.Cookies.Delete("session_id");
-            await _next(context);
+            await next(context);
             return;
         }
         
@@ -45,7 +42,7 @@ public class UserSessionAuthMiddleware(
             if (!refreshSuccess)
             {
                 context.Response.Cookies.Delete("session_id");
-                await _next(context);
+                await next(context);
                 return;
             }
             
@@ -54,6 +51,6 @@ public class UserSessionAuthMiddleware(
         
         context.Request.Headers.Authorization = $"Bearer {sessionData!.AccessToken}";
         
-        await _next(context);
+        await next(context);
     }
 }
