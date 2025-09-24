@@ -1,4 +1,4 @@
-namespace DietiEstate.Shared.Models.UserModels;
+namespace DietiEstate.Shared.Enums;
 
 /// <summary>
 /// Represents the role of the user in the system.

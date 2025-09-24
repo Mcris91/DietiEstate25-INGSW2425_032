@@ -55,6 +55,11 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     /// </summary>
     public virtual DbSet<UserSession> UserSession { get; set; }
     
+    /// <summary>
+    /// Gets or sets the DbSet for managing <see cref="UserVerification"/> entities.
+    /// </summary>
+    public virtual DbSet<UserVerification> UserVerification { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

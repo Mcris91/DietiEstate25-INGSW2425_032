@@ -1,4 +1,4 @@
-using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.Shared.Enums;
 
 namespace DietiEstate.Shared.Dtos.Filters;
 

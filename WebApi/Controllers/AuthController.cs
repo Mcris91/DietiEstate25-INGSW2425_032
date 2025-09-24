@@ -1,6 +1,7 @@
 using AutoMapper;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
+using DietiEstate.Shared.Enums;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Interfaces;
@@ -19,6 +20,7 @@ namespace DietiEstate.WebApi.Controllers;
 public class AuthController(
     IPasswordService passwordService,
     IUserRepository userRepository,
+    IUserVerificationRepository userVerificationRepository,
     IUserService userService,
     IJwtService jwtService,
     IUserSessionService userSessionService,
@@ -59,4 +61,43 @@ public class AuthController(
         return Ok();
     }
     
+    [HttpPost("signup")]
+    public async Task<IActionResult> SignUp([FromBody] UserRequestDto request)
+    {
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+            return BadRequest("Email already exists.");
+        
+        var passwordValidation = userService.ValidatePassword(request.Password);
+        if (!string.IsNullOrWhiteSpace(passwordValidation))
+            return BadRequest(passwordValidation);
+        
+        var user = mapper.Map<User>(request);
+        user.Id = Guid.NewGuid();
+        user.Email = user.Email.ToLowerInvariant();
+        user.Password = passwordService.HashPassword(request.Password);
+        await userRepository.AddUserAsync(user);
+
+        // TODO: Send verification email
+        
+        var userVerification = new UserVerification()
+        {
+            UserId = user.Id
+        };
+        await userVerificationRepository.AddVerificationAsync(userVerification);
+
+        return CreatedAtAction(
+            actionName: "GetUserById", 
+            controllerName: "User",  
+            routeValues: new { userId = user.Id }, 
+            value: user);
+    }
+    
 }
+
+
+
+
+
+
+
+

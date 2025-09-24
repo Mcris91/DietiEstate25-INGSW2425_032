@@ -1,5 +1,5 @@
 using DietiEstate.Shared.Constants;
-using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.Shared.Enums;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Handlers;
@@ -12,7 +12,6 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.WebApi;
@@ -56,6 +55,7 @@ public static class Program
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
         
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();

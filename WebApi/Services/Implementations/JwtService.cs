@@ -4,6 +4,7 @@ using System.Text;
 using DietiEstate.Shared.Constants;
 using DietiEstate.Shared.Models.AuthModels;
 using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.Shared.Enums;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;

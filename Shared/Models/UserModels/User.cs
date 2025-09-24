@@ -1,3 +1,4 @@
+using DietiEstate.Shared.Enums;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 

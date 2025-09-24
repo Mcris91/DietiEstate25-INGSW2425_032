@@ -30,7 +30,6 @@ public class UserRepository(
     
     public async Task AddUserAsync(User user)
     {
-        user.Id = Guid.NewGuid();
         await context.Database.BeginTransactionAsync();
         await context.User.AddAsync(user);
         await context.SaveChangesAsync();
