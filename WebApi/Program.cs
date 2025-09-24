@@ -1,7 +1,9 @@
+using DietiEstate.Shared.Constants;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
 using DietiEstate.WebApi.Handlers;
+using DietiEstate.WebApi.Middlewares;
 using DietiEstate.WebApi.Repositories.Implementations;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Implementations;
@@ -54,7 +56,12 @@ public static class Program
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
+        
+        builder.Services.AddScoped<IJwtService, JwtService>();
+        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        builder.Services.AddScoped<IUserSessionService, UserSessionService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
         
         builder.Services.Configure<AuthConfig>(
@@ -69,12 +76,12 @@ public static class Program
 
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IJwtService, JwtService>();
-        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        
         var jwtConfig = new JwtConfiguration(
             Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret",
             Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "secret",
             Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "secret",
+            int.Parse(Environment.GetEnvironmentVariable("JWT_ID_MINUTES_EXPIRY") ?? "60"),
             int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_MINUTES_EXPIRY") ?? "15"),
             int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_DAYS_EXPIRY") ?? "30")
         );
@@ -105,50 +112,49 @@ public static class Program
     private static void ConfigureAuthorization(WebApplicationBuilder builder)
     {
         var authConfig = builder.Configuration.GetSection("Authentication").Get<AuthConfig>();
-        builder.Services.AddScoped<IAuthorizationHandler, MinimumRoleHandler>();
         if (authConfig?.BypassAuth == true)
         {
             builder.Services.AddAuthorizationBuilder()
-                .SetDefaultPolicy(new AuthorizationPolicyBuilder()
-                    .AddAuthenticationSchemes("BypassAuth")
-                    .RequireAssertion(_ => true)
-                    .Build())
-                .AddPolicy("SuperAdminOnly", policy => 
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("SupportOrSuperAdmin", policy =>
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("SupportAdminOnly", policy =>
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("AgentOnly", policy =>
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("MinimumClient", policy => 
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("MinimumAgent", policy => 
-                    policy.RequireAssertion(_ => true))
-                .AddPolicy("MinimumSupportAdmin", policy => 
-                    policy.RequireAssertion(_ => true));
+                .AddPolicy("ReadListing", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteListing", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteListing", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadAgent", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteAgent", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteAgent", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadSupportAdmin", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteSupportAdmin", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteSupportAdmin", policy =>
+                    policy.RequireAssertion( _ => true));
         }
         else
         {
             builder.Services.AddAuthorizationBuilder()
-                .SetDefaultPolicy(new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddRequirements(new MinimumRoleRequirement(UserRole.Client))
-                    .Build())
-                .AddPolicy("SuperAdminOnly", policy =>
-                    policy.RequireRole(nameof(UserRole.SuperAdmin)))
-                .AddPolicy("SupportOrSuperAdmin", policy =>
-                    policy.RequireRole(nameof(UserRole.SuperAdmin), nameof(UserRole.Admin)))
-                .AddPolicy("SupportAdminOnly", policy =>
-                    policy.RequireRole(nameof(UserRole.Admin)))
-                .AddPolicy("AgentOnly", policy =>
-                    policy.RequireRole(nameof(UserRole.Agent)))
-                .AddPolicy("MinimumClient", policy => 
-                    policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Client)))
-                .AddPolicy("MinimumAgent", policy => 
-                    policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Agent)))
-                .AddPolicy("MinimumSupportAdmin", policy => 
-                    policy.Requirements.Add(new MinimumRoleRequirement(UserRole.Admin)));
+                .AddPolicy("ReadListing", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadListing))
+                .AddPolicy("WriteListing", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteListing))
+                .AddPolicy("DeleteListing", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteListing))
+                .AddPolicy("ReadAgent", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadAgent))
+                .AddPolicy("WriteAgent", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteAgent))
+                .AddPolicy("DeleteAgent", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteAgent))
+                .AddPolicy("ReadSupportAdmin", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadSupportAdmin))
+                .AddPolicy("WriteSupportAdmin", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteSupportAdmin))
+                .AddPolicy("DeleteSupportAdmin", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteSupportAdmin));
         }
     }
     
@@ -169,6 +175,7 @@ public static class Program
         
         //app.UseHttpsRedirection();
         app.UseRouting();
+        app.UseMiddleware<UserSessionAuthMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();

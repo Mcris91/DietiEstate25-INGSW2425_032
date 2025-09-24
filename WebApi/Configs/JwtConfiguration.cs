@@ -10,6 +10,7 @@ public class JwtConfiguration(
     string secretKey, 
     string issuer, 
     string audience,
+    int idExpiresInMinutes,
     int accessExpiresInMinutes,
     int refreshExpiresInDays)
 {
@@ -46,6 +47,12 @@ public class JwtConfiguration(
     /// This value defines the validity period of a refresh token in days.
     /// </summary>
     public int RefreshExpiresInDays { get; } = refreshExpiresInDays;
+
+    /// <summary>
+    /// Gets the number of days until the ID token expires.
+    /// This value defines the validity period of a refresh token in minutes.
+    /// </summary>
+    public int IdExpiresInMinutes { get; } = idExpiresInMinutes;
 
     /// <summary>
     /// Retrieves the token validation parameters required to validate JWT tokens.
