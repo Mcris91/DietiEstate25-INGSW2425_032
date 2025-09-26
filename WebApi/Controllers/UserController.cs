@@ -121,16 +121,21 @@ public class UserController(
 
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
     }
-    
+
     /// <summary>
     /// Updates an existing user's information based on the provided request data.
     /// </summary>
+    /// <param name="userId">The primary id of the <see cref="User"/> entity to be updated</param>
     /// <param name="request">The data containing the updated user information, including email, password, first name, and last name.</param>
     /// <returns>An IActionResult indicating the success or failure of the update operation.</returns>
     [HttpPut("userId:Guid")]
-    public async Task<IActionResult> PutUser(UserRequestDto request)
+    public async Task<IActionResult> PutUser(Guid userId, [FromBody] UserRequestDto request)
     {
-        throw new NotImplementedException();
+        if (await userRepository.GetUserByIdAsync(userId) is not { } existingUser)
+            return NotFound();
+        existingUser = mapper.Map(request, existingUser);
+        await userRepository.UpdateUserAsync(existingUser);
+        return Ok(mapper.Map<UserResponseDto>(existingUser));   
     }
 
     /// <summary>
