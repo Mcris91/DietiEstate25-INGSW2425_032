@@ -59,6 +59,23 @@ public class AuthController(
         Response.Cookies.Delete("id_token");
         return Ok();
     }
+
+    [HttpPost("logout-all")]
+    public async Task<IActionResult> LogoutFromAllDevices()
+    {
+        var sessionId = Request.Cookies["session_id"];
+        if (string.IsNullOrEmpty(sessionId))
+            return Unauthorized();
+        
+        var session = await userSessionService.GetSessionAsync(new Guid(sessionId));
+        if (session is null) 
+            return Unauthorized();
+
+        await userSessionService.InvalidateAllUserSessionsAsync(session.UserId);
+        Response.Cookies.Delete("session_id");
+        Response.Cookies.Delete("id_token");
+        return Ok();
+    }
     
     [HttpPost("signup")]
     public async Task<IActionResult> SignUp([FromBody] UserRequestDto request)

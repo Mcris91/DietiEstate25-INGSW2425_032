@@ -37,6 +37,7 @@ public class UserSessionAuthMiddleware(
         if (sessionData == null)
         {
             context.Response.Cookies.Delete("session_id");
+            context.Response.Cookies.Delete("id_token");
             await next(context);
             return;
         }
@@ -47,6 +48,7 @@ public class UserSessionAuthMiddleware(
             if (!refreshSuccess)
             {
                 context.Response.Cookies.Delete("session_id");
+                context.Response.Cookies.Delete("id_token");
                 await next(context);
                 return;
             }
