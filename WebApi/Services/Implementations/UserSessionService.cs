@@ -84,9 +84,15 @@ public class UserSessionService(
         await context.Database.CommitTransactionAsync();   
     }
 
-    public Task InvalidateAllUserSessionsAsync(Guid userId)
+    public async Task InvalidateAllUserSessionsAsync(Guid userId)
     {
-        throw new NotImplementedException();
+        var sessions = context.UserSession.Where(s => s.UserId == userId);
+        if (!sessions.Any()) return;
+
+        await context.Database.BeginTransactionAsync();
+        context.UserSession.RemoveRange(sessions);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
     }
 
     public async Task<bool> IsSessionValidAsync(Guid sessionId)
