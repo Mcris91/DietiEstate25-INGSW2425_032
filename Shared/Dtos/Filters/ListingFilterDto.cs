@@ -7,7 +7,7 @@ namespace DietiEstate.Shared.Dtos.Filters;
 public class ListingFilterDto
 {
     /// <summary>
-    /// Gets or sets the property type identifier to filter listings by specific type.
+    /// Gets or sets the property type identifier to filter listings by a specific type.
     /// If null, no type filtering is applied.
     /// </summary>
     public Guid? TypeId { get; init; }

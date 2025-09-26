@@ -2,6 +2,7 @@ using DietiEstate.Shared.Constants;
 using DietiEstate.Shared.Enums;
 using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Data;
+using DietiEstate.WebApi.Data.Seeders;
 using DietiEstate.WebApi.Handlers;
 using DietiEstate.WebApi.Middlewares;
 using DietiEstate.WebApi.Repositories.Implementations;
@@ -52,6 +53,8 @@ public static class Program
         {
             options.AddDocumentTransformer<JwtSecuritySchemeTransformer>();
         });
+        
+        builder.Services.AddScoped<DatabaseSeeder>();
         
         builder.Services.AddScoped<IListingRepository, ListingRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -137,6 +140,8 @@ public static class Program
         else
         {
             builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("SystemAdmin", policy =>
+                    policy.RequireClaim("scope", UserScope.SystemAdmin))
                 .AddPolicy("ReadListing", policy =>
                     policy.RequireClaim("scope", UserScope.ReadListing))
                 .AddPolicy("WriteListing", policy =>
@@ -171,6 +176,9 @@ public static class Program
             var scope = app.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<DietiEstateDbContext>();
             await dbContext.Database.MigrateAsync();
+
+            var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+            await seeder.SeedAsync();
         }
         
         //app.UseHttpsRedirection();

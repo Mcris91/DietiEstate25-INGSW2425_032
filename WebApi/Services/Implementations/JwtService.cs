@@ -113,17 +113,22 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
         var scopes = new List<string>();
         switch (user.Role)
         {
+            case UserRole.SystemAdmin:
+                scopes.AddRange(UserScope.SystemAdmin);
+                scopes.AddRange(UserScope.AllScopes);
+                break;
             case UserRole.SuperAdmin:
                 scopes.AddRange(UserScope.SupportAdmin.All);
                 break;
-            case UserRole.Admin:
+            case UserRole.SupportAdmin:
                 scopes.AddRange(UserScope.Agent.All);
                 break;
-            case UserRole.Agent:
+            case UserRole.EstateAgent:
                 scopes.AddRange(UserScope.Listing.All);
                 break;
             case UserRole.Client:
                 scopes.AddRange(UserScope.ReadListing);
+                scopes.AddRange(UserScope.ReadAgent);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(user.Role.ToString());

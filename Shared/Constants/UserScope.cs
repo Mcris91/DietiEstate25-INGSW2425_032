@@ -1,4 +1,4 @@
-using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.Shared.Enums;
 
 namespace DietiEstate.Shared.Constants;
 
@@ -7,6 +7,14 @@ namespace DietiEstate.Shared.Constants;
 /// </summary>
 public static class UserScope
 {
+    /// <summary>
+    /// Grant or restrict access to all resources in the system.
+    /// </summary>
+    /// <remarks>
+    /// This scope is reserved for system administrators.
+    /// </remarks>
+    public const string  SystemAdmin = "system-admin";
+    
     /// <summary>
     /// Grant or restrict access to users attempting to read <see cref="Listing"/> data.
     /// </summary>
@@ -23,32 +31,32 @@ public static class UserScope
     public const string DeleteListing = "delete:listing";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to read <see cref="UserRole.Agent"/> data.
+    /// Grant or restrict access to users attempting to read <see cref="Agent"/> data.
     /// </summary>
     public const string ReadAgent = "read:agent";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to create, update, or modify <see cref="UserRole.Agent"/> data.
+    /// Grant or restrict access to users attempting to create, update, or modify <see cref="Agent"/> data.
     /// </summary>
     public const string WriteAgent = "write:agent";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to delete <see cref="UserRole.Agent"/> data.
+    /// Grant or restrict access to users attempting to delete <see cref="Agent"/> data.
     /// </summary>
     public const string DeleteAgent = "delete:agent";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to read <see cref="UserRole.Admin"/> data.
+    /// Grant or restrict access to users attempting to read <see cref="UserRole.SupportAdmin"/> data.
     /// </summary>
     public const string ReadSupportAdmin = "read:support-admin";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to create, update, or modify <see cref="UserRole.Admin"/> data.
+    /// Grant or restrict access to users attempting to create, update, or modify <see cref="UserRole.SupportAdmin"/> data.
     /// </summary>
     public const string WriteSupportAdmin = "write:support-admin";
 
     /// <summary>
-    /// Grant or restrict access to users attempting to delete <see cref="UserRole.Admin"/> data.
+    /// Grant or restrict access to users attempting to delete <see cref="UserRole.SupportAdmin"/> data.
     /// </summary>
     public const string DeleteSupportAdmin = "delete:support-admin";
     

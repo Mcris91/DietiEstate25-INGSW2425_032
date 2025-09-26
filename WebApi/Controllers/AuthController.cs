@@ -1,7 +1,6 @@
 using AutoMapper;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
-using DietiEstate.Shared.Enums;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Interfaces;

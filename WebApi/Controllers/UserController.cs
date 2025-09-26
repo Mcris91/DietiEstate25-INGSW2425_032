@@ -69,14 +69,14 @@ public class UserController(
     /// <summary>
     /// Creates a new support admin user based on the provided user data.
     /// </summary>
-    /// <param name="request">The data required for creating a new user, including email, password, and user role. The role must be set to Admin.</param>
+    /// <param name="request">The data required for creating a new user, including email, password, and user role. The role must be set to SupportAdmin.</param>
     /// <returns>An HTTP response indicating the result of the operation. Returns a 201 Created response with the created user's details when successful.
-    /// Returns a 400 Bad Request if the email already exists, the role is not Admin, or the password does not meet validation criteria.</returns>
+    /// Returns a 400 Bad Request if the email already exists, the role is not SupportAdmin, or the password does not meet validation criteria.</returns>
     [HttpPost]
     [Authorize(Roles = "SuperAdminOnly")]
     public async Task<ActionResult> CreateSupportAdminUser(UserRequestDto request)
     {
-        if (request.Role != UserRole.Admin)
+        if (request.Role != UserRole.SupportAdmin)
             return BadRequest(new { error = "Only support admins can be created." });
 
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
@@ -104,7 +104,7 @@ public class UserController(
     [Authorize(Roles = "SupportAdminOnly")]
     public async Task<ActionResult> CreateAgentUser(UserRequestDto request)
     {
-        if (request.Role != UserRole.Agent)
+        if (request.Role != UserRole.EstateAgent)
             return BadRequest(new {error = "Only agents can be created."});
         
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)

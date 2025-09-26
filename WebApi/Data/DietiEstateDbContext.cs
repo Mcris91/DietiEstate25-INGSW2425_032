@@ -63,7 +63,7 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        
         modelBuilder.Entity<Listing>()
             .HasMany(l => l.ListingImages)
             .WithMany(i => i.Listings)

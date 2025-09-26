@@ -6,20 +6,28 @@ namespace DietiEstate.Shared.Enums;
 public enum UserRole
 {
     /// <summary>
-    /// The SuperAdmin can create and manage accounts for other admins.
+    /// The SystemAdmin can create and manage every resource in the system.
+    /// This role is reserved for system administrators.
+    /// </summary>
+    SystemAdmin,
+    
+    /// <summary>
+    /// The SuperAdmin is the account associated with the owner of an estate agency.
+    /// The SuperAdmin can create and manage accounts for estate agents.
     /// </summary>
     SuperAdmin,
     
     /// <summary>
-    /// The Admin can create and manage accounts for estate agents.
+    /// The SupportAdmin is the account associated with support staff at an estate agency.
+    /// The SupportAdmin can create and manage accounts for estate agents.
     /// </summary>
-    Admin,
+    SupportAdmin,
     
     /// <summary>
-    /// The Agent can upload listings, schedule appointments with clients
+    /// The EstateAgent can upload listings, schedule appointments with clients
     /// and manage offers for listings between other clients.
     /// </summary>
-    Agent,
+    EstateAgent,
     
     /// <summary>
     /// The Clients can make offers for listings and schedule
