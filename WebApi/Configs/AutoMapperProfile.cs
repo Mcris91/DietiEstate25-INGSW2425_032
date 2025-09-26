@@ -1,7 +1,7 @@
 using AutoMapper;
 using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
-using DietiEstate.Shared.Models.Configs;
+using DietiEstate.Shared.Models.Templates;
 using DietiEstate.Shared.Models.ListingModels;
 using DietiEstate.Shared.Models.UserModels;
 
@@ -21,7 +21,7 @@ public class AutoMapperProfile : Profile
         CreateMap<UserRequestDto, User>();
         CreateMap<User, UserResponseDto>();
         CreateMap <User, LoginResponseDto>();
-        CreateMap<SystemAdminConfig, User>();
+        CreateMap<AdminUserTemplate, User>();
         
         // Listing
         CreateMap<ListingRequestDto, Listing>();

@@ -1,6 +1,6 @@
 using AutoMapper;
 using DietiEstate.Shared.Enums;
-using DietiEstate.Shared.Models.Configs;
+using DietiEstate.Shared.Models.Templates;
 using DietiEstate.Shared.Models.UserModels;
 using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +21,7 @@ public class DatabaseSeeder(
 
     private async Task SeedSystemAdminAsync()
     {
-        var adminUsers = configuration.GetSection("DefaultUsers:SystemAdmins").Get<List<SystemAdminConfig>>();
+        var adminUsers = configuration.GetSection("DefaultUsers:SystemAdmins").Get<List<AdminUserTemplate>>();
         if (adminUsers is null)
         {
             logger.LogWarning("No system admin users found in configuration. Skipping database seeding.");

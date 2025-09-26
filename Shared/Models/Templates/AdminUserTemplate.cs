@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace DietiEstate.Shared.Models.Configs;
+namespace DietiEstate.Shared.Models.Templates;
 
-public class SystemAdminConfig
+public class AdminUserTemplate
 {
     [JsonPropertyName("FIRSTNAME")]
     public string FirstName { get; set; } = string.Empty;
