@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace DietiEstate.WebApi;
 
@@ -46,6 +47,13 @@ public static class Program
                 dboptions.EnableRetryOnFailure(0);
             });
         }, ServiceLifetime.Transient);
+
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
+        });
+        builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING")!));
         
         builder.Services.AddControllers()
             .AddNewtonsoftJson();
@@ -62,7 +70,7 @@ public static class Program
         
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
-        builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+        builder.Services.AddScoped<IUserSessionService, RedisSessionService>();
         builder.Services.AddScoped<IUserService, UserService>();
         
         builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
