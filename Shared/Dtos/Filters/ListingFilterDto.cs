@@ -1,7 +1,9 @@
+using DietiEstate.Shared.Models.ListingModels;
+
 namespace DietiEstate.Shared.Dtos.Filters;
 
 /// <summary>
-/// Data transfer object containing filter parameters for listing queries.
+/// Data transfer object containing filter parameters for <see cref="Listing"/> queries.
 /// Used to specify criteria for filtering, sorting, and retrieving property listings.
 /// </summary>
 public class ListingFilterDto

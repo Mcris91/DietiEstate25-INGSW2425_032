@@ -16,7 +16,7 @@ public class RedisSessionService(
     : IUserSessionService
 {
     private readonly IDatabase _redis = connection.GetDatabase();
-    private readonly TimeSpan _sessionTtl = TimeSpan.FromDays(30); // TTL della sessione
+    private readonly TimeSpan _sessionTtl = TimeSpan.FromDays(30);
 
     public async Task<string> CreateSessionAsync(User user, string accessToken, string refreshToken)
     {

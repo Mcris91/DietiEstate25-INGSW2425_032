@@ -2,22 +2,19 @@ namespace DietiEstate.Shared.Dtos.Requests;
 
 /// <summary>
 /// Represents the data transfer object for login requests.
-/// This class is used to encapsulate the necessary information required
-/// for a user to authenticate by providing their email and password.
 /// </summary>
 public class LoginRequestDto
 {
     /// <summary>
-    /// Gets or initializes the email address associated with the login request.
-    /// This property is required for user authentication and is a unique
-    /// identifier used to reference the user in the system.
+    /// Gets or sets the email of the property.
     /// </summary>
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets or initializes the password associated with the login request.
-    /// This property is required to authenticate the user and should be
-    /// provided in combination with a valid email address by the client.
+    /// Gets or sets the password of the property.
     /// </summary>
+    /// <remarks>
+    /// The password should be hashed before saving it to the database.
+    /// </remarks>
     public string Password { get; init; } = string.Empty;
 }
