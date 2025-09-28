@@ -1,4 +1,5 @@
 using System.Text.Json;
+using DietiEstate.Shared.Models.AuthModels;
 using DietiEstate.WebApi.Services.Interfaces;
 using StackExchange.Redis;
 
@@ -12,40 +13,48 @@ public class PasswordResetService(
     private readonly IDatabase _redis = connection.GetDatabase();
     private readonly TimeSpan _sessionTtl = TimeSpan.FromMinutes(10);
 
-    public async Task<string> GetResetRequestEmailAsync(Guid resetTokenId)
+    public async Task<PasswordReset?> GetResetRequestAsync(string email)
     {
-        var requestEmail = await _redis.StringGetAsync($"session:{resetTokenId}");
+        var passwordReset = await _redis.StringGetAsync($"password_reset_request:{email}");
 
-        return requestEmail.HasValue
-            ? requestEmail!
-            : "";
+        return passwordReset.HasValue
+            ? JsonSerializer.Deserialize<PasswordReset>(passwordReset!)
+            : null;
     }
 
-    public async Task<bool> CreatePasswordResetRequestAsync(string email)
+    public async Task<PasswordReset?> CreatePasswordResetRequestAsync(string email)
     {
+        var passwordReset = new PasswordReset()
+        {
+            Email = email,
+            Token = new Random().Next(100000, 1000000)
+        };
+        
         try
         {
-            var resetTokenId = Guid.NewGuid();
             await _redis.StringSetAsync(
-                $"password_reset_request:{resetTokenId.ToString()}",
-                JsonSerializer.Serialize(new
-                {
-                    Id = resetTokenId,
-                    Email = email
-                }), _sessionTtl);
+                $"password_reset_request:{passwordReset.Email}",
+                JsonSerializer.Serialize(passwordReset), _sessionTtl);
             logger.LogInformation("Password reset request for email {Email}", email);   
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to create a password reset request for email {Email}", email);
+            return null;
         }
 
-        return true;
+        return passwordReset;
     }
 
-    public async Task<bool> ValidateResetTokenAsync(Guid resetTokenId)
+    public async Task InvalidateResetTokenAsync(string email)
     {
-        var resetRequest = await GetResetRequestEmailAsync(resetTokenId);
-        return resetRequest != "";
+        await _redis.KeyDeleteAsync($"password_reset_request:{email}");
+        logger.LogInformation("Invalidated session {email}", email);
+    }
+    
+    public async Task<bool> ValidateResetTokenAsync(string email, int token)
+    {
+        var resetRequest = await GetResetRequestAsync(email);
+        return resetRequest is not null && resetRequest.Token == token;
     }
 }

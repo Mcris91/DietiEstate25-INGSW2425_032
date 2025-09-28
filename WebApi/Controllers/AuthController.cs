@@ -17,12 +17,13 @@ namespace DietiEstate.WebApi.Controllers;
 [AllowAnonymous]
 [Route("api/v1/[controller]")]
 public class AuthController(
+    IUserVerificationRepository userVerificationRepository,
+    IPasswordResetService passwordResetService,
+    IUserSessionService userSessionService,
     IPasswordService passwordService,
     IUserRepository userRepository,
-    IUserVerificationRepository userVerificationRepository,
     IUserService userService,
     IJwtService jwtService,
-    IUserSessionService userSessionService,
     IMapper mapper) : Controller
 {
     [HttpPost("login")]
@@ -83,7 +84,7 @@ public class AuthController(
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest("Email already exists.");
         
-        var passwordValidation = userService.ValidatePassword(request.Password);
+        var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (!string.IsNullOrWhiteSpace(passwordValidation))
             return BadRequest(passwordValidation);
         
@@ -107,7 +108,46 @@ public class AuthController(
             routeValues: new { userId = user.Id }, 
             value: user);
     }
-    
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+    {
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+        {
+            var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
+            // TODO: Send email notification with reset token
+        }
+        
+        return Ok();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+    {
+        var passwordReset = await passwordResetService.GetResetRequestAsync(request.Email);
+        if (passwordReset is null || await userRepository.GetUserByEmailAsync(passwordReset.Email) is not { } user)
+            return NotFound();
+        
+        user.Password = passwordService.HashPassword(request.Password);
+        await userRepository.UpdateUserAsync(user);
+        
+        await userSessionService.InvalidateAllUserSessionsAsync(user.Id);
+        Response.Cookies.Delete("session_id");
+        Response.Cookies.Delete("id_token");
+        await passwordResetService.InvalidateResetTokenAsync(request.Email);
+        
+        return Ok();
+    }
+
+    [HttpPost("validate-reset-token")]
+    public async Task<IActionResult> ValidateResetToken([FromBody] ValidatePasswordResetTokenRequestDto request)
+    {
+        if (!await passwordResetService.ValidateResetTokenAsync(request.Email, request.Token))
+            return BadRequest("Token expired or not found");
+        
+        return Ok();
+    }
+
 }
 
 

@@ -5,7 +5,8 @@ namespace DietiEstate.Shared.Dtos.Requests;
 public class ResetPasswordRequestDto
 {
     [Required]
-    public Guid Token { get; set; } = Guid.NewGuid();
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
     
     [Required]
     [DataType(DataType.Password)]
