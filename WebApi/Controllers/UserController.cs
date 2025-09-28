@@ -4,6 +4,7 @@ using DietiEstate.Shared.Dtos.Requests;
 using DietiEstate.Shared.Dtos.Responses;
 using DietiEstate.Shared.Enums;
 using DietiEstate.Shared.Models.UserModels;
+using DietiEstate.WebApi.Extensions;
 using DietiEstate.WebApi.Repositories.Interfaces;
 using DietiEstate.WebApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -21,6 +22,7 @@ namespace DietiEstate.WebApi.Controllers;
 /// </remarks>
 [ApiController]
 [Route("api/v1/[controller]")]
+[Authorize]
 public class UserController(
     IMapper mapper,
     IPasswordService passwordService,
@@ -151,5 +153,22 @@ public class UserController(
         
         await userRepository.DeleteUserAsync(user);
         return NoContent();   
+    }
+
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordRequestDto request)
+    {
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+        if (await userRepository.GetUserByIdAsync(userId) is not { } user)
+            return NotFound();
+
+        if (!passwordService.VerifyPassword(request.OldPassword, user.Password))
+            return BadRequest("Incorrect password.");
+        
+        user.Password = passwordService.HashPassword(request.NewPassword);
+        await userRepository.UpdateUserAsync(user);
+        return Ok();
     }
 }

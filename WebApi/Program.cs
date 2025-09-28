@@ -70,6 +70,7 @@ public static class Program
         
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
+        builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
         builder.Services.AddScoped<IUserSessionService, RedisSessionService>();
         builder.Services.AddScoped<IUserService, UserService>();
         
@@ -102,8 +103,7 @@ public static class Program
         if (authConfig?.BypassAuth == true)
         {
             builder.Services.AddAuthentication("BypassAuth")
-                .AddScheme<AuthenticationSchemeOptions, BypassAuthHandler>("BypassAuth", _ => { });
-            Console.WriteLine("🚧 DEVELOPMENT MODE: Authentication bypassed!");
+                .AddScheme<AuthenticationSchemeOptions, BypassAuthHandler>("BypassAuth", null);
         }
         else
         {
