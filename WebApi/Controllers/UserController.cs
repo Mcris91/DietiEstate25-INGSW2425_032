@@ -24,7 +24,6 @@ namespace DietiEstate.WebApi.Controllers;
 public class UserController(
     IMapper mapper,
     IPasswordService passwordService,
-    IUserService userService,
     IUserRepository userRepository) : Controller
 {
     /// <summary>
@@ -82,7 +81,7 @@ public class UserController(
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest(new { error = "Email already exists." });
 
-        var passwordValidation = userService.ValidatePassword(request.Password);
+        var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (passwordValidation != "")
             return BadRequest(new {error = passwordValidation});
         
@@ -110,7 +109,7 @@ public class UserController(
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest(new {error = "Email already exists."});
         
-        var passwordValidation = userService.ValidatePassword(request.Password);
+        var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (passwordValidation != "")
             return BadRequest(new {error = passwordValidation});
         

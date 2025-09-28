@@ -18,5 +18,7 @@ public interface IPasswordService
     /// <param name="password">The plaintext password to be verified.</param>
     /// <param name="hashedPassword">The hashed version of the password for comparison.</param>
     /// <returns>True if the password matches the hashed password, otherwise false.</returns>
-    bool VerifyPassword(string password, string hashedPassword);   
+    bool VerifyPassword(string password, string hashedPassword);
+    
+    string ValidatePasswordStrength(string password);
 }
