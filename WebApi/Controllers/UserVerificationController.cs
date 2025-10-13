@@ -1,6 +1,6 @@
-using DietiEstate.Shared.Enums;
-using DietiEstate.Shared.Models.UserModels;
-using DietiEstate.WebApi.Repositories.Interfaces;
+using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Core.Entities.UserModels;
+using DietiEstate.Core.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,15 +1,7 @@
-using DietiEstate.WebApi.Services.Interfaces;
+using DietiEstate.Application.Interfaces.Services;
 
 namespace DietiEstate.WebApi.Middlewares;
 
-/// <summary>
-/// Middleware for managing user session-based authentication.
-/// </summary>
-/// <remarks>
-/// This middleware is responsible for intercepting HTTP requests, verifying session information stored in user cookies,
-/// and ensuring that valid session tokens are in place. It handles refreshing expired access tokens or invalidating
-/// sessions when necessary. This ensures that session-related logic is decoupled from actual controller actions.
-/// </remarks>
 public class UserSessionAuthMiddleware(
     RequestDelegate next,
     IServiceProvider serviceProvider)

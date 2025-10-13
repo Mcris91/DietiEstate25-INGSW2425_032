@@ -1,18 +1,14 @@
 using AutoMapper;
-using DietiEstate.Shared.Dtos.Requests;
-using DietiEstate.Shared.Dtos.Responses;
-using DietiEstate.Shared.Models.UserModels;
-using DietiEstate.WebApi.Repositories.Interfaces;
-using DietiEstate.WebApi.Services.Interfaces;
+using DietiEstate.Application.Dtos.Requests;
+using DietiEstate.Application.Dtos.Responses;
+using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.UserModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
 
-/// <summary>
-/// Controller responsible for handling authentication-related endpoints such as user signup, token generation,
-/// and token refresh.
-/// </summary>
 [ApiController]
 [AllowAnonymous]
 [Route("api/v1/[controller]")]
