@@ -1,6 +1,8 @@
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +12,9 @@ namespace DietiEstate.WebApi.Controllers;
 [Route("api/v1/[controller]")]
 [AllowAnonymous]
 public class UserVerificationController(
+    IEmailService emailService,
+    IBackgroundJobClient jobClient,
+    IUserRepository userRepository,
     IUserVerificationRepository userVerificationRepository) : Controller
 {
     [HttpPost("verify-email/{token:minlength(32):maxlength(32)}")]
@@ -40,11 +45,14 @@ public class UserVerificationController(
     [HttpPost("resend-email/{userId:guid}")]
     public async Task<IActionResult> ResendEmail(Guid userId)
     {
+        if (await userRepository.GetUserByIdAsync(userId) is not { } user)
+            return NotFound("User not found.");
         var userVerification = new UserVerification()
         {
             UserId = userId,
         };
-        // TODO: Send new verification email
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         await userVerificationRepository.AddVerificationAsync(userVerification);
         return Ok();
     }

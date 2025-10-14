@@ -12,6 +12,7 @@ using DietiEstate.WebApi.Configs;
 using DietiEstate.WebApi.Handlers;
 using DietiEstate.WebApi.Middlewares;
 using DotNetEnv;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -60,6 +61,12 @@ public static class Program
         
         builder.Services.AddScoped<DatabaseSeeder>();
 
+        builder.Services.AddHangfire(options =>
+        {
+            options.UseSimpleAssemblyNameTypeSerializer();
+            options.UseRecommendedSerializerSettings();
+        });
+        
         builder.Services.AddDependencies(builder.Configuration);
         
         builder.Services.Configure<AuthConfig>(
@@ -163,6 +170,8 @@ public static class Program
             app.MapOpenApi();
             app.MapScalarApiReference();
         }
+
+        app.UseHangfireDashboard();
 
         if (!app.Environment.IsStaging())
         {

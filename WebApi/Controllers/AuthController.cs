@@ -4,6 +4,9 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
+using DietiEstate.Core.Entities.Worker;
+using DietiEstate.Core.Enums;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,8 +21,10 @@ public class AuthController(
     IUserSessionService userSessionService,
     IPasswordService passwordService,
     IUserRepository userRepository,
+    IEmailService emailService,
     IUserService userService,
     IJwtService jwtService,
+    IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
     [HttpPost("login")]
@@ -89,8 +94,6 @@ public class AuthController(
         user.Email = user.Email.ToLowerInvariant();
         user.Password = passwordService.HashPassword(request.Password);
         await userRepository.AddUserAsync(user);
-
-        // TODO: Send verification email
         
         var userVerification = new UserVerification()
         {
@@ -98,6 +101,9 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+        
         return CreatedAtAction(
             actionName: "GetUserById", 
             controllerName: "User",  
@@ -108,12 +114,11 @@ public class AuthController(
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
     {
-        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-        {
-            var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
-            // TODO: Send email notification with reset token
-        }
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not { } user) return Ok();
         
+        var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
+        var emailData = await emailService.PrepareEmailAsync(EmailType.PasswordReset, user.FirstName, user.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return Ok();
     }
 
