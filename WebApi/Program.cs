@@ -2,6 +2,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Constants;
 using DietiEstate.Core.Enums;
+using DietiEstate.Infrastracture;
 using DietiEstate.Infrastracture.Config;
 using DietiEstate.Infrastracture.Data;
 using DietiEstate.Infrastracture.Data.Seeders;
@@ -23,7 +24,11 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
-        Env.Load();
+        var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+        if (File.Exists(envPath))
+        {
+            Env.Load(envPath);
+        }
         
         var builder = WebApplication.CreateBuilder(args);
         ConfigureServices(builder);
@@ -39,16 +44,6 @@ public static class Program
     
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddDbContext<DietiEstateDbContext>(options =>
-        {
-            options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"), dboptions =>
-            {
-                dboptions.MapEnum<UserRole>("user_role")
-                    .EnableRetryOnFailure();
-                dboptions.EnableRetryOnFailure(0);
-            });
-        }, ServiceLifetime.Transient);
-
         builder.Services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
@@ -64,18 +59,8 @@ public static class Program
         });
         
         builder.Services.AddScoped<DatabaseSeeder>();
-        
-        builder.Services.AddScoped<IListingRepository, ListingRepository>();
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
-        
-        builder.Services.AddScoped<IJwtService, JwtService>();
-        builder.Services.AddScoped<IPasswordService, BCryptPasswordService>();
-        builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
-        builder.Services.AddScoped<IUserSessionService, RedisSessionService>();
-        builder.Services.AddScoped<IUserService, UserService>();
-        
-        builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+        builder.Services.AddDependencies(builder.Configuration);
         
         builder.Services.Configure<AuthConfig>(
             builder.Configuration.GetSection("Authentication"));
