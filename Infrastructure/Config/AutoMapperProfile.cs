@@ -14,7 +14,7 @@ public class AutoMapperProfile : Profile
         // User
         CreateMap<UserRequestDto, User>();
         CreateMap<User, UserResponseDto>();
-        CreateMap <User, LoginResponseDto>();
+        CreateMap<User, LoginResponseDto>();
         CreateMap<AdminUserTemplate, User>();
         
         // Listing

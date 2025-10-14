@@ -89,7 +89,6 @@ public static class Program
 
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
-        
         var jwtConfig = new JwtConfiguration(
             Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "secret",
             Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "secret",

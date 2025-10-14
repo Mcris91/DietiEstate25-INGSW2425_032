@@ -1,5 +1,3 @@
-using DietiEstate.Core.Entities.ListingModels;
-
 namespace DietiEstate.Application.Dtos.Filters;
 
 public class ListingFilterDto

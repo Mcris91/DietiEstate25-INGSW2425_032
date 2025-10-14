@@ -33,7 +33,6 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     public async Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images)
     {
         // TODO: Add images to the database
-        listing.Id = Guid.NewGuid();
         listing.ListingServices = await context.Service
             .Where(s => services.Contains(s.Id))
             .ToListAsync();
