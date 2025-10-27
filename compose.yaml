@@ -5,3 +5,9 @@
       context: .
       dockerfile: WebApi/Dockerfile
 
+  webclient:
+    image: webclient
+    build:
+      context: .
+      dockerfile: WebClient/Dockerfile
+
