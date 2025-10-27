@@ -1,0 +1,121 @@
+@using DietiEstate.WebClient.ApiService
+@using DietiEstate.WebClient.Components.Shared
+@using DietiEstate.WebClient.Data.Requests
+@using DietiEstate.WebClient.Data.Responses
+@rendermode InteractiveServer
+
+@inject ListingApiService ListingApiService
+
+@page "/agent/dashboard"
+
+<FluentGrid Spacing="2">
+  <FluentGridItem xs="12" sm="12" md="8">
+    
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+      <FluentGrid Style="width: 100%;">
+        <FluentGridItem xs="12" sm="4" md="4">
+          <DashboardInfoCard Title="Inserzioni"
+                             LeftInfo="Vendita" RightInfo="Affitto"
+                             LeftNumber="17" RightNumber="8"/>
+        </FluentGridItem>
+        <FluentGridItem xs="12" sm="4" md="4">
+          <DashboardInfoCard Title="Offerte"
+                             LeftInfo="Totali" RightInfo="Attesa"
+                             LeftNumber="75" RightNumber="28"/>
+        </FluentGridItem>
+        <FluentGridItem xs="12" sm="4" md="4">
+          <DashboardInfoCard Title="Prenotazioni"
+                             LeftInfo="Prossime" RightInfo="Attesa"
+                             LeftNumber="17" RightNumber="28"/>
+        </FluentGridItem>
+      </FluentGrid>  
+      
+      <FluentCard>
+        <FluentTabs Size="TabSize.Medium">
+          
+          <FluentTab Label="Inserzioni" Id="tab-listings">
+            
+            <FluentDataGrid @ref="_gridListings" Items="_listingItems">
+              <PropertyColumn Title="Nome" Property="@(l => l.Name)" />
+              <PropertyColumn Title="Tipologia" Property="@(l => l.Type)" />
+              <PropertyColumn Title="Prezzo" Property="@(l => l.Price)" />
+              <TemplateColumn Title="Disponibilità">
+                <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
+                  @(context.Available ? "Disponibile" : "Occupata")
+                </FluentBadge>
+              </TemplateColumn>
+            </FluentDataGrid>
+            @if (_totalPages.HasValue)
+            {
+              for (var pageIndex = 0; pageIndex <= _totalPages.Value; pageIndex++)
+              {
+                var capturedIndex = pageIndex;
+                <FluentButton @onclick="@(() => GoToPageAsync(capturedIndex))"
+                              Appearance="@PageButtonAppearance(capturedIndex)"
+                              aria-current="@AriaCurrentValue(capturedIndex)"
+                              aria-label="@AriaLabel(capturedIndex + 1)">
+                  @(capturedIndex + 1)
+                </FluentButton>
+              }
+            }
+            
+          </FluentTab>
+          <FluentTab Label="Offerte" Id="tab-offers">
+            Content for Offers tab.
+          </FluentTab>
+          <FluentTab Label="Prenotazioni" Id="tab-bookings">
+            Content for Bookings tab.
+          </FluentTab>
+          
+        </FluentTabs>
+      </FluentCard>
+    </FluentStack>
+    
+  </FluentGridItem>
+  <FluentGridItem xs="12" sm="12" md="4">
+    <FluentCard>
+      Right side
+    </FluentCard>
+  </FluentGridItem>
+</FluentGrid>
+
+@code {
+  FluentDataGrid<ListingResponseDto>? _gridListings;
+  IQueryable<ListingResponseDto>? _listingItems = Enumerable.Empty<ListingResponseDto>().AsQueryable();
+
+  int? _currentPage;
+  int? _prevPageNumber;
+  int? _nextPageNumber;
+  int? _totalPages;
+  
+  ListingFilterDto _filters = new ListingFilterDto();
+  
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await ListingApiService.GetListingsByAgentIdAsync(Guid.NewGuid(), _filters, 1, 5);
+    _listingItems = response.Items.AsQueryable();
+    _currentPage = response.PageNumber;
+    _prevPageNumber = response.PrevPageNumber;
+    _nextPageNumber = response.NextPageNumber;
+    _totalPages = response.TotalPages;
+  }
+  
+  private async Task GoToPageAsync(int pageIndex)
+  {
+    _currentPage = pageIndex + 1;
+    var response = await ListingApiService.GetListingsByAgentIdAsync(Guid.NewGuid(), _filters, _currentPage, 5);
+    _currentPage = response.PageNumber;
+    _prevPageNumber = response.PrevPageNumber;
+    _nextPageNumber = response.NextPageNumber;
+  }
+
+  private Appearance PageButtonAppearance(int pageIndex)
+    => _currentPage == pageIndex + 1 ? Appearance.Accent : Appearance.Neutral;
+
+  private string? AriaCurrentValue(int pageIndex)
+    => _currentPage == pageIndex + 1 ? "page" : null;
+
+  private string AriaLabel(int pageIndex)
+    => $"Go to page {pageIndex}";
+
+}

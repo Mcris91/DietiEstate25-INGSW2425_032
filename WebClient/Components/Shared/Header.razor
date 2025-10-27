@@ -1,0 +1,19 @@
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" 
+             HorizontalGap="10" Style="padding: 20px; 
+                                       margin-bottom: 20px; 
+                                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 
+                                                   0 4px 16px rgba(0, 0, 0, 0.08);">
+
+  <FluentIcon Icon="Icons.Regular.Size48.Building" Color="Color.Neutral" Title="Logo"/>
+  <FluentLabel Typo="Typography.Header">DietiEstate</FluentLabel>
+  <FluentSpacer/>
+  <NavMenu />
+</FluentStack>
+
+@code {
+
+}

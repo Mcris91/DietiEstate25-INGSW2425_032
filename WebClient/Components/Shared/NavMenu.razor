@@ -1,0 +1,58 @@
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
+
+<FluentDesignTheme Mode="@Mode" CustomColor="#EF4444" StorageName="theme"/>
+@if (!_isLoggedIn)
+{
+  <FluentAnchor Href="/" Appearance="Appearance.Stealth">Registra la tua azienda</FluentAnchor>
+  <FluentButton IconStart="@(new Icons.Regular.Size20.PersonAccounts())"
+                Appearance="Appearance.Accent">Accedi</FluentButton>
+}
+else
+{
+  if (_isAgent)
+  {
+    <FluentAnchor Href="/agent/dashboard" Appearance="Appearance.Stealth">Dashboard</FluentAnchor>
+    <FluentAnchor Href="/agent/calendar" Appearance="Appearance.Outline">Calendario</FluentAnchor>
+    <FluentAnchor Href="/agent/offers" Appearance="Appearance.Outline">Offerte</FluentAnchor>
+    <FluentAnchor Href="/agent/listings" Appearance="Appearance.Outline">Inserzioni</FluentAnchor>
+    <FluentProfileMenu Image=""
+                       HeaderLabel="@_currentUser.Role" Initials="@_currentUser.Initials"
+                       FullName="@($"{_currentUser.FirstName} {_currentUser.LastName}")"
+                       EMail="@_currentUser.Email" PopoverStyle="min-width: 330px;"
+                       OnHeaderButtonClick="@SignOUt">
+      <FooterTemplate>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+          <FluentGridItem>
+            <FluentSelect Width="150px"
+                          Items="@(Enum.GetValues<DesignThemeModes>())"
+                          @bind-SelectedOption="@Mode"/>
+          </FluentGridItem>
+          <FluentSpacer/>
+          <FluentAnchor Href="/user/profile" Appearance="Appearance.Hypertext">View Profile</FluentAnchor>
+        </FluentStack>
+      </FooterTemplate>
+    </FluentProfileMenu>
+  }
+}
+
+@code {
+  public DesignThemeModes Mode { get; set; }
+  
+  private bool _isLoggedIn = true;
+  private bool _isAgent = true;
+  private CurrentUser _currentUser = new();
+  
+  private void SignOUt() => NavigationManager.NavigateTo("user/logout", true);
+  
+  public class CurrentUser
+  {
+    public string FirstName { get; init; } = "Simone";
+    public string LastName { get; init; } = "Liberti";
+    public string Email { get; init; } = "sim.liberti@gmail.com";
+    public string Role { get; init; } = "Agent";
+
+    public string Initials => $"{FirstName[0]}{LastName[0]}".ToUpper();
+  }
+}
