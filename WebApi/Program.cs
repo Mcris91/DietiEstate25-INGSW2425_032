@@ -171,7 +171,7 @@ public static class Program
             app.MapScalarApiReference();
         }
 
-        app.UseHangfireDashboard();
+        //app.UseHangfireDashboard();
 
         if (!app.Environment.IsStaging())
         {

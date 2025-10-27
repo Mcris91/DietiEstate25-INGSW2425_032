@@ -21,6 +21,19 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .ToListAsync();
     }
     
+    public async Task<IEnumerable<Listing?>> GetListingsByAgentIdAsync(Guid agentId, ListingFilterDto filters, int? pageNumber, int? pageSize)
+    {
+        return await context.Listing
+            .Include(l => l.ListingServices)
+            .Include(l => l.ListingTags)
+            .Include(l => l.ListingImages)
+            .Where(l => l.AgentUserId == agentId)
+            .ApplyFilters(filters)
+            .ApplyNumericFilters(filters)
+            .ApplySorting(filters.SortBy, filters.SortOrder)
+            .ToListAsync();
+    }
+    
     public async Task<Listing?> GetListingByIdAsync(Guid listingId)
     {
         return await context.Listing

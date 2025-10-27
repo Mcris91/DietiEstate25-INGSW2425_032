@@ -44,6 +44,25 @@ public class ListingController(
         return NotFound();
     }
 
+    [HttpGet("GetByAgentId/{agentId:guid}")]
+    [Authorize(Policy = "ReadListing")]
+    public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgentId(
+        Guid agentId,
+        [FromQuery] ListingFilterDto filterDto,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize)
+    {
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+
+        var listings = await listingRepository.GetListingsByAgentIdAsync(agentId, filterDto, pageNumber, pageSize);
+        return Ok(new PagedResponseDto<ListingResponseDto>(
+            listings.ToList().Select(mapper.Map<ListingResponseDto>), 
+            pageSize, pageNumber));
+    }
+
     [HttpPost]
     [Authorize(Policy = "WriteListing")]
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
