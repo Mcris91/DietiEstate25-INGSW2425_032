@@ -1,5 +1,6 @@
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,8 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
 
     public virtual DbSet<Listing> Listing { get; set; }
+    
+    public virtual DbSet<Offer> Offer { get; set; }
  
     public virtual DbSet<Image> Image { get; set; }
 
