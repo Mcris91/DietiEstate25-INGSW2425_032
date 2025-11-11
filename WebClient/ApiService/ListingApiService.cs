@@ -26,7 +26,7 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         }
         
         var uri = $"GetByAgentId/{agentId}{queryString}";
-        Console.WriteLine(uri);
+        Console.WriteLine(uri); 
         return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
     }
 }

@@ -35,29 +35,20 @@
           
           <FluentTab Label="Inserzioni" Id="tab-listings">
             
-            <FluentDataGrid @ref="_gridListings" Items="_listingItems">
-              <PropertyColumn Title="Nome" Property="@(l => l.Name)" />
-              <PropertyColumn Title="Tipologia" Property="@(l => l.Type)" />
-              <PropertyColumn Title="Prezzo" Property="@(l => l.Price)" />
-              <TemplateColumn Title="Disponibilità">
-                <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
-                  @(context.Available ? "Disponibile" : "Occupata")
-                </FluentBadge>
-              </TemplateColumn>
-            </FluentDataGrid>
-            @if (_totalPages.HasValue)
-            {
-              for (var pageIndex = 0; pageIndex <= _totalPages.Value; pageIndex++)
-              {
-                var capturedIndex = pageIndex;
-                <FluentButton @onclick="@(() => GoToPageAsync(capturedIndex))"
-                              Appearance="@PageButtonAppearance(capturedIndex)"
-                              aria-current="@AriaCurrentValue(capturedIndex)"
-                              aria-label="@AriaLabel(capturedIndex + 1)">
-                  @(capturedIndex + 1)
-                </FluentButton>
-              }
-            }
+            <PagedDataGrid TItem="ListingResponseDto"
+                           DataProvider="GetListingData"
+                           PageSize="10">
+              <GridColumns>
+                <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)" />
+                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)" />
+                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price)" />
+                <TemplateColumn Title="Disponibilità" TGridItem="ListingResponseDto">
+                  <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent )" Circular="true">
+                    @(context.Available ? "Disponibile" : "Occupata" )
+                  </FluentBadge>
+                </TemplateColumn> 
+              </GridColumns>
+            </PagedDataGrid>
             
           </FluentTab>
           <FluentTab Label="Offerte" Id="tab-offers">
@@ -80,42 +71,11 @@
 </FluentGrid>
 
 @code {
-  FluentDataGrid<ListingResponseDto>? _gridListings;
-  IQueryable<ListingResponseDto>? _listingItems = Enumerable.Empty<ListingResponseDto>().AsQueryable();
-
-  int? _currentPage;
-  int? _prevPageNumber;
-  int? _nextPageNumber;
-  int? _totalPages;
-  
   ListingFilterDto _filters = new ListingFilterDto();
   
-  protected override async Task OnInitializedAsync()
+  private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(Guid agentId, int? pageNumber, int? pageSize)
   {
-    var response = await ListingApiService.GetListingsByAgentIdAsync(Guid.NewGuid(), _filters, 1, 5);
-    _listingItems = response.Items.AsQueryable();
-    _currentPage = response.PageNumber;
-    _prevPageNumber = response.PrevPageNumber;
-    _nextPageNumber = response.NextPageNumber;
-    _totalPages = response.TotalPages;
+    return await ListingApiService.GetListingsByAgentIdAsync(agentId, _filters, pageNumber, pageSize);
   }
-  
-  private async Task GoToPageAsync(int pageIndex)
-  {
-    _currentPage = pageIndex + 1;
-    var response = await ListingApiService.GetListingsByAgentIdAsync(Guid.NewGuid(), _filters, _currentPage, 5);
-    _currentPage = response.PageNumber;
-    _prevPageNumber = response.PrevPageNumber;
-    _nextPageNumber = response.NextPageNumber;
-  }
-
-  private Appearance PageButtonAppearance(int pageIndex)
-    => _currentPage == pageIndex + 1 ? Appearance.Accent : Appearance.Neutral;
-
-  private string? AriaCurrentValue(int pageIndex)
-    => _currentPage == pageIndex + 1 ? "page" : null;
-
-  private string AriaLabel(int pageIndex)
-    => $"Go to page {pageIndex}";
 
 }
