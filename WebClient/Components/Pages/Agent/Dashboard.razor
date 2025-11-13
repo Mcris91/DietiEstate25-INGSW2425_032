@@ -16,7 +16,8 @@
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Inserzioni"
                              LeftInfo="Vendita" RightInfo="Affitto"
-                             LeftNumber="17" RightNumber="8"/>
+                             LeftNumber="@(_listingCounters?.ForSaleCount ?? 0)" 
+                             RightNumber="@(_listingCounters?.ForSaleCount ?? 0)"/>
         </FluentGridItem>
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Offerte"
@@ -71,11 +72,25 @@
 </FluentGrid>
 
 @code {
-  ListingFilterDto _filters = new ()
+
+  readonly ListingFilterDto _filters = new ()
   {
     AgentId = Guid.NewGuid()
   };
   
+  private ListingAgentCountersResponseDto? _listingCounters;
+  
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!firstRender) return;
+    await GetListingCounters();
+    StateHasChanged();
+  }
+  
+  private async Task GetListingCounters()
+  {
+    _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
+  }
   
   
   private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(int? pageNumber, int? pageSize)

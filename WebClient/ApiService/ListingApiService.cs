@@ -25,7 +25,15 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         }
         
         var uri = queryString;
-        Console.WriteLine(uri); 
         return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
+    }
+
+    public async Task<ListingAgentCountersResponseDto> GetListingAgentCountersAsync(Guid? agentId)
+    {
+        if (agentId == null)
+            throw new ArgumentException("AgentId cannot be null.", nameof(agentId));
+        
+        var uri = $"GetAgentCounters/{agentId}";
+        return await GetAsync<ListingAgentCountersResponseDto>(uri);
     }
 }

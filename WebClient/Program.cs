@@ -1,6 +1,7 @@
 using System.Text.Json;
 using DietiEstate.WebClient.ApiService;
 using DietiEstate.WebClient.Components;
+using DietiEstate.WebClient.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,10 +14,9 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddSingleton(new JsonSerializerOptions {
     PropertyNameCaseInsensitive = true
 });
-builder.Services.AddHttpClient<ListingApiService>(client =>
-{
-    client.BaseAddress = new Uri($"{builder.Configuration["ApiUrl"]!}Listing/");
-});
+
+builder.Services.AddApiService<ListingApiService>(builder.Configuration["ApiUrl"]!, "Listing");
+builder.Services.AddApiService<PropertyTypeApiService>(builder.Configuration["ApiUrl"]!, "PropertyType");
 
 var app = builder.Build();
 
