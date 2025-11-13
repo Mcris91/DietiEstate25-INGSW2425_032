@@ -1,3 +1,4 @@
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.UserModels;
@@ -24,6 +25,8 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     public virtual DbSet<UserSession> UserSession { get; set; }
 
     public virtual DbSet<UserVerification> UserVerification { get; set; }
+    
+    public virtual DbSet<Booking>  Booking { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
