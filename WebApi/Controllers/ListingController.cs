@@ -14,6 +14,7 @@ namespace DietiEstate.WebApi.Controllers;
 [Route("api/v1/[controller]")]
 public class ListingController(
     IListingRepository listingRepository,
+    IPropertyTypeRepository propertyTypeRepository,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -44,23 +45,26 @@ public class ListingController(
         return NotFound();
     }
 
-    [HttpGet("GetByAgentId/{agentId:guid}")]
+    [HttpGet("GetAgentCounters/{agentId:guid}")]
     [Authorize(Policy = "ReadListing")]
-    public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgentId(
-        Guid agentId,
-        [FromQuery] ListingFilterDto filterDto,
-        [FromQuery] int? pageNumber,
-        [FromQuery] int? pageSize)
+    public async Task<IActionResult> GetAgentCounters(Guid agentId)
     {
-        if (pageNumber.HasValue ^ pageSize.HasValue) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
-        if (pageNumber <= 0 || pageSize <= 0) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        var listings = await listingRepository.GetListingsAsync(
+            new ListingFilterDto() { AgentId = agentId }, null, null);
 
-        var listings = await listingRepository.GetListingsByAgentIdAsync(agentId, filterDto, pageNumber, pageSize);
-        return Ok(new PagedResponseDto<ListingResponseDto>(
-            listings.ToList().Select(mapper.Map<ListingResponseDto>), 
-            pageSize, pageNumber));
+        var forRentType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("RENT");
+        var forSaleType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("SALE");
+        
+        if (forRentType == null || forSaleType == null)
+            return StatusCode(500, new { error = "Property types 'RENT' and 'SALE' must exist in the database." });
+
+        var listingsEnumerable = listings.ToList();
+        
+        return Ok(new ListingAgentCountersResponseDto()
+        {
+            ForRentCount = listingsEnumerable.Count(l => l.TypeId == forRentType.Id),
+            ForSaleCount = listingsEnumerable.Count(l => l.TypeId == forSaleType.Id),
+        });
     }
 
     [HttpPost]

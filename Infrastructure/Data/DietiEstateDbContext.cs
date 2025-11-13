@@ -39,6 +39,12 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
             entity.HasIndex(i => i.Url)
                 .IsUnique();
         });
+        
+        modelBuilder.Entity<PropertyType>(entity =>
+        {
+            entity.HasIndex(pt => pt.Code)
+                .IsUnique();
+        });
     }
 
 }

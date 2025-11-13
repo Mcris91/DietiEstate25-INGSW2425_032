@@ -71,11 +71,16 @@
 </FluentGrid>
 
 @code {
-  ListingFilterDto _filters = new ListingFilterDto();
-  
-  private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(Guid agentId, int? pageNumber, int? pageSize)
+  ListingFilterDto _filters = new ()
   {
-    return await ListingApiService.GetListingsByAgentIdAsync(agentId, _filters, pageNumber, pageSize);
+    AgentId = Guid.NewGuid()
+  };
+  
+  
+  
+  private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(int? pageNumber, int? pageSize)
+  {
+    return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
   }
 
 }

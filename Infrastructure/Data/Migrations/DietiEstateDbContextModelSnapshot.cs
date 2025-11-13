@@ -123,6 +123,10 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Icon")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -134,6 +138,9 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("PropertyType");
                 });

@@ -5,10 +5,8 @@ namespace DietiEstate.Application.Interfaces.Repositories;
 
 public interface IListingRepository
 {
-    Task<IEnumerable<Listing?>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize);
+    Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize);
 
-    Task<IEnumerable<Listing?>> GetListingsByAgentIdAsync(Guid agentId, ListingFilterDto filters, int? pageNumber, int? pageSize);
-    
     Task<Listing?> GetListingByIdAsync(Guid listingId);
 
     Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images);

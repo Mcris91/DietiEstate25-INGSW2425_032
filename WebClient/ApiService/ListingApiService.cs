@@ -7,7 +7,6 @@ namespace DietiEstate.WebClient.ApiService;
 public class ListingApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
     public async Task<PagedResponseDto<ListingResponseDto>> GetListingsByAgentIdAsync(
-        Guid agentId,
         ListingFilterDto filterDto,
         int? pageNumber,
         int? pageSize)
@@ -25,7 +24,7 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
             queryString += $"pageSize={pageSize.Value}";
         }
         
-        var uri = $"GetByAgentId/{agentId}{queryString}";
+        var uri = queryString;
         Console.WriteLine(uri); 
         return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
     }
