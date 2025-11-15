@@ -21,6 +21,9 @@ public class Booking
     [Required]
     public bool BookingAccepted { get; set; }
     
+    [Required]
+    public Listing? Listing { get; set; }
+    
     [ForeignKey(nameof(Listing))]
     public Guid ListingId { get; set; }
     
@@ -28,14 +31,12 @@ public class Booking
     public User? Agent{get;set;}
     
     [ForeignKey(nameof(Agent))]
-    [EmailAddress]
-    public string? Email { get; set; }
+    public Guid AgentUserId { get; set; }
     
-    [Required]
+    [Required] 
     public User? Client { get; set; }
     
     [ForeignKey(nameof(Client))]
-    [EmailAddress]
-    public string? ClientEmail { get; set; }
-    
+    public Guid ClientUserId { get; set; }
 }
+

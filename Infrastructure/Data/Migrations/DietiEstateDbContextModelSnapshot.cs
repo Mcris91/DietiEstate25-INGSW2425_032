@@ -30,7 +30,31 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("AgentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("BookingAccepted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ClientUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateMeeting")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("AgentUserId");
+
+                    b.HasIndex("ClientUserId");
+
+                    b.HasIndex("ListingId");
 
                     b.ToTable("Booking");
                 });
@@ -318,6 +342,33 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.HasIndex("ListingsId");
 
                     b.ToTable("ListingTag");
+                });
+
+            modelBuilder.Entity("DietiEstate.Core.Entities.BookingModels.Booking", b =>
+                {
+                    b.HasOne("DietiEstate.Core.Entities.UserModels.User", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DietiEstate.Core.Entities.UserModels.User", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DietiEstate.Core.Entities.ListingModels.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("DietiEstate.Core.Entities.ListingModels.Listing", b =>
