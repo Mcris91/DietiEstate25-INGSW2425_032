@@ -15,7 +15,13 @@ else if (_pagedResult == null || !_pagedResult.Items.Any())
 }
 else
 {
-    <FluentDataGrid Items="@_pagedResult.Items.AsQueryable()" @attributes="AdditionalAttributes">
+    <FluentDataGrid Items="@_pagedResult.Items.AsQueryable()"
+                    @attributes="AdditionalAttributes">
+        <SelectColumn TGridItem="TItem"
+                      SelectMode="DataGridSelectMode.Single"
+                      SelectFromEntireRow="true"
+                      OnSelect="@((context) => HandleRowClick(context.Item))"
+                      Style="display: none;"/>
         @GridColumns
     </FluentDataGrid>
 
@@ -39,6 +45,9 @@ else
 @code {
     [Parameter, EditorRequired]
     public required Func<int?, int?, Task<PagedResponseDto<TItem>>> DataProvider { get; set; }
+    
+    [Parameter]
+    public EventCallback<TItem> OnRowClick { get; set; }
 
     [Parameter, EditorRequired]
     public required RenderFragment GridColumns { get; set; }
@@ -49,6 +58,7 @@ else
     [Parameter(CaptureUnmatchedValues = true)]
     public required IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
 
+    
     private IQueryable<TItem>? _items = Enumerable.Empty<TItem>().AsQueryable();
     private int? _currentPage;
     private int? _totalPages;
@@ -97,4 +107,10 @@ else
 
     private string? AriaCurrentValue(int pageIndex)
         => _currentPage == pageIndex ? "page" : null;
+    
+    private async Task HandleRowClick(TItem item)
+    {
+        if (OnRowClick.HasDelegate)
+            await OnRowClick.InvokeAsync(item);
+    }
 }

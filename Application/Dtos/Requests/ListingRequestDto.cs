@@ -15,6 +15,8 @@ public class ListingRequestDto
 
         public string Address { get; init; } = string.Empty;
 
+        public string City { get; init; } = string.Empty;
+
         public float Latitude { get; init; }
 
         public float Longitude { get; init; }

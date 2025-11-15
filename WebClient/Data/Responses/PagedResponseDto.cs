@@ -12,5 +12,5 @@ public record PagedResponseDto<T>
 
     public int? TotalPages { get; init; }
 
-    public IEnumerable<T> Items { get; } = [];
+    public IEnumerable<T> Items { get; init; } = [];
 }

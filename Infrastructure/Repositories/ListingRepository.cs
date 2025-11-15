@@ -12,6 +12,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     public async Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
     {
         return await context.Listing
+            .Include(l => l.Type)
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)
@@ -24,6 +25,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     public async Task<Listing?> GetListingByIdAsync(Guid listingId)
     {
         return await context.Listing
+            .Include(l => l.Type)
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)

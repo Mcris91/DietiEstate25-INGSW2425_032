@@ -33,6 +33,9 @@ public class Listing
     public string Address { get; set; } = string.Empty;
 
     [Required]
+    public string City { get; set; } = string.Empty;
+
+    [Required]
     public float Latitude { get; set; }
 
     [Required]

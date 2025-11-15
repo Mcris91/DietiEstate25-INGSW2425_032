@@ -38,16 +38,17 @@
             
             <PagedDataGrid TItem="ListingResponseDto"
                            DataProvider="GetListingData"
-                           PageSize="10">
+                           PageSize="10"
+                           OnRowClick="OnListingRowClick">
               <GridColumns>
-                <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)" />
-                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)" />
-                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price)" />
+                <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)"/>
+                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)"/>
+                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price)"/>
                 <TemplateColumn Title="Disponibilità" TGridItem="ListingResponseDto">
-                  <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent )" Circular="true">
-                    @(context.Available ? "Disponibile" : "Occupata" )
+                  <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
+                    @(context.Available ? "Disponibile" : "Occupata")
                   </FluentBadge>
-                </TemplateColumn> 
+                </TemplateColumn>
               </GridColumns>
             </PagedDataGrid>
             
@@ -65,9 +66,10 @@
     
   </FluentGridItem>
   <FluentGridItem xs="12" sm="12" md="4">
-    <FluentCard>
-      Right side
-    </FluentCard>
+    <DetailsCard IsLoading="_isDetailsCardLoading"
+                 TopSection="_detailsCardTopSection"
+                 BottomSection="_detailsCardBottomSection">
+    </DetailsCard>
   </FluentGridItem>
 </FluentGrid>
 
@@ -75,27 +77,49 @@
 
   readonly ListingFilterDto _filters = new ()
   {
-    AgentId = Guid.NewGuid()
+    AgentId = Guid.Parse("2ac5ece6-2dd3-4db4-81e2-a824d010d181")
   };
   
   private ListingAgentCountersResponseDto? _listingCounters;
+
+  private bool _isDetailsCardLoading = false;
+  private Dictionary<string, string>? _detailsCardTopSection = null;
+  private Dictionary<string, string>? _detailsCardBottomSection = null;
   
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (!firstRender) return;
-    await GetListingCounters();
+    _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
     StateHasChanged();
   }
-  
-  private async Task GetListingCounters()
-  {
-    _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
-  }
-  
   
   private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(int? pageNumber, int? pageSize)
   {
     return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
   }
 
+  private void OnListingRowClick(ListingResponseDto listing)
+  {
+    _isDetailsCardLoading = true;
+    _detailsCardTopSection = new Dictionary<string, string>()
+    {
+      { "Nome", listing.Name },
+      { "Città", listing.City },
+      { "Indirizzo", listing.Address },
+      { "Tipologia", listing.Type },
+      { "Prezzo", "$"+listing.Price.ToString("C") },
+      { "Disponibilità", listing.Available ? "Disponibile" : "Occupata" },
+      { "Servizi disponibili", listing.Services.Count().ToString("C") }
+    };
+    _detailsCardBottomSection = new Dictionary<string, string>()
+    {
+      {"Visualizzazioni", "350"},
+      {"Preferiti", "123"},
+      {"Offerenti", "75"},
+      {"Offerte", "24"},
+      {"Prenotazioni", "17"}
+    };
+    _isDetailsCardLoading = true;
+  }
+  
 }

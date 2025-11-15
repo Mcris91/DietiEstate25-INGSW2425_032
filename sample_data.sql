@@ -1,0 +1,81 @@
+BEGIN;
+
+INSERT INTO "Service" ("Id", "Name") VALUES
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, 'WiFi'),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, 'Air Conditioning'),
+('86b19a63-81d2-4a9d-bd37-d0b447fd92df'::uuid, 'Heating'),
+('dbcd5891-5129-4fc0-9423-6a1c84e05a09'::uuid, 'Parking'),
+('82008289-420d-4186-8a1d-b2c5399c490b'::uuid, 'Elevator'),
+('4ea8ef48-78d6-4e7e-8c03-535ffa4fbccb'::uuid, 'Cleaning Service'),
+('0ed4b8f2-4ede-444c-84c6-2e0225d3d077'::uuid, 'Pool'),
+('b5e084a6-ab81-4e69-83ae-fa2513e51b7b'::uuid, 'Gym'),
+('c12445af-b990-4d18-b2dd-9370ce6048c0'::uuid, 'Garden'),
+('192298a8-4746-41ff-abce-6cf48b0e77d0'::uuid, 'Pet Friendly');
+
+INSERT INTO "Listing" (
+  "Id", "Name", "Description", "TypeId", "FeaturedImage", "Address", "City",
+  "Latitude", "Longitude", "Dimensions", "Price", "Rooms", "Floor",
+  "Available", "Elevator", "EnergyClass", "Views", "OwnerEmail", "AgentUserId"
+) VALUES
+('eee9ded5-fb70-41cf-92ac-4472e0f2027f'::uuid, 'Sunny Studio', 'Bright studio with balcony and great light.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing1.jpg', 'Via Roma 1', 'Milan', 45.4642, 9.1900, 35.50, 85000.00, 1, 2, true, false, 'A+', 120, 'owner1@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('b310a8f8-5ef9-40cb-b042-97471ed3eeed'::uuid, 'Cozy Two-Bed', 'Nice two-bedroom close to transport.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing2.jpg', 'Via Garibaldi 12', 'Turin', 45.0703, 7.6869, 68.00, 160000.00, 2, 3, true, true, 'B', 87, 'owner2@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('7beaca79-f71b-4971-9ce2-3936f48464c7'::uuid, 'City Center Flat', 'Large flat in the heart of the city, close to services.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing3.jpg', 'Piazza Duomo 5', 'Milan', 45.4641, 9.1916, 110.00, 420000.00, 3, 4, false, true, 'A', 430, 'owner3@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('db2c8072-1a43-4439-97d5-fd81aa702b0c'::uuid, 'Modern Loft', 'Open-plan loft with modern kitchen and high ceilings.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing4.jpg', 'Lungarno 10', 'Florence', 43.7696, 11.2558, 95.00, 350000.00, 2, 1, true, false, 'A', 210, 'owner4@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('6faeb891-4812-4050-9c5f-10c1690fd489'::uuid, 'Seaside Apartment', 'Apartment with sea view and terrace.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing5.jpg', 'Viale Mare 7', 'Rimini', 44.0678, 12.5695, 78.00, 195000.00, 2, 2, true, true, 'B', 57, 'owner5@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid, 'Hilltop Villa', 'Spacious villa with garden and private pool.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing6.jpg', 'Contrada Colle 2', 'Perugia', 43.1107, 12.3908, 240.00, 890000.00, 5, 1, false, false, 'C', 14, 'owner6@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('279d5352-92cf-4004-8f48-756e10f488ce'::uuid, 'Compact Studio', 'Ideal for students; small but functional.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing7.jpg', 'Via Università 3', 'Bologna', 44.4949, 11.3426, 28.00, 60000.00, 0, 1, true, false, 'A', 300, 'owner7@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('3db661c4-827e-40b8-97f1-c537dd8d653e'::uuid, 'Suburban House', 'Family house with garden and garage.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing8.jpg', 'Via Giardino 20', 'Padua', 45.4064, 11.8768, 140.00, 280000.00, 4, 0, true, true, 'B', 65, 'owner8@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('832a6575-edc8-49db-a7e8-16abe6f77441'::uuid, 'Smart Flat', 'Recently renovated, energy efficient.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing9.jpg', 'Corso Sempione 50', 'Milan', 45.4760, 9.1700, 55.00, 185000.00, 1, 3, true, true, 'A+', 190, 'owner9@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('b1bab78c-d121-43af-92ea-dbf04854d456'::uuid, 'Countryside Cottage', 'Quiet cottage near nature trails.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing10.jpg', 'Strada della Collina 9', 'Siena', 43.3188, 11.3308, 82.00, 145000.00, 2, 0, false, false, 'C', 27, 'owner10@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('8239f5ab-e3d3-469b-8324-a6ce5ea40230'::uuid, 'Loft Near Park', 'Stylish loft overlooking the park.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing11.jpg', 'Parco Verde 4', 'Naples', 40.8518, 14.2681, 88.00, 220000.00, 2, 2, true, true, 'B', 103, 'owner11@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('2e090323-adac-4db7-956f-44a27b2ebba3'::uuid, 'Elegant Apartment', 'High-end finishes, great location.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing12.jpg', 'Via dei Mille 18', 'Genoa', 44.4056, 8.9463, 120.00, 480000.00, 3, 3, false, true, 'A', 76, 'owner12@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid, 'Penthouse Suite', 'Top-floor penthouse with panoramic view.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing13.jpg', 'Salita del Monte 1', 'Rome', 41.9028, 12.4964, 150.00, 950000.00, 4, 6, false, true, 'A', 512, 'owner13@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('7b02a626-0608-4f22-b09c-6bb3633ce34c'::uuid, 'Basement Studio', 'Affordable basement studio near university.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing14.jpg', 'Via Ateneo 6', 'Pisa', 43.7228, 10.4017, 32.00, 52000.00, 0, 0, true, false, 'B', 9, 'owner14@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('78792145-5657-4fa2-91db-0ee2863187c4'::uuid, 'Riverfront Home', 'House with private dock and river view.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing15.jpg', 'Lungofiume 2', 'Ferrara', 44.8354, 11.6198, 160.00, 520000.00, 4, 0, true, true, 'A', 34, 'owner15@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('ff4c20ca-e76d-4b90-bfee-ba72f4a56578'::uuid, 'Mountain Cabin', 'Rustic cabin with stunning mountain views.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing16.jpg', 'Via Montagna 11', 'Trento', 46.0700, 11.1190, 70.00, 175000.00, 2, 0, false, false, 'C', 6, 'owner16@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('fd5ddab4-610f-4504-b0cb-afafdc6e41eb'::uuid, 'Studio with Terrace', 'Small studio but large terrace and view.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing17.jpg', 'Via Terrazza 8', 'Salerno', 40.6820, 14.7681, 40.00, 98000.00, 1, 2, true, false, 'B', 44, 'owner17@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('e9eb5de8-bd6d-49db-8046-36c9d0a089ca'::uuid, 'Large Family Home', 'Perfect family home, multiple bedrooms and play area.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing18.jpg', 'Via Famiglia 33', 'Verona', 45.4384, 10.9916, 200.00, 420000.00, 5, 1, true, true, 'B', 72, 'owner18@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('b80b4ed6-6bde-4fee-aae2-25abed1d5721'::uuid, 'Studio Close to Metro', 'Efficient layout, minutes from metro.', '6b207b40-ff51-46e5-a643-326a4073de96'::uuid, 'https://example.com/images/listing19.jpg', 'Via Metro 2', 'Milan', 45.4650, 9.1850, 30.00, 75000.00, 0, 1, true, false, 'A', 250, 'owner19@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid),
+('bf1aaf89-472f-4e1d-8a1b-45b7fef7b294'::uuid, 'Historic Center Flat', 'Charming flat in historic quarter.', 'a0be8920-4db6-4723-af0c-2561c3358dab'::uuid, 'https://example.com/images/listing20.jpg', 'Via Storica 21', 'Bologna', 44.4949, 11.3426, 75.00, 210000.00, 2, 2, false, false, 'B', 132, 'owner20@example.com', '2ac5ece6-2dd3-4db4-81e2-a824d010d181'::uuid
+);
+
+INSERT INTO "ListingService" ("ListingServicesId", "ListingsId") VALUES
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, 'eee9ded5-fb70-41cf-92ac-4472e0f2027f'::uuid),
+('86b19a63-81d2-4a9d-bd37-d0b447fd92df'::uuid, 'eee9ded5-fb70-41cf-92ac-4472e0f2027f'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, 'b310a8f8-5ef9-40cb-b042-97471ed3eeed'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, 'b310a8f8-5ef9-40cb-b042-97471ed3eeed'::uuid),
+('82008289-420d-4186-8a1d-b2c5399c490b'::uuid, 'b310a8f8-5ef9-40cb-b042-97471ed3eeed'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '7beaca79-f71b-4971-9ce2-3936f48464c7'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, '7beaca79-f71b-4971-9ce2-3936f48464c7'::uuid),
+('86b19a63-81d2-4a9d-bd37-d0b447fd92df'::uuid, '7beaca79-f71b-4971-9ce2-3936f48464c7'::uuid),
+('82008289-420d-4186-8a1d-b2c5399c490b'::uuid, '7beaca79-f71b-4971-9ce2-3936f48464c7'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, 'db2c8072-1a43-4439-97d5-fd81aa702b0c'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, 'db2c8072-1a43-4439-97d5-fd81aa702b0c'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '6faeb891-4812-4050-9c5f-10c1690fd489'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, '6faeb891-4812-4050-9c5f-10c1690fd489'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid),
+('dbcd5891-5129-4fc0-9423-6a1c84e05a09'::uuid, '2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid),
+('0ed4b8f2-4ede-444c-84c6-2e0225d3d077'::uuid, '2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid),
+('c12445af-b990-4d18-b2dd-9370ce6048c0'::uuid, '2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid),
+('192298a8-4746-41ff-abce-6cf48b0e77d0'::uuid, '2ef031a4-e9b9-4b60-b169-cc415330e92a'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '3db661c4-827e-40b8-97f1-c537dd8d653e'::uuid),
+('dbcd5891-5129-4fc0-9423-6a1c84e05a09'::uuid, '3db661c4-827e-40b8-97f1-c537dd8d653e'::uuid),
+('c12445af-b990-4d18-b2dd-9370ce6048c0'::uuid, '3db661c4-827e-40b8-97f1-c537dd8d653e'::uuid),
+('192298a8-4746-41ff-abce-6cf48b0e77d0'::uuid, '3db661c4-827e-40b8-97f1-c537dd8d653e'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '832a6575-edc8-49db-a7e8-16abe6f77441'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, '832a6575-edc8-49db-a7e8-16abe6f77441'::uuid),
+('82008289-420d-4186-8a1d-b2c5399c490b'::uuid, '832a6575-edc8-49db-a7e8-16abe6f77441'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('86b19a63-81d2-4a9d-bd37-d0b447fd92df'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('82008289-420d-4186-8a1d-b2c5399c490b'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('4ea8ef48-78d6-4e7e-8c03-535ffa4fbccb'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('b5e084a6-ab81-4e69-83ae-fa2513e51b7b'::uuid, '80c0db98-1ad2-45dd-8752-eac57360ea58'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, 'e9eb5de8-bd6d-49db-8046-36c9d0a089ca'::uuid),
+('dbcd5891-5129-4fc0-9423-6a1c84e05a09'::uuid, 'e9eb5de8-bd6d-49db-8046-36c9d0a089ca'::uuid),
+('192298a8-4746-41ff-abce-6cf48b0e77d0'::uuid, 'e9eb5de8-bd6d-49db-8046-36c9d0a089ca'::uuid),
+('6e9b2e34-f478-47fc-988f-870f515a6b5f'::uuid, '78792145-5657-4fa2-91db-0ee2863187c4'::uuid),
+('ea6a51e2-5d8a-45d6-ae5d-4b87efb6b82a'::uuid, '78792145-5657-4fa2-91db-0ee2863187c4'::uuid),
+('dbcd5891-5129-4fc0-9423-6a1c84e05a09'::uuid, '78792145-5657-4fa2-91db-0ee2863187c4'::uuid);
+
+COMMIT;

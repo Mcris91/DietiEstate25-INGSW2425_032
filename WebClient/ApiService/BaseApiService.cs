@@ -10,7 +10,8 @@ public abstract class BaseApiService(HttpClient httpClient, JsonSerializerOption
         var response = await httpClient.GetAsync(uri);
         if (!response.IsSuccessStatusCode) throw new Exception($"Exception in ApiCall: {response.StatusCode} - {response.ReasonPhrase}"); 
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions) ?? throw new InvalidOperationException("Deserialization returned null.");
+        var deserializedObject = JsonSerializer.Deserialize<T>(json, jsonSerializerOptions) ?? throw new InvalidOperationException("Deserialization returned null.");
+        return deserializedObject;
     }
 
     protected async Task<TResponse> PostAsync<TRequest, TResponse>(string uri, TRequest data)

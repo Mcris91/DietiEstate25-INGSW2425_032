@@ -27,7 +27,9 @@ public class AutoMapperProfile : Profile
             .ForMember(listingDto => listingDto.Tags, opt =>
                 opt.MapFrom(src => src.ListingTags.Select(tag => tag.Name)))
             .ForMember(listingDto => listingDto.Images, opt =>
-                opt.MapFrom(src => src.ListingImages.Select(image => image.Url)));
+                opt.MapFrom(src => src.ListingImages.Select(image => image.Url)))
+            .ForMember(listingDto => listingDto.City, opt =>
+                opt.MapFrom(src => src.City));
         CreateMap<PropertyTypeRequestDto, PropertyType>();
         CreateMap<PropertyType, PropertyTypeResponseDto>();
     }

@@ -13,6 +13,10 @@ public class ListingResponseDto
     public float Price { get; init; }
 
     public int Rooms { get; init; }
+    
+    public required string Address { get; init; }
+    
+    public required string City { get; init; }
 
     public bool Available { get; init; }
 
