@@ -1,7 +1,8 @@
+@using System.Globalization
 @using DietiEstate.WebClient.ApiService
-@using DietiEstate.WebClient.Components.Shared
 @using DietiEstate.WebClient.Data.Requests
 @using DietiEstate.WebClient.Data.Responses
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Color
 @rendermode InteractiveServer
 
 @inject ListingApiService ListingApiService
@@ -43,7 +44,7 @@
               <GridColumns>
                 <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)"/>
                 <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)"/>
-                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price)"/>
+                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price.ToString("C", new CultureInfo("it-IT")))"/>
                 <TemplateColumn Title="Disponibilità" TGridItem="ListingResponseDto">
                   <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
                     @(context.Available ? "Disponibile" : "Occupata")
@@ -69,31 +70,61 @@
     <DetailsCard IsLoading="_isDetailsCardLoading"
                  TopSection="_detailsCardTopSection"
                  BottomSection="_detailsCardBottomSection">
+      <Actions>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+          <FluentLabel Typo="Typography.H5">Azioni</FluentLabel>
+          @if (_loadedItem is ListingResponseDto listing)
+          {
+            <FluentGrid Spacing="1" Style="width: 100%;">
+              <FluentGridItem xs="12">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()">
+                  Visualizza
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="12">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()">
+                  Modifica
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.DocumentArrowDown()">
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Share()">
+                </FluentButton>
+              </FluentGridItem>
+            </FluentGrid>
+          }
+        </FluentStack>
+      </Actions>
+      <!-- TODO: Insert actions for other tables -->
     </DetailsCard>
   </FluentGridItem>
 </FluentGrid>
 
 @code {
 
-  readonly ListingFilterDto _filters = new ()
+  readonly ListingFilterDto _filters = new()
   {
     AgentId = Guid.Parse("2ac5ece6-2dd3-4db4-81e2-a824d010d181")
   };
-  
+
   private ListingAgentCountersResponseDto? _listingCounters;
 
-  private bool _isDetailsCardLoading = false;
-  private Dictionary<string, string>? _detailsCardTopSection = null;
-  private Dictionary<string, string>? _detailsCardBottomSection = null;
-  
+  private bool _isDetailsCardLoading;
+  private Dictionary<string, string>? _detailsCardTopSection;
+  private Dictionary<string, string>? _detailsCardBottomSection;
+  private object? _loadedItem;
+
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (!firstRender) return;
     _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
     StateHasChanged();
   }
-  
-  private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(int? pageNumber, int? pageSize)
+
+  private async Task<PagedResponseDto<ListingResponseDto>> GetListingData(int? pageNumber, int? pageSize)
   {
     return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
   }
@@ -107,19 +138,20 @@
       { "Città", listing.City },
       { "Indirizzo", listing.Address },
       { "Tipologia", listing.Type },
-      { "Prezzo", "$"+listing.Price.ToString("C") },
+      { "Prezzo", listing.Price.ToString("C", new CultureInfo("it-IT")) },
       { "Disponibilità", listing.Available ? "Disponibile" : "Occupata" },
-      { "Servizi disponibili", listing.Services.Count().ToString("C") }
+      { "Servizi disponibili", listing.Services.Count().ToString() }
     };
     _detailsCardBottomSection = new Dictionary<string, string>()
     {
-      {"Visualizzazioni", "350"},
-      {"Preferiti", "123"},
-      {"Offerenti", "75"},
-      {"Offerte", "24"},
-      {"Prenotazioni", "17"}
+      { "Visualizzazioni", "350" },
+      { "Preferiti", "123" },
+      { "Offerenti", "75" },
+      { "Offerte", "24" },
+      { "Prenotazioni", "17" }
     };
-    _isDetailsCardLoading = true;
+    _loadedItem = listing;
+    _isDetailsCardLoading = false;
   }
-  
+
 }
