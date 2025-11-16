@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using DietiEstate.Core.Enums;
+﻿using DietiEstate.Core.Enums;
 
 namespace DietiEstate.Application.Dtos.Responses;
 
@@ -13,6 +11,11 @@ public class OfferResponseDto
     public DateTimeOffset Date { get; init; }
     
     public OfferStatus Status { get; init; }
+    public string CustomerName { get; init; } = string.Empty;
+    public string CustomerLastName { get; init; } = string.Empty;
+    public string CustomerEmail { get; init; } = string.Empty;
+    public string ListingName { get; init; } = string.Empty;
+    public float ListingPrice { get; init; }
     
     public Guid FirstOfferId { get; init; }
     

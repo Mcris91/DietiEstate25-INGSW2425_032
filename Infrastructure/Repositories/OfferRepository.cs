@@ -1,6 +1,9 @@
-﻿using DietiEstate.Application.Interfaces.Repositories;
+﻿using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
+using DietiEstate.Core.Enums;
 using DietiEstate.Infrastracture.Data;
+using DietiEstate.Infrastracture.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.Infrastracture.Repositories;
@@ -31,31 +34,31 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
         await context.Database.CommitTransactionAsync();
     }
     
-    public async Task<Offer?> GetOffersByIdAsync(Guid offerId)
+    public async Task<Offer?> GetOfferByIdAsync(Guid offerId)
     {
         return await context.Offer
             .Where(o => o.Id == offerId)
             .FirstOrDefaultAsync();
     }
-
-    public async Task<IEnumerable<Offer>> GetOffersByListingAsync(Guid listingId, int? pageNumber, int? pageSize)
-    {
-        return await context.Offer
-            .Where(o => o.ListingId == listingId)
-            .ToListAsync();
-    }
     
-    public async Task<IEnumerable<Offer>> GetOffersByCustomerAsync(Guid customerId, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Offer>> GetOffersByCustomerIdAsync(Guid customerId, OfferFilterDto filters)
     {
         return await context.Offer
             .Where(o => o.CustomerId == customerId)
+            .Include(o => o.Listing)
+            .ApplyFilters(filters)
+            .ApplySorting(filters.SortBy, filters.SortOrder)
             .ToListAsync();
     }
     
-    public async Task<IEnumerable<Offer>> GetOffersByAgentAsync(Guid agentId, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Offer?>> GetOffersByAgentIdAsync(Guid agentId, OfferFilterDto filters)
     {
         return await context.Offer
             .Where(o => o.AgentId == agentId)
+            .Include(o => o.Listing)
+            .Include(o => o.Customer)
+            .ApplyFilters(filters)
+            .ApplySorting(filters.SortBy, filters.SortOrder)
             .ToListAsync();
     }
 
@@ -64,5 +67,27 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
         return await context.Offer
             .Where(o => o.CustomerId == userId)
             .AnyAsync();
+    }
+
+    public async Task<IEnumerable<Offer?>> GetPendingOffersByListingIdAsync(Guid listingId)
+    {
+        return await context.Offer
+            .Where(o => o.ListingId == listingId && o.Status == OfferStatus.Pending)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Offer?>> GetOfferHistoryAsync(Guid offerId)
+    {
+        return await context.Offer
+            .Where(o => o.FirstOfferId == offerId)
+            .OrderBy(o => o.Date)
+            .ToListAsync();
+    }
+    public async Task<(int Total, int Pending)> GetTotalOffersAsync(Guid agentId)
+    {
+        var totalOffers = context.Offer
+            .Where(o => o.AgentId == agentId);
+        var pendingOffers = totalOffers.Where(o => o.Status == OfferStatus.Pending);
+        return (await totalOffers.CountAsync(), await pendingOffers.CountAsync());
     }
 }

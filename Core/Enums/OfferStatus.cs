@@ -2,7 +2,7 @@
 
 public enum OfferStatus
 {
-    Accepted,
     Pending,
+    Accepted,
     Rejected
 }

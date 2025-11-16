@@ -1,4 +1,5 @@
-﻿using DietiEstate.Core.Entities.OfferModels;
+﻿using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Core.Entities.OfferModels;
 
 namespace DietiEstate.Application.Interfaces.Repositories;
 
@@ -10,14 +11,15 @@ public interface IOfferRepository
     
     Task DeleteOfferAsync(Offer offer);
 
-    Task<Offer?> GetOffersByIdAsync(Guid offerId);
+    Task<Offer?> GetOfferByIdAsync(Guid offerId);
 
-    Task<IEnumerable<Offer>> GetOffersByListingAsync(Guid listingId, int? pageNumber, int? pageSize);
-
-    Task<IEnumerable<Offer>> GetOffersByCustomerAsync(Guid listingId, int? pageNumber, int? pageSize);
+    Task<IEnumerable<Offer>> GetOffersByCustomerIdAsync(Guid customerId, OfferFilterDto filters);
     
-    Task<IEnumerable<Offer>> GetOffersByAgentAsync(Guid listingId, int? pageNumber, int? pageSize);
+    Task<IEnumerable<Offer?>> GetOffersByAgentIdAsync(Guid agentId, OfferFilterDto filters);
 
     Task<bool> CheckExistingCustomerOffer(Guid userId);
 
+    Task<IEnumerable<Offer?>> GetPendingOffersByListingIdAsync(Guid listingId);
+    Task<IEnumerable<Offer?>> GetOfferHistoryAsync(Guid offerId);
+    Task<(int Total, int Pending)> GetTotalOffersAsync(Guid agentId);
 }

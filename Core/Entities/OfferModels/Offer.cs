@@ -35,4 +35,11 @@ public class Offer
     [Required]
     [ForeignKey(nameof(Listing))]
     public Guid ListingId { get; set; }
+    
+    [Required]
+    public virtual Listing Listing { get; set; }
+    
+    [Required]
+    
+    public virtual User Customer { get; set; }
 }
