@@ -1,0 +1,156 @@
+@using AutoMapper
+@using DietiEstate.WebClient.ApiService
+@using DietiEstate.WebClient.Data.Common
+@using DietiEstate.WebClient.Data.Requests
+@using DietiEstate.WebClient.Data.Responses
+
+@inject ListingApiService ListingApiService
+@inject PropertyTypeApiService PropertyTypeApiService
+@inject IMapper Mapper
+
+@rendermode InteractiveServer
+
+@page "/listing/create/{ListingId:guid?}/"
+
+<FluentGrid Spacing="2">
+  <FluentGridItem xs="12" sm="12" md="8">
+    
+    <FluentCard AreaRestricted="false">
+        
+      <EditForm Model="_listingRequestDto">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+          <DataAnnotationsValidator/>
+          <FluentValidationSummary/>
+          
+          <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            <FluentLabel Typo="Typography.H4">Tipologia e Prezzo</FluentLabel>
+            <FluentLabel Typo="Typography.Body">Scegli il prezzo e la tipologia del nuovo immobile</FluentLabel>
+          </FluentStack>
+          
+          <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10"
+                       HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentNumberField Name="Price" @bind-Value="_listingRequestDto.Price"
+                                 Label="Prezzo" Required
+                                 Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Price)"/>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentCombobox Placeholder="Make a selection..." Label="Tipologia" 
+                              Autofocus="false" Items="_listingTypes" 
+                              OptionText="@(o => o.Text)" 
+                              OptionValue="@(o => o.Value)"
+                              @bind-value="_listingRequestDto.Type.Code" 
+                              Height="200px" Width="100%" Required/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Type.Name)"/>
+            </FluentStack>
+          </FluentStack>
+          
+          <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            <FluentLabel Typo="Typography.H4">Dettagli</FluentLabel>
+            <FluentLabel Typo="Typography.Body">Inserisci i dati principali dell'inserzione</FluentLabel>
+          </FluentStack>
+          
+          <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentTextField Name="Name" Label="Nome" 
+                               @bind-Value="_listingRequestDto.Name" Required
+                               Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Name)"/>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">              
+              <FluentTextField Name="Address" Label="Indirizzo" 
+                               @bind-Value="_listingRequestDto.Address" Required
+                               Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Address)"/>
+            </FluentStack>
+          </FluentStack>
+
+          <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentNumberField Name="Dimensions" @bind-Value="_listingRequestDto.Dimensions"
+                                 Label="Dimensioni" Required
+                                 Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Dimensions)"/>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentNumberField Name="Rooms" @bind-Value="_listingRequestDto.Rooms"
+                                 Label="N. Stanze" Required
+                                 Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Rooms)"/>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentNumberField Name="Floor" @bind-Value="_listingRequestDto.Floor"
+                                 Label="Piano" Required
+                                 Style="width: 100%;"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.Floor)"/>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+              <FluentCombobox Placeholder="Seleziona..." Label="Classe Energetica" 
+                              Autofocus="false" Items="_energyClasses" 
+                              OptionText="@(o => o.Text)" 
+                              OptionValue="@(o => o.Value)"
+                              @bind-value="_listingRequestDto.EnergyClass" 
+                              Height="200px" Width="100%" Required/>
+            </FluentStack>
+          </FluentStack>
+          
+          <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            <FluentTextArea Name="Description" Label="Descrizione" 
+                            @bind-Value="_listingRequestDto.Description" Required
+                            Style="width: 100%;" Rows="5"/>
+            <FluentValidationMessage For="@(() => _listingRequestDto.Description)"/>
+          </FluentStack>
+          
+        </FluentStack>
+      </EditForm>
+        
+        
+    </FluentCard>
+    
+  </FluentGridItem>
+  
+  <FluentGridItem xs="12" sm="12" md="4">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    </FluentStack>
+  </FluentGridItem>
+</FluentGrid>
+
+@code {
+  [Parameter]
+  public Guid? ListingId { get; set; }
+
+  private ListingRequestDto _listingRequestDto = new();
+  private List<Option<string>> _listingTypes = [];
+
+  private readonly List<Option<string>> _energyClasses =
+  [
+    new() { Value = "A", Text = "A" },
+    new() { Value = "B", Text = "B" },
+    new() { Value = "C", Text = "C" },
+    new() { Value = "D", Text = "D" },
+    new() { Value = "E", Text = "E" },
+    new() { Value = "F", Text = "F" },
+    new() { Value = "G", Text = "G" }
+  ];
+  
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!firstRender || ListingId == null) return;
+
+    var listingData = await ListingApiService.GetListingByIdAsync(ListingId.Value);
+    _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
+
+    var propertyTypes = await PropertyTypeApiService.GetPropertyTypesAsync();
+    _listingTypes = propertyTypes.Select(lt => 
+      new Option<string>{Value = lt.Code, Text = lt.Name, Selected = _listingRequestDto.Type.Code == lt.Code})
+      .ToList();
+    
+    _energyClasses.Where(c => c.Value == _listingRequestDto.EnergyClass)
+      .ToList()
+      .ForEach(c => c.Selected = true);
+    
+    StateHasChanged();
+  }
+
+}

@@ -6,6 +6,7 @@
 @rendermode InteractiveServer
 
 @inject ListingApiService ListingApiService
+@inject NavigationManager Navigation
 
 @page "/agent/dashboard"
 
@@ -43,7 +44,7 @@
                            OnRowClick="OnListingRowClick">
               <GridColumns>
                 <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)"/>
-                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)"/>
+                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type.Name)"/>
                 <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price.ToString("C", new CultureInfo("it-IT")))"/>
                 <TemplateColumn Title="Disponibilità" TGridItem="ListingResponseDto">
                   <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
@@ -82,7 +83,8 @@
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="12">
-                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{listing.Id}/"); })">
                   Modifica
                 </FluentButton>
               </FluentGridItem>
@@ -137,7 +139,7 @@
       { "Nome", listing.Name },
       { "Città", listing.City },
       { "Indirizzo", listing.Address },
-      { "Tipologia", listing.Type },
+      { "Tipologia", listing.Type.Name },
       { "Prezzo", listing.Price.ToString("C", new CultureInfo("it-IT")) },
       { "Disponibilità", listing.Available ? "Disponibile" : "Occupata" },
       { "Servizi disponibili", listing.Services.Count().ToString() }
@@ -153,5 +155,5 @@
     _loadedItem = listing;
     _isDetailsCardLoading = false;
   }
-
+ 
 }

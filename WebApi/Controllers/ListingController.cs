@@ -72,7 +72,10 @@ public class ListingController(
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);
-        await listingRepository.AddListingAsync(listing, request.Services, request.Tags, request.Images);
+        await listingRepository.AddListingAsync(listing, 
+            request.Services.Select(s=>s.Id).ToList(), 
+            request.Tags.Select(s=>s.Id).ToList(), 
+            request.Images.Select(s=>s.Url).ToList());
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
 

@@ -1,49 +1,50 @@
 using System.ComponentModel.DataAnnotations;
+using DietiEstate.Application.Dtos.Common;
 
 namespace DietiEstate.Application.Dtos.Requests;
 
 public class ListingRequestDto
 {
-        public string Name { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
 
-        [MaxLength(5000)]
-        public string Description { get; init; } = string.Empty;
+    [MaxLength(5000)]
+    public string Description { get; init; } = string.Empty;
 
-        public Guid TypeId { get; init; }
+    public string FeaturedImage { get; init; } = string.Empty;
 
-        public string FeaturedImage { get; init; } = string.Empty;
+    public string Address { get; init; } = string.Empty;
 
-        public string Address { get; init; } = string.Empty;
+    public string City { get; init; } = string.Empty;
 
-        public string City { get; init; } = string.Empty;
+    public float Latitude { get; init; }
 
-        public float Latitude { get; init; }
+    public float Longitude { get; init; }
 
-        public float Longitude { get; init; }
+    public decimal Dimensions { get; init; }
 
-        public decimal Dimensions { get; init; }
+    public decimal Price { get; init; }
 
-        public decimal Price { get; init; }
+    public int Rooms { get; init; }
 
-        public int Rooms { get; init; }
+    public int Floor { get; init; }
 
-        public int Floor { get; init; }
+    public bool Available { get; init; } = false;
 
-        public bool Available { get; init; } = false;
+    public bool Elevator { get; init; } = false;
 
-        public bool Elevator { get; init; } = false;
+    public string EnergyClass { get; init; } = string.Empty;
 
-        public string EnergyClass { get; init; } = string.Empty;
+    public int Views { get; init; } = 0;
 
-        public int Views { get; init; } = 0;
+    public string OwnerEmail { get; init; } = string.Empty;
 
-        public string OwnerEmail { get; init; } = string.Empty;
+    public Guid? AgentUserId { get; init; } = null;
 
-        public Guid? AgentUserId { get; init; } = null;
+    public required ListingTypeDto Type { get; init; }
 
-        public List<Guid> Services { get; init; } = [];
+    public List<ListingImageDto> Images { get; init; } = [];
 
-        public List<Guid> Tags { get; init; } = [];
+    public List<ListingServiceDto> Services { get; init; } = [];
 
-        public List<string> Images { get; init; } = [];
+    public List<ListingTagDto> Tags { get; init; } = [];
 }

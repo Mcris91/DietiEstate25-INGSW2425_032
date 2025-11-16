@@ -5,6 +5,11 @@ namespace DietiEstate.WebClient.ApiService;
 
 public class PropertyTypeApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
+    public async Task<IEnumerable<PropertyTypeResponseDto>> GetPropertyTypesAsync()
+    {
+        return await GetAsync<IEnumerable<PropertyTypeResponseDto>>("");
+    }
+    
     public async Task<PropertyTypeResponseDto> GetPropertyTypeByCodeAsync(string code)
     {
         if (string.IsNullOrWhiteSpace(code))

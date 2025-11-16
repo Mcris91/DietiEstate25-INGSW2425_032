@@ -1,4 +1,5 @@
 using AutoMapper;
+using DietiEstate.Application.Dtos.Common;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Core.ValueObjects;
@@ -21,15 +22,29 @@ public class AutoMapperProfile : Profile
         CreateMap<ListingRequestDto, Listing>();
         CreateMap<Listing, ListingResponseDto>()
             .ForMember(listingDto => listingDto.Type, opt =>
-                opt.MapFrom(src => src.Type.Name))
+                opt.MapFrom(src => new ListingTypeDto
+                {
+                    Code = src.Type.Code,
+                    Name = src.Type.Name
+                }))
             .ForMember(listingDto => listingDto.Services, opt =>
-                opt.MapFrom(src => src.ListingServices.Select(service => service.Name)))
+                opt.MapFrom(src => src.ListingServices.Select(service => new ListingServiceDto
+                {
+                    Id = service.Id,
+                    Name = service.Name
+                })))
             .ForMember(listingDto => listingDto.Tags, opt =>
-                opt.MapFrom(src => src.ListingTags.Select(tag => tag.Name)))
+                opt.MapFrom(src => src.ListingTags.Select(tag => new ListingTagDto
+                {
+                    Id = tag.Id,
+                    Name = tag.Name
+                })))
             .ForMember(listingDto => listingDto.Images, opt =>
-                opt.MapFrom(src => src.ListingImages.Select(image => image.Url)))
-            .ForMember(listingDto => listingDto.City, opt =>
-                opt.MapFrom(src => src.City));
+                opt.MapFrom(src => src.ListingImages.Select(image => new ListingImageDto
+                {
+                    Id = image.Id,
+                    Url = image.Url
+                }))); 
         CreateMap<PropertyTypeRequestDto, PropertyType>();
         CreateMap<PropertyType, PropertyTypeResponseDto>();
     }

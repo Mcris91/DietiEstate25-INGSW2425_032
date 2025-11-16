@@ -1,3 +1,5 @@
+using DietiEstate.Application.Dtos.Common;
+
 namespace DietiEstate.Application.Dtos.Responses;
 
 public class ListingResponseDto
@@ -5,6 +7,8 @@ public class ListingResponseDto
     public Guid Id { get; init; }
 
     public required string Name { get; init; }
+    
+    public required string Description { get; init; }
 
     public required string FeaturedImage { get; init; }
 
@@ -17,14 +21,16 @@ public class ListingResponseDto
     public required string Address { get; init; }
     
     public required string City { get; init; }
+    
+    public required string EnergyClass { get; init; }
 
     public bool Available { get; init; }
 
-    public required string Type { get; init; }
+    public required ListingTypeDto Type { get; init; }
 
-    public List<string> Images { get; init; } = [];
+    public List<ListingImageDto> Images { get; init; } = [];
 
-    public List<string> Services { get; init; } = [];
+    public List<ListingServiceDto> Services { get; init; } = [];
 
-    public List<string> Tags { get; init; } = [];
+    public List<ListingTagDto> Tags { get; init; } = [];
 }

@@ -7,9 +7,11 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <AssemblyName>DietiEstate.WebClient</AssemblyName>
         <RootNamespace>DietiEstate.WebClient</RootNamespace>
+        <LangVersion>13</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AutoMapper" Version="14.0.0" />
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.13.0"/>
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.13.0"/>
     </ItemGroup>

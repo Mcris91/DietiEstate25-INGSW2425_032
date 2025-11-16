@@ -6,6 +6,12 @@ namespace DietiEstate.WebClient.ApiService;
 
 public class ListingApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
+    public async Task<ListingResponseDto> GetListingByIdAsync(Guid listingId)
+    {
+        var uri = $"{listingId}";
+        return await GetAsync<ListingResponseDto>(uri);
+    }
+    
     public async Task<PagedResponseDto<ListingResponseDto>> GetListingsByAgentIdAsync(
         ListingFilterDto filterDto,
         int? pageNumber,
