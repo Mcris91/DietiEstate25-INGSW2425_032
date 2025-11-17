@@ -29,6 +29,7 @@ public static class DependecyInjection
         }, ServiceLifetime.Transient);
         
         services.AddScoped<IListingRepository, ListingRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
         
