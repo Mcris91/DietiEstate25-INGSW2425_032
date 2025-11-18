@@ -38,5 +38,8 @@ public class Booking
     
     [ForeignKey(nameof(Client))]
     public Guid ClientUserId { get; set; }
+    
+    [Required]
+    public virtual ICollection<Service> BookingServices { get; set; } = [];
 }
 

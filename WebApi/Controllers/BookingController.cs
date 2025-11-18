@@ -1,5 +1,6 @@
 using AutoMapper;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Core.Entities.BookingModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,9 +25,17 @@ public class BookingController(
     public async Task<IActionResult> GetBookingById(Guid bookingId) 
     {
         if (await bookingRepository.GetBookingByIdAsync(bookingId) is { } booking)
-            return Ok(mapper.Map(booking));
+            return Ok(booking);
         
         return NotFound();
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "CreateBooking")]
+    public async Task<IActionResult> CreateBooking(Booking booking)
+    {
+        await bookingRepository.AddBookingAsync(booking);
+        return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, booking);
     }
     
     
