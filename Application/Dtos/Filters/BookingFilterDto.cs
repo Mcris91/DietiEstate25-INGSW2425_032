@@ -1,13 +1,16 @@
+using DietiEstate.Core.Entities.BookingModels;
+using DietiEstate.Core.Entities.ListingModels;
 using Microsoft.VisualBasic;
 
 namespace DietiEstate.Application.Dtos.Filters;
 
 public class BookingFilterDto
 {
-    public IReadOnlyList<Guid>? BookingsIds { get; init; }
+    public Guid? BookingId { get; init; }
     
-    public DateAndTime? DateCreation { get; init; }
+    public DateTime? DateCreation { get; init; }
     
-    public DateAndTime? DateMeeting { get; init; }
-    
+    public DateTime? DateMeeting { get; init; }
+
+    public string SortOrder { get; init; } = "desc";
 }

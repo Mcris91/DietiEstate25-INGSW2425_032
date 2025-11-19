@@ -4,11 +4,18 @@ namespace DietiEstate.Application.Dtos.Requests;
 
 public class BookingRequestDto
 {
-    public Guid Id { get; set; }
-    
-    public DateAndTime DateCreated { get; set; }
-    
-    public DateAndTime DateMeeting { get; set; }
+   public DateTime DateCreation { get; init; } = DateTime.Now;
+   
+   public Guid Id { get; init; }
+   
+   public DateTime DateMeeting { get; init; }
 
-    public bool BookingAccepted { get; set; } = false;
+   public Guid ClientId { get; init; }
+
+   public Guid AgentId { get; init; }
+
+   public bool BookingAccepted { get; init; } = false;
+   
+   public List<Guid>? BookingsForListing { get; init; }
+   
 }
