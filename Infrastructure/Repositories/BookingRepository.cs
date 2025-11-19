@@ -23,4 +23,19 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         await context.Booking.AddAsync(booking);
     }
 
+    public async Task UpdateBookingAsync(Booking booking)
+    {
+        await context.Database.BeginTransactionAsync();
+        context.Booking.Update(booking);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
+    }
+
+    public async Task DeleteBookingAsync(Booking booking)
+    {
+        await context.Database.BeginTransactionAsync();
+        context.Booking.Remove(booking);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
+    }
 }

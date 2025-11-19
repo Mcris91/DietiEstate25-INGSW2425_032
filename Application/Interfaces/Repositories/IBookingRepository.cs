@@ -8,4 +8,6 @@ public interface IBookingRepository
     Task<Booking?> GetBookingByIdAsync(Guid bookingId);
     
     Task AddBookingAsync(Booking booking);
+    Task UpdateBookingAsync(Booking booking);
+    Task DeleteBookingAsync(Booking booking);
 }

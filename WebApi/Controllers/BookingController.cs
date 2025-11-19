@@ -37,6 +37,29 @@ public class BookingController(
         await bookingRepository.AddBookingAsync(booking);
         return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, booking);
     }
+
+    [HttpPatch("{bookingId:guid}")]
+    [Authorize(Roles = "Client")]
+    public async Task<IActionResult> UpdateBooking(Guid bookingId)
+    {
+        if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
+            return NotFound();
+        
+        await bookingRepository.UpdateBookingAsync(booking);
+        return NoContent();
+    }
+
+    [HttpDelete("{bookingId:guid}")]
+    [Authorize(Roles = "Client")]
+
+    public async Task<IActionResult> DeleteBooking(Guid bookingId)
+    {
+        if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
+            return NotFound();
+        
+        await bookingRepository.DeleteBookingAsync(booking);
+        return NoContent();
+    }
     
     
 }
