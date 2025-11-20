@@ -30,6 +30,15 @@ public class BookingController(
         return NotFound();
     }
 
+    [HttpGet("GetByListingId/{listingId:guid}")]
+    [Authorize(Policy = "ReadBooking")]
+
+    public async Task<IActionResult> GetBookingByListingId(Guid listingId)
+    {
+        var boockings = await bookingRepository.GetBookingByIdListingAsync(listingId);
+        return  Ok(boockings);
+    }
+
     [HttpPost]
     [Authorize(Policy = "CreateBooking")]
     public async Task<IActionResult> CreateBooking(Booking booking)

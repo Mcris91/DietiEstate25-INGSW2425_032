@@ -18,6 +18,11 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         return await context.Booking.FindAsync(bookingId);
     }
 
+    public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId)
+    {
+        return await context.Booking.ToListAsync();
+    }
+
     public async Task AddBookingAsync(Booking booking)
     {
         await context.Booking.AddAsync(booking);
