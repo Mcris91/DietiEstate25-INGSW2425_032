@@ -10,7 +10,8 @@
 
 @rendermode InteractiveServer
 
-@page "/listing/create/{ListingId:guid?}/"
+@page "/listing/update/{ListingId:guid}/"
+@page "/listing/create/"
 
 <FluentGrid Spacing="2">
   <FluentGridItem xs="12" sm="12" md="8">
@@ -45,6 +46,8 @@
               <FluentValidationMessage For="@(() => _listingRequestDto.Type.Name)"/>
             </FluentStack>
           </FluentStack>
+          
+          <FluentDivider Style="width: 100%;"></FluentDivider>
           
           <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
             <FluentLabel Typo="Typography.H4">Dettagli</FluentLabel>
@@ -112,14 +115,69 @@
   
   <FluentGridItem xs="12" sm="12" md="4">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+      
+      <FluentCard>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+          <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            <FluentLabel Typo="Typography.H4">Immagini</FluentLabel>
+            <FluentLabel Typo="Typography.Body">Carica le immagini dell'immobile</FluentLabel>
+          </FluentStack>
+          
+          @if (!_isCoverUploaded)
+          {
+            <FluentInputFile @ref="_coverFileUpload"
+                             Mode="InputFileMode.Stream"
+                             AnchorId="cover-file-upload"                 
+                             DragDropZoneVisible="false"
+                             MaximumFileCount="1"
+                             MaximumFileSize="@(10*1024*1024)"
+                             Accept="image/*"
+                             OnFileUploaded="@OnCoverFileUploaded"
+                             OnCompleted="@OnCoverFileUploadComplete"/>
+            <FluentStack Orientation="Orientation.Vertical">
+              <FluentLabel Typo="Typography.Body">Scegli un'immagine di copertina: </FluentLabel>
+              <FluentButton Id="cover-file-upload" IconStart="@(new Icons.Regular.Size20.ArrowUpload())">Carica</FluentButton>
+            </FluentStack>
+            
+            <FluentProgress Min="0" Max="100" Visible="@(_coverUploadProgressPercent > 0)" Value="@_coverUploadProgressPercent" />
+            @if (_coverUploadProgressPercent > 0)
+            {
+              <FluentLabel Alignment="HorizontalAlignment.Center">
+                @_coverUploadProgressTitle
+              </FluentLabel>
+            }
+          }
+          else
+          {
+            <FluentStack Orientation="Orientation.Vertical">
+              <FluentLabel Typo="Typography.Body">Immagine di copertina caricata:</FluentLabel>
+              <img src="@_coverFile" alt="Cover Image" width="100%" height="auto"/>
+            </FluentStack>
+          }
+        </FluentStack>
+        
+      </FluentCard>
+      
+      <FluentCard>
+        <FluentButton Appearance="Appearance.Accent" Style="width: 100%;"
+                      OnClick="@SaveListingAsync">Salva</FluentButton>
+      </FluentCard>
+      
     </FluentStack>
   </FluentGridItem>
 </FluentGrid>
 
 @code {
   [Parameter]
-  public Guid? ListingId { get; set; }
+  public Guid ListingId { get; set; }
 
+  private FluentInputFile? _coverFileUpload;
+  private int? _coverUploadProgressPercent;
+  private string? _coverUploadProgressTitle;
+  private bool _isCoverUploaded;
+  private string _coverFile;
+  private FluentInputFile? _galleryFileUpload;
+  
   private ListingRequestDto _listingRequestDto = new();
   private List<Option<string>> _listingTypes = [];
 
@@ -136,9 +194,9 @@
   
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (!firstRender || ListingId == null) return;
+    if (!firstRender) return;
 
-    var listingData = await ListingApiService.GetListingByIdAsync(ListingId.Value);
+    var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
     _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
 
     var propertyTypes = await PropertyTypeApiService.GetPropertyTypesAsync();
@@ -153,4 +211,33 @@
     StateHasChanged();
   }
 
+  private async Task OnCoverFileUploaded(FluentInputFileEventArgs file)
+  {
+    var localFile = "tmp/" + file.Name;
+    
+    await using FileStream fs = new("./wwwroot/" + localFile, FileMode.Create);
+    await file.Stream!.CopyToAsync(fs);
+    await file.Stream!.DisposeAsync();
+    
+    _coverFile = localFile;
+  }
+  
+  void OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
+  {
+    _coverUploadProgressPercent = _coverFileUpload!.ProgressPercent;
+    _coverUploadProgressTitle = _coverFileUpload!.ProgressTitle;
+  }
+  
+  private async Task SaveListingAsync()
+  {
+    if (ListingId == null)
+    {
+      //await ListingApiService.CreateListingAsync(_listingRequestDto);
+    }
+    else
+    {
+      //await ListingApiService.UpdateListingAsync(ListingId.Value, _listingRequestDto);
+    }
+  }
+  
 }
