@@ -28,7 +28,5 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingTags.Select(tag => tag.Name)))
             .ForMember(listingDto => listingDto.Images, opt =>
                 opt.MapFrom(src => src.ListingImages.Select(image => image.Url)));
-        
-        
     }
 }
