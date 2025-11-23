@@ -1,11 +1,8 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.WebClient.Data.Responses;
-using DietiEstate.Application.Dtos.Requests;
-
-using OfferResponseDto = DietiEstate.Application.Dtos.Responses.OfferResponseDto;
+using DietiEstate.WebClient.Data.Requests;
 
 namespace DietiEstate.WebClient.ApiService;
 
