@@ -15,7 +15,6 @@ public class BookingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
-    [Authorize(Policy = "ReadBooking")]
     public async Task<IActionResult> GetBookings()
     {
         var bookings = await bookingRepository.GetBookingsAsync();
@@ -23,7 +22,7 @@ public class BookingController(
     }
     
     [HttpGet("{bookingId:guid}")]
-    [Authorize(Policy = "ReadBooking")]
+   
     public async Task<IActionResult> GetBookingById(Guid bookingId) 
     {
         if (await bookingRepository.GetBookingByIdAsync(bookingId) is { } booking)
@@ -33,7 +32,6 @@ public class BookingController(
     }
 
     [HttpGet("GetByListingId/{listingId:guid}")]
-    [Authorize(Policy = "ReadBooking")]
 
     public async Task<IActionResult> GetBookingByListingId(Guid listingId)
     {
@@ -42,7 +40,6 @@ public class BookingController(
     }
 
     [HttpPost]
-    [Authorize(Policy = "CreateBooking")]
     public async Task<IActionResult> CreateBooking(Booking booking)
     {
         await bookingRepository.AddBookingAsync(booking);
@@ -50,7 +47,6 @@ public class BookingController(
     }
 
     [HttpPatch("{bookingId:guid}")]
-    [Authorize(Roles = "Client")]
     public async Task<IActionResult> UpdateBooking(Guid bookingId)
     {
         if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
@@ -61,7 +57,6 @@ public class BookingController(
     }
 
     [HttpDelete("{bookingId:guid}")]
-    [Authorize(Roles = "Client")]
 
     public async Task<IActionResult> DeleteBooking(Guid bookingId)
     {
