@@ -1,4 +1,6 @@
 using AutoMapper;
+using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
 using Microsoft.AspNetCore.Authorization;

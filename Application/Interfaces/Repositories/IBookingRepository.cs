@@ -1,3 +1,4 @@
+using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.BookingModels;
 
 namespace DietiEstate.Application.Interfaces.Repositories;
