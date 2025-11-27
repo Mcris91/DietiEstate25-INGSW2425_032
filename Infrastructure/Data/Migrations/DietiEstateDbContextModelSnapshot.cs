@@ -21,6 +21,7 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                 .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "booking_status", new[] { "accepted", "pending", "rejected" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "user_role", new[] { "client", "estate_agent", "super_admin", "support_admin", "system_admin" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
@@ -33,9 +34,6 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.Property<Guid>("AgentUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("BookingAccepted")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("ClientUserId")
                         .HasColumnType("uuid");
 
@@ -47,6 +45,9 @@ namespace DietiEstate.Infrastracture.Data.Migrations
 
                     b.Property<Guid>("ListingId")
                         .HasColumnType("uuid");
+
+                    b.Property<BookingStatus>("Status")
+                        .HasColumnType("booking_status");
 
                     b.HasKey("Id");
 
@@ -179,17 +180,12 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("BookingId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BookingId");
 
                     b.ToTable("Service");
                 });
@@ -395,13 +391,6 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.Navigation("Type");
                 });
 
-            modelBuilder.Entity("DietiEstate.Core.Entities.ListingModels.Service", b =>
-                {
-                    b.HasOne("DietiEstate.Core.Entities.BookingModels.Booking", null)
-                        .WithMany("BookingServices")
-                        .HasForeignKey("BookingId");
-                });
-
             modelBuilder.Entity("ListingImage", b =>
                 {
                     b.HasOne("DietiEstate.Core.Entities.Common.Image", null)
@@ -445,11 +434,6 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .HasForeignKey("ListingsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("DietiEstate.Core.Entities.BookingModels.Booking", b =>
-                {
-                    b.Navigation("BookingServices");
                 });
 #pragma warning restore 612, 618
         }

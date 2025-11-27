@@ -8,7 +8,7 @@ namespace DietiEstate.Infrastracture.Repositories;
 
 public class BookingRepository(DietiEstateDbContext context) : IBookingRepository
 {
-    public async Task<IEnumerable<Booking?>> GetBookingsAsync()
+    public async Task<IEnumerable<Booking?>> GetBookingsAsync(BookingFilterDto filterDto)
     {
         return await context.Booking.ToListAsync();
     }
@@ -18,14 +18,17 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         return await context.Booking.FindAsync(bookingId);
     }
 
-    public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId)
+    public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId, BookingFilterDto filterDto)
     {
         return await context.Booking.ToListAsync();
     }
 
     public async Task AddBookingAsync(Booking booking)
     {
+        await context.Database.BeginTransactionAsync();
         await context.Booking.AddAsync(booking);
+        await context.SaveChangesAsync();
+        await context.Database.CommitTransactionAsync();
     }
 
     public async Task UpdateBookingAsync(Booking booking)

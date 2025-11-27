@@ -4,6 +4,7 @@ using System.Runtime.InteropServices.JavaScript;
 using DietiEstate.Core.Constants;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.UserModels;
+using DietiEstate.Core.Enums;
 
 namespace DietiEstate.Core.Entities.BookingModels;
 
@@ -19,7 +20,7 @@ public class Booking
     public DateTime DateMeeting { get; set; }
     
     [Required]
-    public bool BookingAccepted { get; set; }
+    public BookingStatus Status { get; set; } = BookingStatus.Pending;
     
     [Required]
     public Listing? Listing { get; set; }
@@ -38,8 +39,5 @@ public class Booking
     
     [ForeignKey(nameof(Client))]
     public Guid ClientUserId { get; set; }
-    
-    [Required]
-    public virtual ICollection<Service> BookingServices { get; set; } = [];
 }
 

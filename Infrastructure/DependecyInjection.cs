@@ -24,6 +24,8 @@ public static class DependecyInjection
             {
                 dboptions.MapEnum<UserRole>("user_role")
                     .EnableRetryOnFailure();
+                dboptions.MapEnum<BookingStatus>("booking_status")
+                    .EnableRetryOnFailure();
                 dboptions.EnableRetryOnFailure(0);
             });
         }, ServiceLifetime.Transient);

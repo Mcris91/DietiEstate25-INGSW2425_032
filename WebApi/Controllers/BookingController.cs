@@ -1,5 +1,6 @@
 using AutoMapper;
 using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
@@ -15,10 +16,11 @@ public class BookingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetBookings()
+    public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetBookings(
+        [FromQuery] BookingFilterDto filterDto)
     {
-        var bookings = await bookingRepository.GetBookingsAsync();
-        return Ok(bookings);
+        var bookings = await bookingRepository.GetBookingsAsync(filterDto);
+        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
     }
     
     [HttpGet("{bookingId:guid}")]
@@ -26,34 +28,38 @@ public class BookingController(
     public async Task<IActionResult> GetBookingById(Guid bookingId) 
     {
         if (await bookingRepository.GetBookingByIdAsync(bookingId) is { } booking)
-            return Ok(booking);
+            return Ok(mapper.Map<BookingResponseDto>(booking));
         
         return NotFound();
     }
 
     [HttpGet("GetByListingId/{listingId:guid}")]
 
-    public async Task<IActionResult> GetBookingByListingId(Guid listingId)
+    public async Task<ActionResult<BookingResponseDto>> GetBookingByListingId(
+        Guid listingId,
+        [FromQuery] BookingFilterDto filterDto)
     {
-        var boockings = await bookingRepository.GetBookingByIdListingAsync(listingId);
-        return  Ok(boockings);
+        var boockings = await bookingRepository.GetBookingByIdListingAsync(listingId, filterDto);
+        return  Ok(boockings.ToList().Select(mapper.Map<BookingResponseDto>));
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBooking(Booking booking)
+    public async Task<IActionResult> PostBooking(
+        [FromQuery] BookingRequestDto request)
     {
+        var booking = mapper.Map<Booking>(request);
         await bookingRepository.AddBookingAsync(booking);
-        return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, booking);
+        return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, mapper.Map<BookingResponseDto>(booking));
     }
 
-    [HttpPatch("{bookingId:guid}")]
-    public async Task<IActionResult> UpdateBooking(Guid bookingId)
+    [HttpPut("{bookingId:guid}")]
+    public async Task<IActionResult> PutBooking(Guid bookingId, [FromBody]  BookingRequestDto request)
     {
         if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
             return NotFound();
         
         await bookingRepository.UpdateBookingAsync(booking);
-        return NoContent();
+        return Ok(mapper.Map<BookingResponseDto>(booking));
     }
 
     [HttpDelete("{bookingId:guid}")]
