@@ -10,6 +10,10 @@ public interface IBookingRepository
     
     Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId, BookingFilterDto filterDto);
     
+    Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto);
+    
+    Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto);
+    
     Task AddBookingAsync(Booking booking);
     Task UpdateBookingAsync(Booking booking);
     Task DeleteBookingAsync(Booking booking);

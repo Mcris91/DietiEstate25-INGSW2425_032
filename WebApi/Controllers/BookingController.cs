@@ -39,8 +39,28 @@ public class BookingController(
         Guid listingId,
         [FromQuery] BookingFilterDto filterDto)
     {
-        var boockings = await bookingRepository.GetBookingByIdListingAsync(listingId, filterDto);
-        return  Ok(boockings.ToList().Select(mapper.Map<BookingResponseDto>));
+        var bookings = await bookingRepository.GetBookingByIdListingAsync(listingId, filterDto);
+        return  Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+    }
+
+    [HttpGet("GetByAgentId/{agentId:guid}")]
+
+    public async Task<ActionResult<BookingResponseDto>> GetBookingByAgentId(
+        Guid agentId,
+        [FromQuery] BookingFilterDto filterDto)
+    {
+        var bookings = await bookingRepository.GetBookingByAgentIdAsync(agentId, filterDto);
+        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+    }
+
+    [HttpGet("GetByClientId/{clientId:guid}")]
+
+    public async Task<ActionResult<BookingResponseDto>> GetBookingByClientId(
+        Guid clientId,
+        [FromQuery] BookingFilterDto filterDto)
+    {
+        var bookings = await bookingRepository.GetBookingByClientIdAsync(clientId, filterDto);
+        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
     }
 
     [HttpPost]

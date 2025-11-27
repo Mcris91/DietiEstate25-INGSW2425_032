@@ -23,6 +23,16 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         return await context.Booking.ToListAsync();
     }
 
+    public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto)
+    {
+        return await context.Booking.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto)
+    {
+        return await context.Booking.ToListAsync();
+    }
+
     public async Task AddBookingAsync(Booking booking)
     {
         await context.Database.BeginTransactionAsync();
