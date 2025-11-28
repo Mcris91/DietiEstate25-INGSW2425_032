@@ -13,6 +13,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     {
         return await context.Booking
             .ApplyFilters(filterDto)
+            .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
             .ToListAsync();
     }
 
@@ -25,6 +26,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     {
         return await context.Booking
             .ApplyFilters(filterDto)
+            .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
             .ToListAsync();
     }
 
@@ -32,6 +34,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     {
         return await context.Booking
             .ApplyFilters(filterDto)
+            .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
             .ToListAsync();
     }
 
@@ -39,6 +42,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     {
         return await context.Booking
             .ApplyFilters(filterDto)
+            .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
             .ToListAsync();
     }
 

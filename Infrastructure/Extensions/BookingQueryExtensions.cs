@@ -29,4 +29,13 @@ public static class BookingQueryExtensions
         
         return query;
     }
+
+    public static IQueryable<Booking> ApplySorting(this IQueryable<Booking> query, string sortBy, string sortOrder)
+    {
+        return sortBy.ToLower() switch
+        {
+            "DateCreation" => sortOrder == "desc" ? query.OrderByDescending(b => b.DateCreation) : query.OrderBy(b => b.DateCreation),
+            "DateMeeting" => sortOrder == "desc" ? query.OrderByDescending(b => b.DateMeeting) : query.OrderBy(b => b.DateMeeting)
+        };
+    }
 }
