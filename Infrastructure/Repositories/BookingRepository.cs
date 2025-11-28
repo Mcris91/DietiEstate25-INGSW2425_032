@@ -3,6 +3,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Infrastracture.Data;
 using Microsoft.EntityFrameworkCore;
+using DietiEstate.Infrastracture.Extensions;
 
 namespace DietiEstate.Infrastracture.Repositories;
 
@@ -10,27 +11,35 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
 {
     public async Task<IEnumerable<Booking?>> GetBookingsAsync(BookingFilterDto filterDto)
     {
-        return await context.Booking.ToListAsync();
+        return await context.Booking
+            .ApplyFilters(filterDto)
+            .ToListAsync();
     }
 
     public async Task<Booking?> GetBookingByIdAsync(Guid bookingId)
     {
-        return await context.Booking.FindAsync(bookingId);
+        return await context.Booking.FirstOrDefaultAsync(b => b.Id == bookingId);
     }
 
     public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId, BookingFilterDto filterDto)
     {
-        return await context.Booking.ToListAsync();
+        return await context.Booking
+            .ApplyFilters(filterDto)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto)
     {
-        return await context.Booking.ToListAsync();
+        return await context.Booking
+            .ApplyFilters(filterDto)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto)
     {
-        return await context.Booking.ToListAsync();
+        return await context.Booking
+            .ApplyFilters(filterDto)
+            .ToListAsync();
     }
 
     public async Task AddBookingAsync(Booking booking)
