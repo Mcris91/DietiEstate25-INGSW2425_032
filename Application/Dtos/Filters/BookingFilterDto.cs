@@ -19,7 +19,7 @@ public class BookingFilterDto
     
     public Guid? AgentId { get; init;}
 
-    public string SortOrder { get; init; } = "data";
+    public string SortOrder { get; init; } = "desc";
     
-    public string SortBy { get; init; } = "Id";
+    public string SortBy { get; init; } = "data";
 }
