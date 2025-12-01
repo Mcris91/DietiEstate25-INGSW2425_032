@@ -9,7 +9,7 @@ namespace DietiEstate.Infrastracture.Repositories;
 
 public class BookingRepository(DietiEstateDbContext context) : IBookingRepository
 {
-    public async Task<IEnumerable<Booking?>> GetBookingsAsync(BookingFilterDto filterDto)
+    public async Task<IEnumerable<Booking?>> GetBookingsAsync(BookingFilterDto filterDto, int? pageNumber, int? pageSize)
     {
         return await context.Booking
             .ApplyFilters(filterDto)
@@ -22,7 +22,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         return await context.Booking.FirstOrDefaultAsync(b => b.Id == bookingId);
     }
 
-    public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId, BookingFilterDto filterDto)
+    public async Task<IEnumerable<Booking?>> GetBookingByIdListingAsync(Guid listingId, BookingFilterDto filterDto,int? pageNumber, int? pageSize)
     {
         return await context.Booking
             .ApplyFilters(filterDto)
@@ -30,7 +30,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto)
+    public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto, int? pageNumber, int? pageSize)
     {
         return await context.Booking
             .ApplyFilters(filterDto)
@@ -38,7 +38,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto)
+    public async Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto, int? pageNumber, int? pageSize)
     {
         return await context.Booking
             .ApplyFilters(filterDto)

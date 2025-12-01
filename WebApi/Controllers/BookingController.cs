@@ -16,11 +16,18 @@ public class BookingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetBookings(
-        [FromQuery] BookingFilterDto filterDto)
+    public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookings(
+        [FromQuery] BookingFilterDto filterDto,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize)
     {
-        var bookings = await bookingRepository.GetBookingsAsync(filterDto);
-        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        
+        var bookings = await bookingRepository.GetBookingsAsync(filterDto,pageNumber,pageSize);
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
     }
     
     [HttpGet("{bookingId:guid}")]
@@ -35,32 +42,56 @@ public class BookingController(
 
     [HttpGet("GetByListingId/{listingId:guid}")]
 
-    public async Task<ActionResult<BookingResponseDto>> GetBookingByListingId(
+    public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByListingId(
         Guid listingId,
-        [FromQuery] BookingFilterDto filterDto)
+        [FromQuery] BookingFilterDto filterDto,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize)
     {
-        var bookings = await bookingRepository.GetBookingByIdListingAsync(listingId, filterDto);
-        return  Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+        
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        
+        var bookings = await bookingRepository.GetBookingByIdListingAsync(listingId, filterDto,pageNumber,pageSize);
+        return  Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
     }
 
     [HttpGet("GetByAgentId/{agentId:guid}")]
 
-    public async Task<ActionResult<BookingResponseDto>> GetBookingByAgentId(
+    public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByAgentId(
         Guid agentId,
-        [FromQuery] BookingFilterDto filterDto)
+        [FromQuery] BookingFilterDto filterDto,
+        [FromQuery]  int? pageNumber,
+        [FromQuery]  int? pageSize)
     {
-        var bookings = await bookingRepository.GetBookingByAgentIdAsync(agentId, filterDto);
-        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+        
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        
+        var bookings = await bookingRepository.GetBookingByAgentIdAsync(agentId, filterDto, pageNumber,pageSize);
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
     }
 
     [HttpGet("GetByClientId/{clientId:guid}")]
 
-    public async Task<ActionResult<BookingResponseDto>> GetBookingByClientId(
+    public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByClientId(
         Guid clientId,
-        [FromQuery] BookingFilterDto filterDto)
+        [FromQuery] BookingFilterDto filterDto,
+        [FromQuery]  int? pageNumber,
+        [FromQuery]  int? pageSize)
     {
-        var bookings = await bookingRepository.GetBookingByClientIdAsync(clientId, filterDto);
-        return Ok(bookings.ToList().Select(mapper.Map<BookingResponseDto>));
+        
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        
+        var bookings = await bookingRepository.GetBookingByClientIdAsync(clientId, filterDto, pageNumber,pageSize);
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select( mapper.Map<BookingResponseDto>), pageNumber, pageSize));
     }
 
     [HttpPost]
