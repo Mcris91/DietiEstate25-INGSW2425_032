@@ -1,5 +1,6 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastracture.Config;
 using DietiEstate.Infrastracture.Data;
@@ -29,6 +30,7 @@ public static class DependecyInjection
         }, ServiceLifetime.Transient);
         
         services.AddScoped<IListingRepository, ListingRepository>();
+        services.AddScoped<IOfferRepository, OfferRepository>();
         services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();

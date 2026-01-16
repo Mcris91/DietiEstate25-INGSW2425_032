@@ -48,6 +48,7 @@ public class AutoMapperProfile : Profile
                 }))); 
         CreateMap<PropertyTypeRequestDto, PropertyType>();
         CreateMap<PropertyType, PropertyTypeResponseDto>();
+        CreateMap<ListingTypeDto, PropertyType>();
         
         // Offer
         CreateMap<OfferRequestDto, Offer>();

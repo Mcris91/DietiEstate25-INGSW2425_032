@@ -5,6 +5,8 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
+using DietiEstate.Infrastracture.Data.Migrations;
+using DietiEstate.Infrastracture.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
@@ -16,6 +18,7 @@ public class OfferController(
     IOfferRepository offerRepository,
     IListingRepository listingRepository,
     IUserRepository userRepository,
+    //RedisSessionService redisSessionService,
     IMapper mapper) : Controller
 {
     //sia customer che agent
@@ -40,6 +43,8 @@ public class OfferController(
 
         if (offer.FirstOfferId == Guid.Empty)
             offer.FirstOfferId = offer.Id;
+
+        offer.Date = offer.Date.UtcDateTime;
         
         await offerRepository.AddOfferAsync(offer);
         return CreatedAtAction(nameof(GetOfferById), new { offerId = offer.Id }, mapper.Map<OfferResponseDto>(offer));
@@ -103,13 +108,19 @@ public class OfferController(
     }
     
     //agent
-    [HttpGet("GetByAgentId/{agentId:guid}")]
+    [HttpGet("GetByAgentId")]
     public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOffersByAgentId(
-        Guid agentId,
         [FromQuery] OfferFilterDto filterDto,
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
+        pageNumber = 1;
+        pageSize = 10;
+        //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
+        //if (adminSession is null)
+        //    return Unauthorized("Access denied");
+        var agentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15");
+        
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 
@@ -162,8 +173,14 @@ public class OfferController(
     }
 
     [HttpGet("GetTotalOffers/{agentId:guid}")]
-    public async Task<ActionResult<(int Total, int Pending)>> GetTotalOffers(Guid agentId)
+    public async Task<ActionResult> GetTotalOffers(Guid agentId)
     {
-        return await offerRepository.GetTotalOffersAsync(agentId);
+        var offers = await offerRepository.GetTotalOffersAsync(agentId);
+        return Ok(new OfferAgentCountersResponseDto()
+        {
+            TotalOffers = offers.Total,
+            PendingOffers = offers.Pending
+        });
+            
     }
 }

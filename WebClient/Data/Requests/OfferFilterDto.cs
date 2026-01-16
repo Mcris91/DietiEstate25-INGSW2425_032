@@ -2,7 +2,7 @@
 
 namespace DietiEstate.WebClient.Data.Requests;
 
-public class OfferFilterDto
+public class OfferFilterDto : BaseFilterDto
 {
     public string CustomerFirstName { get; init; } = string.Empty;
     public string CustomerLastName { get; init; } = string.Empty;

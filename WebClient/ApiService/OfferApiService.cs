@@ -15,7 +15,7 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
     
     public async Task AcceptOrRejectOfferAsync(Guid offerId, bool accept)
     {
-        await httpClient.PutAsync($"api/v1/Offer/AcceptOrRejectOffer/{offerId}/{accept}", null);
+        await httpClient.PutAsync($"AcceptOrRejectOffer/{offerId}/{accept}", null);
     }
     
     public async Task DeleteOfferAsync(Guid offerId, Guid customerId)
@@ -23,27 +23,25 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
         await httpClient.DeleteAsync($"api/v1/Offer/{offerId}/{customerId}");
     }
     
-    public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOffersByAgentIdAsync(
-        Guid agentId,
+    public async Task<PagedResponseDto<OfferResponseDto>> GetOffersByAgentIdAsync(
         OfferFilterDto filterDto,
         int? pageNumber,
         int? pageSize)
     {
-        var query = new Dictionary<string, string?>
+        var queryString = filterDto.ToQueryString();
+        if (pageNumber.HasValue)
         {
-            ["CustomerFirstName"] = filterDto.CustomerFirstName,
-            ["CustomerLastName"] = filterDto.CustomerLastName,
-            ["CustomerEmail"] = filterDto.CustomerEmail,
-            ["ListingName"] = filterDto.ListingName,
-            ["Value"] = filterDto.Value.ToString(),
-            ["Date"] = filterDto.Date.ToString(),
-            ["Status"] = filterDto.Status.ToString(),
-            ["SortBy"] = filterDto.SortBy,
-            ["SortOrder"] = filterDto.SortOrder,
-            ["pageNumber"] = pageNumber.ToString(),
-            ["pageSize"] = pageSize.ToString(),
-        };
-        var uri = QueryHelpers.AddQueryString($"api/v1/Offer/GetByAgentId/{agentId}", query);
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageNumber={pageNumber.Value}";
+        }
+
+        if (pageSize.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageSize={pageSize.Value}";
+        }
+
+        var uri = $"GetByAgentId/{queryString}";
         return await GetAsync<PagedResponseDto<OfferResponseDto>>(uri);
     }
     
@@ -82,8 +80,11 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
         return await GetAsync<PagedResponseDto<OfferResponseDto>>(uri);
     }
 
-    public async Task<ActionResult<(int Total, int Pending)>> GetTotalOffersAsync(Guid agentId)
+    public async Task<OfferAgentCountersResponseDto> GetTotalOffersAsync(Guid? agentId)
     {
-        return await GetAsync<(int Total, int Pending)>($"api/v1/Offer/GetTotalOffers/{agentId}");
+        if (agentId == null)
+            throw new ArgumentException("AgentId cannot be null.", nameof(agentId));
+        
+        return await GetAsync<OfferAgentCountersResponseDto>($"GetTotalOffers/{agentId}");
     }
 }
