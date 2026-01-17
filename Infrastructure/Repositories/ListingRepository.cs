@@ -41,9 +41,9 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
         listing.ListingTags = await context.Tag
             .Where(t => tags.Contains(t.Id))
             .ToListAsync();
-        listing.ListingImages = await context.Image
+        /*listing.ListingImages = await context.Image
             .Where(i => images.Contains(i.Url))
-            .ToListAsync();
+            .ToListAsync();*/
         
         await context.Database.BeginTransactionAsync();
         await context.Listing.AddAsync(listing);

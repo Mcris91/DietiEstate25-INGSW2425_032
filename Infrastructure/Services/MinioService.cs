@@ -1,0 +1,55 @@
+﻿using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Infrastracture.Config;
+using Minio;
+using Minio.DataModel.Args;
+using SixLabors.ImageSharp;
+
+namespace DietiEstate.Infrastracture.Services;
+
+public class MinioService(IMinioClient minioClient, MinioConfiguration minioConfiguration) : IMinioService
+{
+    public async Task<string> UploadImageAsync(Stream picture, Guid listingId, Guid imageId)
+    {
+        var mimeType = IsImage(picture);
+        if (mimeType == null) throw new Exception("Il file che stai caricando non è un'immagine!");
+
+        var fileName = $"{listingId}/{imageId}.jpg";
+
+        var args = new PutObjectArgs()
+            .WithBucket(minioConfiguration.Bucket)
+            .WithObject(fileName)
+            .WithStreamData(picture)
+            .WithObjectSize(picture.Length)
+            .WithContentType(mimeType);
+        
+            await minioClient.PutObjectAsync(args);
+
+        
+        return fileName;
+    }
+
+    public async Task<string> GeneratePresignedUrl(string objectKey)
+    {
+        var args = new PresignedGetObjectArgs()
+            .WithBucket(minioConfiguration.Bucket)
+            .WithObject(objectKey)
+            .WithExpiry(3600);
+
+        return await minioClient.PresignedGetObjectAsync(args);
+    }
+
+    public string? IsImage(Stream stream)
+    {
+        try
+        {
+            using var image = Image.Load(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            return image.Metadata.DecodedImageFormat?.DefaultMimeType;
+        }
+        catch
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            return null;
+        }
+    }
+}

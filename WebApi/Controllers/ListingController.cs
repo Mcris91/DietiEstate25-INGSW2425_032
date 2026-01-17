@@ -3,6 +3,8 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.ListingModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
@@ -15,6 +17,7 @@ namespace DietiEstate.WebApi.Controllers;
 public class ListingController(
     IListingRepository listingRepository,
     IPropertyTypeRepository propertyTypeRepository,
+    IMinioService minioService,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -30,6 +33,12 @@ public class ListingController(
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
         var listings = await listingRepository.GetListingsAsync(filterDto, pageNumber, pageSize);
+        foreach (var listing in listings)
+        {
+            if (listing.ListingImages.Count > 0)
+                foreach (var image in listing.ListingImages)
+                    image.Url = await minioService.GeneratePresignedUrl(image.Url);
+        }
         return Ok(new PagedResponseDto<ListingResponseDto>(
             listings.ToList().Select(mapper.Map<ListingResponseDto>), 
             pageSize, pageNumber));
@@ -40,7 +49,14 @@ public class ListingController(
     public async Task<IActionResult> GetListingById(Guid listingId) 
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is { } listing)
+        {
+            if (listing.ListingImages.Count > 0)
+            {
+                foreach (var image in listing.ListingImages)
+                    image.Url = await minioService.GeneratePresignedUrl(image.Url);
+            }
             return Ok(mapper.Map<ListingResponseDto>(listing));
+        }
         
         return NotFound();
     }
@@ -72,10 +88,31 @@ public class ListingController(
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);
+
+        foreach (var listingImage in  request.Images)
+        {
+            using var imageStream = new MemoryStream(listingImage.Image);
+
+            var newImage = new Image()
+            {
+                Id = Guid.NewGuid(),
+            };
+            try
+            {
+                newImage.Url = minioService.UploadImageAsync(imageStream, listing.Id, newImage.Id).Result;
+            }
+            catch (Exception)
+            {
+                return BadRequest("L'immagine non è stata caricata");
+            }
+            Console.WriteLine($"Immagine {newImage.Id} aggiunta all'elenco");
+            listing.ListingImages.Add(newImage);
+        }
+        
         await listingRepository.AddListingAsync(listing, 
             request.Services.Select(s=>s.Id).ToList(), 
             request.Tags.Select(s=>s.Id).ToList(), 
-            request.Images.Select(s=>s.Url).ToList());
+            listing.ListingImages.Select(s=>s.Url).ToList());
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
 

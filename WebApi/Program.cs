@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Minio;
 using StackExchange.Redis;
 
 namespace DietiEstate.WebApi;
@@ -32,6 +33,7 @@ public static class Program
         }
         
         var builder = WebApplication.CreateBuilder(args);
+        ConfigureMinio(builder);
         ConfigureServices(builder);
 
         ConfigureAuthentication(builder);
@@ -66,6 +68,22 @@ public static class Program
             options.UseSimpleAssemblyNameTypeSerializer();
             options.UseRecommendedSerializerSettings();
         });
+
+        builder.Services.AddScoped<IMinioService, MinioService>();
+        
+        builder.Services.AddScoped<IMinioClient>(sp => 
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var endpoint = config["MINIO_ENDPOINT"] ?? "localhost:9000";
+            var accessKey = config["MINIO_ACCESS_KEY"] ?? "minioadmin";
+            var secretKey = config["MINIO_SECRET_KEY"] ?? "minioadmin";
+
+            return new MinioClient()
+                .WithEndpoint(endpoint)
+                .WithCredentials(accessKey, secretKey)
+                .WithSSL(false)
+                .Build();
+        });
         
         builder.Services.AddDependencies(builder.Configuration);
         
@@ -79,6 +97,16 @@ public static class Program
             .AddEnvironmentVariables();
     }
 
+    private static void ConfigureMinio(WebApplicationBuilder builder)
+    {
+        var minioConfig = new MinioConfiguration(
+            Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000",
+            Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "minioadmin",
+            Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "minioadmin",
+            Environment.GetEnvironmentVariable("MINIO_BUCKET") ?? "listingbucket"
+        );
+        builder.Services.AddSingleton(minioConfig);
+    }
     private static void ConfigureAuthentication(WebApplicationBuilder builder)
     {
         var jwtConfig = new JwtConfiguration(

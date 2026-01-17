@@ -28,7 +28,7 @@ public class ListingResponseDto
 
     public required ListingTypeDto Type { get; init; }
 
-    public List<ListingImageDto> Images { get; init; } = [];
+    public List<ListingImageResponseDto> Images { get; init; } = [];
 
     public List<ListingServiceDto> Services { get; init; } = [];
 

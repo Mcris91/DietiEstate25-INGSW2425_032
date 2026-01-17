@@ -42,7 +42,7 @@ public class ListingRequestDto
 
     public required ListingTypeDto Type { get; init; }
 
-    public List<ListingImageDto> Images { get; init; } = [];
+    public List<ListingImageRequestDto> Images { get; init; } = [];
 
     public List<ListingServiceDto> Services { get; init; } = [];
 

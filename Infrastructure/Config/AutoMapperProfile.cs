@@ -41,7 +41,7 @@ public class AutoMapperProfile : Profile
                     Name = tag.Name
                 })))
             .ForMember(listingDto => listingDto.Images, opt =>
-                opt.MapFrom(src => src.ListingImages.Select(image => new ListingImageDto
+                opt.MapFrom(src => src.ListingImages.Select(image => new ListingImageResponseDto
                 {
                     Id = image.Id,
                     Url = image.Url
