@@ -1,0 +1,17 @@
+﻿@using DietiEstate.WebClient.Data.Requests
+@implements IDialogContentComponent<UserRequestDto>
+@rendermode InteractiveServer
+<FluentStack>
+    <FluentTextField @bind-Value="Content.FirstName" Style="width: 50%">Nome*</FluentTextField>
+    <FluentTextField @bind-Value="Content.LastName" Style="width: 50%">Cognome*</FluentTextField>
+</FluentStack>
+<FluentTextField Label="Email*" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
+<FluentTextField Label="Password*" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
+<FluentTextField Label="Conferma Password*" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
+@code {
+    [Parameter]
+    public UserRequestDto Content { get; set; } = default!;
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+}

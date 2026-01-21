@@ -19,6 +19,8 @@ builder.Services.AddSingleton(new JsonSerializerOptions {
 builder.Services.AddApiService<ListingApiService>(builder.Configuration["ApiUrl"]!, "Listing");
 builder.Services.AddApiService<PropertyTypeApiService>(builder.Configuration["ApiUrl"]!, "PropertyType");
 builder.Services.AddApiService<OfferApiService>(builder.Configuration["ApiUrl"]!, "Offer");
+builder.Services.AddApiService<AuthApiService>(builder.Configuration["ApiUrl"]!, "Auth");
+
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 

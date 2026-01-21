@@ -63,12 +63,12 @@ public static class Program
         
         builder.Services.AddScoped<DatabaseSeeder>();
 
-        builder.Services.AddHangfire(options =>
+    /*    builder.Services.AddHangfire(options =>
         {
             options.UseSimpleAssemblyNameTypeSerializer();
             options.UseRecommendedSerializerSettings();
         });
-
+*/
         builder.Services.AddScoped<IMinioService, MinioService>();
         
         builder.Services.AddScoped<IMinioClient>(sp => 

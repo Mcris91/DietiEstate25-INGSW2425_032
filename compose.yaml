@@ -11,6 +11,12 @@
       context: .
       dockerfile: WebClient/Dockerfile
       
+  redis:
+    image: redis:latest
+    container_name: INGSW_Sessions
+    ports:
+      - "6379:6379"
+  
   minio:
     image: minio/minio
     container_name: INGSW_Images

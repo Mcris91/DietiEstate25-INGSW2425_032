@@ -19,7 +19,10 @@ public class ListingResponseDto
     public int Rooms { get; init; }
     
     public required string Address { get; init; }
-    
+
+    public required float Latitude { get; init; }
+
+    public required float Longitude { get; init; }
     public required string City { get; init; }
     
     public required string EnergyClass { get; init; }
