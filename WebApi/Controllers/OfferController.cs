@@ -36,10 +36,10 @@ public class OfferController(
         
         if (await userRepository.GetUserByIdAsync(offer.CustomerId) is { Role: UserRole.Client })
             if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId))
-                return BadRequest("Hai già fatto un'offerta per questo immobile");
+                return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
-        if (offer.Value > listing.Price) 
-            return BadRequest("Il valore dell'offerta non può essere superiore al valore dell'immobile");
+        if (offer.Value< 0 || offer.Value > listing.Price) 
+            return BadRequest("Valore dell'offerta non valido");
 
         if (offer.FirstOfferId == Guid.Empty)
             offer.FirstOfferId = offer.Id;

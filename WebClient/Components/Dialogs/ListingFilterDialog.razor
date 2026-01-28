@@ -1,0 +1,103 @@
+﻿@using DietiEstate.WebClient.Data.Requests
+@implements IDialogContentComponent<ListingFilterDto>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+    
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Home())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Tipologia</FluentLabel>
+        </FluentStack>
+        
+        <FluentSelect TOption="Option<string>"
+                      Items="_listingTypes"
+                      OptionText="@(i => i.Text)"
+                      OptionValue="@(i => i.Value)"
+                      Width="100%"
+                      @bind-SelectedOption="@_selectedType"/>
+    </FluentStack>
+
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Flash())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Classe energetica</FluentLabel>
+        </FluentStack>
+
+        <FluentSelect TOption="Option<string>"
+                      Items="_listingEnergeticClasses"
+                      OptionText="@(i => i.Text)"
+                      OptionValue="@(i => i.Value)"
+                      Width="100%"
+                      @bind-SelectedOption="@_selectedEnergyClass"/>
+    </FluentStack>
+    
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Money())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Prezzo</FluentLabel>
+        </FluentStack>
+        
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinPrice"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxPrice"></FluentNumberField>
+        </FluentStack>
+    </FluentStack>
+    
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.ArrowMaximize())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Superficie</FluentLabel>
+        </FluentStack>
+        
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinSize"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxSize"></FluentNumberField>
+        </FluentStack>
+    </FluentStack>
+    
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Door())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Numero di Stanze</FluentLabel>
+        </FluentStack>
+        
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentNumberField TValue="int?" Label="Da" @bind-Value="Content.MinRooms"></FluentNumberField>
+            <FluentNumberField TValue="int?" Label="A" @bind-Value="Content.MaxRooms"></FluentNumberField>
+        </FluentStack>
+    </FluentStack>
+    
+</FluentStack>
+
+@code {
+    [Parameter] 
+    public ListingFilterDto Content { get; set; } = default!;
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+
+
+    Option<string> _selectedType = _listingTypes[0];
+    
+    Option<string> _selectedEnergyClass = _listingTypes[0];
+
+    static List<Option<string>> _listingTypes = new()
+    {
+        { new Option<string> { Value = "", Text = "Nessuna preferenza" } },
+        { new Option<string> { Value = "Sale", Text = "In vendita" } },
+        { new Option<string> { Value = "Rent", Text = "In affitto" } }
+    };
+    
+    static List<Option<string>> _listingEnergeticClasses = new()
+    {
+        { new Option<string> { Value = "", Text = "Nessuna preferenza" } },
+        { new Option<string> { Value = "A", Text = "A" } },
+        { new Option<string> { Value = "B", Text = "B" } },
+        { new Option<string> { Value = "C", Text = "C" } },
+        { new Option<string> { Value = "D", Text = "D" } },
+        { new Option<string> { Value = "E", Text = "E" } },
+        { new Option<string> { Value = "F", Text = "F" } },
+        { new Option<string> { Value = "G", Text = "G" } },
+    };
+
+}

@@ -10,7 +10,7 @@ public class ListingRequestDto
     [MaxLength(5000)]
     public string Description { get; set; } = string.Empty;
 
-    public string FeaturedImage { get; set; } = string.Empty;
+    public byte[] FeaturedImage { get; set; } = [];
 
     public string Address { get; set; } = string.Empty;
 
@@ -42,7 +42,7 @@ public class ListingRequestDto
 
     public ListingTypeDto Type { get; set; } = new();
 
-    public List<ListingImageDto> Images { get; set; } = [];
+    public List<ListingImageRequestDto> Images { get; set; } = [];
 
     public List<ListingServiceDto> Services { get; set; } = [];
 

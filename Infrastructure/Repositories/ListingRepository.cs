@@ -29,6 +29,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)
+            .Include(l => l.Agent)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 

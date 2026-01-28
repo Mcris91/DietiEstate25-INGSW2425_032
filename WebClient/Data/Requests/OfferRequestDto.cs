@@ -2,13 +2,13 @@
 
 public class OfferRequestDto
 {
-    public decimal Value { get; init; }
+    public decimal Value { get; set; }
     
     public Guid FirstOfferId { get; set; }
     
-    public Guid CustomerId { get; init; }
+    public Guid CustomerId { get; set; }
     
-    public Guid AgentId { get; init; }
+    public Guid AgentId { get; set; }
     
-    public Guid ListingId { get; init; }
+    public Guid ListingId { get; set; }
 }

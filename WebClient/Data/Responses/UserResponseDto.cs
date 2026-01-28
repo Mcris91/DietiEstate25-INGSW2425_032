@@ -1,6 +1,4 @@
-using DietiEstate.Core.Enums;
-
-namespace DietiEstate.Application.Dtos.Responses;
+﻿namespace DietiEstate.WebClient.Data.Responses;
 
 public class UserResponseDto
 {

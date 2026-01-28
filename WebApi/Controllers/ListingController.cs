@@ -35,9 +35,8 @@ public class ListingController(
         var listings = await listingRepository.GetListingsAsync(filterDto, pageNumber, pageSize);
         foreach (var listing in listings)
         {
-            if (listing.ListingImages.Count > 0)
-                foreach (var image in listing.ListingImages)
-                    image.Url = await minioService.GeneratePresignedUrl(image.Url);
+            if (!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
         }
         return Ok(new PagedResponseDto<ListingResponseDto>(
             listings.ToList().Select(mapper.Map<ListingResponseDto>), 
@@ -50,6 +49,9 @@ public class ListingController(
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is { } listing)
         {
+            if(!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
+            
             if (listing.ListingImages.Count > 0)
             {
                 foreach (var image in listing.ListingImages)
@@ -89,6 +91,19 @@ public class ListingController(
     {
         var listing = mapper.Map<Listing>(request);
 
+        if (request.FeaturedImage.Length > 0)
+        {
+            try
+            {
+                using var featuredImageStream = new MemoryStream(request.FeaturedImage);
+                listing.FeaturedImage = await minioService.UploadImageAsync(featuredImageStream, listing.Id, listing.Id);
+            }
+            catch (Exception)
+            {
+                return BadRequest("L'immagine di copertina non è stata caricata");
+
+            }
+        }
         foreach (var listingImage in  request.Images)
         {
             using var imageStream = new MemoryStream(listingImage.Image);
@@ -99,7 +114,7 @@ public class ListingController(
             };
             try
             {
-                newImage.Url = minioService.UploadImageAsync(imageStream, listing.Id, newImage.Id).Result;
+                newImage.Url = await minioService.UploadImageAsync(imageStream, listing.Id, newImage.Id);
             }
             catch (Exception)
             {

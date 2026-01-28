@@ -18,6 +18,8 @@ public class ListingResponseDto
 
     public int Rooms { get; init; }
     
+    public int Floor { get; init; }
+    
     public required string Address { get; init; }
     
     public required float Latitude { get; init;}
@@ -29,8 +31,12 @@ public class ListingResponseDto
     public required string EnergyClass { get; init; }
 
     public bool Available { get; init; }
+    
+    public bool Elevator { get; set; }
 
     public required ListingTypeDto Type { get; init; }
+    
+    public UserResponseDto Agent { get; init; }
 
     public List<ListingImageResponseDto> Images { get; init; } = [];
 

@@ -28,6 +28,14 @@ public class AutoMapperProfile : Profile
                     Code = src.Type.Code,
                     Name = src.Type.Name
                 }))
+            .ForMember(listingDto => listingDto.Agent, opt => 
+                opt.MapFrom(src => new UserResponseDto
+                {
+                    Id = src.Agent.Id,
+                    Email = src.Agent.Email,
+                    FirstName = src.Agent.FirstName,
+                    LastName = src.Agent.LastName,
+                }))
             .ForMember(listingDto => listingDto.Services, opt =>
                 opt.MapFrom(src => src.ListingServices.Select(service => new ListingServiceDto
                 {

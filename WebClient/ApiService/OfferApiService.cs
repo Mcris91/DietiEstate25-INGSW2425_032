@@ -10,7 +10,7 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
 {
     public async Task PostOfferAsync(OfferRequestDto offerDto)
     {
-        await httpClient.PostAsJsonAsync("api/v1/Offer", offerDto);
+        await httpClient.PostAsJsonAsync("", offerDto);
     }
     
     public async Task AcceptOrRejectOfferAsync(Guid offerId, bool accept)
