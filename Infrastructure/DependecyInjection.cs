@@ -42,6 +42,8 @@ public static class DependecyInjection
         services.AddScoped<IUserSessionService, RedisSessionService>();
         services.AddScoped<IUserService, UserService>();
         
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        
         services.AddScoped<IEmailService, EmailService>();
         
         services.AddAutoMapper(typeof(AutoMapperProfile));

@@ -2,6 +2,7 @@ using AutoMapper;
 using DietiEstate.Application.Dtos.Common;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.ValueObjects;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.OfferModels;
@@ -71,5 +72,12 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.Listing.Name))
             .ForMember(offerDto => offerDto.ListingPrice, opt => 
                 opt.MapFrom(src => src.Listing.Price));
+        
+        //Booking
+        CreateMap<BookingRequestDto, Booking>();
+        CreateMap<Booking, BookingResponseDto>();
+        // Se nel DTO si chiama AnnuncioId ma nel DB è ListingId
+        CreateMap<BookingRequestDto, Booking>()
+            .ForMember(dest => dest.ListingId, opt => opt.MapFrom(src => src.ListingId));
     }
 }
