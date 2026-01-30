@@ -13,6 +13,7 @@ namespace DietiEstate.Infrastracture.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:Enum:booking_status", "accepted,pending,rejected")
                 .Annotation("Npgsql:Enum:user_role", "client,estate_agent,super_admin,support_admin,system_admin");
 
             migrationBuilder.CreateTable(
@@ -156,6 +157,41 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Booking",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DateCreation = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateMeeting = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<BookingStatus>(type: "booking_status", nullable: false),
+                    ListingId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AgentUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ClientUserId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Booking", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Booking_Listing_ListingId",
+                        column: x => x.ListingId,
+                        principalTable: "Listing",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Booking_User_AgentUserId",
+                        column: x => x.AgentUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Booking_User_ClientUserId",
+                        column: x => x.ClientUserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ListingImage",
                 columns: table => new
                 {
@@ -228,6 +264,21 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Booking_AgentUserId",
+                table: "Booking",
+                column: "AgentUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_ClientUserId",
+                table: "Booking",
+                column: "ClientUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_ListingId",
+                table: "Booking",
+                column: "ListingId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Image_Url",
                 table: "Image",
                 column: "Url",
@@ -262,6 +313,9 @@ namespace DietiEstate.Infrastracture.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Booking");
+
             migrationBuilder.DropTable(
                 name: "ListingImage");
 

@@ -21,8 +21,44 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                 .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "booking_status", new[] { "accepted", "pending", "rejected" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "user_role", new[] { "client", "estate_agent", "super_admin", "support_admin", "system_admin" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DietiEstate.Core.Entities.BookingModels.Booking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateMeeting")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<BookingStatus>("Status")
+                        .HasColumnType("booking_status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentUserId");
+
+                    b.HasIndex("ClientUserId");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("Booking");
+                });
 
             modelBuilder.Entity("DietiEstate.Core.Entities.Common.Image", b =>
                 {
@@ -354,6 +390,33 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.HasIndex("ListingsId");
 
                     b.ToTable("ListingTag");
+                });
+
+            modelBuilder.Entity("DietiEstate.Core.Entities.BookingModels.Booking", b =>
+                {
+                    b.HasOne("DietiEstate.Core.Entities.UserModels.User", "Agent")
+                        .WithMany()
+                        .HasForeignKey("AgentUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DietiEstate.Core.Entities.UserModels.User", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DietiEstate.Core.Entities.ListingModels.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("DietiEstate.Core.Entities.ListingModels.Listing", b =>

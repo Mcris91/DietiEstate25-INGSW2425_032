@@ -1,3 +1,4 @@
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.OfferModels;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.Infrastracture.Data;
 
-public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
+public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
 {
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
 
@@ -27,6 +28,8 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
     public virtual DbSet<UserSession> UserSession { get; set; }
 
     public virtual DbSet<UserVerification> UserVerification { get; set; }
+    
+    public virtual DbSet<Booking>  Booking { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,5 +52,4 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
                 .IsUnique();
         });
     }
-
 }
