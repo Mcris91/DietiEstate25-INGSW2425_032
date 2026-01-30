@@ -9,25 +9,13 @@ namespace DietiEstate.Infrastracture.Repositories;
 
 public class ListingRepository(DietiEstateDbContext context) : IListingRepository
 {
-    public async Task<IEnumerable<Listing?>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
     {
         return await context.Listing
+            .Include(l => l.Type)
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)
-            .ApplyFilters(filters)
-            .ApplyNumericFilters(filters)
-            .ApplySorting(filters.SortBy, filters.SortOrder)
-            .ToListAsync();
-    }
-    
-    public async Task<IEnumerable<Listing?>> GetListingsByAgentIdAsync(Guid agentId, ListingFilterDto filters, int? pageNumber, int? pageSize)
-    {
-        return await context.Listing
-            .Include(l => l.ListingServices)
-            .Include(l => l.ListingTags)
-            .Include(l => l.ListingImages)
-            .Where(l => l.AgentUserId == agentId)
             .ApplyFilters(filters)
             .ApplyNumericFilters(filters)
             .ApplySorting(filters.SortBy, filters.SortOrder)
@@ -37,9 +25,11 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     public async Task<Listing?> GetListingByIdAsync(Guid listingId)
     {
         return await context.Listing
+            .Include(l => l.Type)
             .Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             .Include(l => l.ListingImages)
+            .Include(l => l.Agent)
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
@@ -52,9 +42,9 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
         listing.ListingTags = await context.Tag
             .Where(t => tags.Contains(t.Id))
             .ToListAsync();
-        listing.ListingImages = await context.Image
+        /*listing.ListingImages = await context.Image
             .Where(i => images.Contains(i.Url))
-            .ToListAsync();
+            .ToListAsync();*/
         
         await context.Database.BeginTransactionAsync();
         await context.Listing.AddAsync(listing);

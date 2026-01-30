@@ -94,6 +94,10 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.Property<bool>("Available")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(5000)
@@ -159,6 +163,10 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Icon")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -170,6 +178,9 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("PropertyType");
                 });
@@ -204,6 +215,42 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tag");
+                });
+
+            modelBuilder.Entity("DietiEstate.Core.Entities.OfferModels.Offer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FirstOfferId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("Offer");
                 });
 
             modelBuilder.Entity("DietiEstate.Core.Entities.UserModels.User", b =>
@@ -389,6 +436,25 @@ namespace DietiEstate.Infrastracture.Data.Migrations
                     b.Navigation("Agent");
 
                     b.Navigation("Type");
+                });
+
+            modelBuilder.Entity("DietiEstate.Core.Entities.OfferModels.Offer", b =>
+                {
+                    b.HasOne("DietiEstate.Core.Entities.UserModels.User", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DietiEstate.Core.Entities.ListingModels.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Listing");
                 });
 
             modelBuilder.Entity("ListingImage", b =>

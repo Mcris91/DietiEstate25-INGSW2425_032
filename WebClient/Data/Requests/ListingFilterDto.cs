@@ -4,21 +4,23 @@ public class ListingFilterDto : BaseFilterDto
 {
     public Guid? TypeId { get; init; }
     
+    public Guid? AgentId { get; init; }
+    
     public IReadOnlyList<Guid>? ServiceIds { get; init; }
 
     public IReadOnlyList<Guid>? TagIds { get; init; }
 
-    public decimal? MinPrice { get; init; }
+    public decimal? MinPrice { get; set; }
 
-    public decimal? MaxPrice { get; init; }
+    public decimal? MaxPrice { get; set; }
 
-    public decimal? MinRooms { get; init; }
+    public int? MinRooms { get; set; }
 
-    public decimal? MaxRooms { get; init; }
+    public int? MaxRooms { get; set; }
 
-    public decimal? MinSize { get; init; }
+    public decimal? MinSize { get; set; }
 
-    public decimal? MaxSize { get; init; }
+    public decimal? MaxSize { get; set; }
 
     public string SortBy { get; init; } = "views";
 

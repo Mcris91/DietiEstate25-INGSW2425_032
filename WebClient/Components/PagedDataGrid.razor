@@ -9,13 +9,18 @@
 {
     <FluentProgressRing></FluentProgressRing>
 }
-else if (_pagedResult != null && !_pagedResult.Items.Any())
+else if (_pagedResult == null || !_pagedResult.Items.Any())
 {
     <p><em>Nessun dato trovato.</em></p>
 }
 else
 {
-    <FluentDataGrid Items="@_pagedResult!.Items.AsQueryable()" @attributes="AdditionalAttributes">
+    <FluentDataGrid Items="@_pagedResult.Items.AsQueryable()"
+                    @attributes="AdditionalAttributes">
+        <SelectColumn TGridItem="TItem"
+                      SelectMode="DataGridSelectMode.Single"
+                      SelectFromEntireRow="true"
+                      OnSelect="@((context) => HandleRowClick(context.Item))"/>
         @GridColumns
     </FluentDataGrid>
 
@@ -38,7 +43,10 @@ else
 
 @code {
     [Parameter, EditorRequired]
-    public required Func<Guid, int?, int?, Task<PagedResponseDto<TItem>>> DataProvider { get; set; }
+    public required Func<int?, int?, Task<PagedResponseDto<TItem>>> DataProvider { get; set; }
+    
+    [Parameter]
+    public EventCallback<TItem> OnRowClick { get; set; }
 
     [Parameter, EditorRequired]
     public required RenderFragment GridColumns { get; set; }
@@ -49,6 +57,7 @@ else
     [Parameter(CaptureUnmatchedValues = true)]
     public required IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
 
+    
     private IQueryable<TItem>? _items = Enumerable.Empty<TItem>().AsQueryable();
     private int? _currentPage;
     private int? _totalPages;
@@ -56,27 +65,29 @@ else
 
     private PagedResponseDto<TItem>? _pagedResult;
     
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadData(Guid.NewGuid(), 1, PageSize);
+        if (!firstRender) return; 
+        await LoadData(1, PageSize);
+        StateHasChanged();
     }
 
-    private async Task LoadData(Guid agentId, int? pageNumber, int? pageSize)
+    private async Task LoadData(int? pageNumber, int? pageSize)
     {
         _isLoading = true;
         
         try
         {
-            _pagedResult = await DataProvider.Invoke(agentId, pageNumber, pageSize);
+            _pagedResult = await DataProvider.Invoke(pageNumber, pageSize);
             _items = _pagedResult.Items.AsQueryable();
             _currentPage = _pagedResult.PageNumber;
             _totalPages = _pagedResult.TotalPages;
         }
         catch (Exception ex)
         {
-            Logger.LogError("Impossibile caricare i dati per la griglia. {Error}", ex.Message);
+            Logger.LogError("Error retreiving data from the API. {Error}", ex.Message);
             _items = Enumerable.Empty<TItem>().AsQueryable();
-            ToastService.ShowError("Impossibile caricare i dati per la griglia. " + ex.Message);
+            ToastService.ShowError("Impossibile caricare i dati per la griglia. Riprova più tardi.");
         }
         finally
         {
@@ -87,7 +98,7 @@ else
     private async Task GoToPageAsync(int pageIndex)
     {
         if (pageIndex == _currentPage) return;
-        await LoadData(Guid.NewGuid(), pageIndex, PageSize);
+        await LoadData(pageIndex, PageSize);
     }
 
     private Appearance PageButtonAppearance(int pageIndex)
@@ -95,4 +106,10 @@ else
 
     private string? AriaCurrentValue(int pageIndex)
         => _currentPage == pageIndex ? "page" : null;
+    
+    private async Task HandleRowClick(TItem item)
+    {
+        if (OnRowClick.HasDelegate)
+            await OnRowClick.InvokeAsync(item);
+    }
 }

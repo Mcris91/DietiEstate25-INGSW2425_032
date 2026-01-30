@@ -1,6 +1,7 @@
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,8 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
 
     public virtual DbSet<Listing> Listing { get; set; }
+    
+    public virtual DbSet<Offer> Offer { get; set; }
  
     public virtual DbSet<Image> Image { get; set; }
 
@@ -40,6 +43,12 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
         modelBuilder.Entity<Image>(entity =>
         {
             entity.HasIndex(i => i.Url)
+                .IsUnique();
+        });
+        
+        modelBuilder.Entity<PropertyType>(entity =>
+        {
+            entity.HasIndex(pt => pt.Code)
                 .IsUnique();
         });
     }

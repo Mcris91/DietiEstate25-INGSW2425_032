@@ -3,6 +3,8 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.ListingModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
@@ -14,6 +16,8 @@ namespace DietiEstate.WebApi.Controllers;
 [Route("api/v1/[controller]")]
 public class ListingController(
     IListingRepository listingRepository,
+    IPropertyTypeRepository propertyTypeRepository,
+    IMinioService minioService,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -29,6 +33,11 @@ public class ListingController(
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
         var listings = await listingRepository.GetListingsAsync(filterDto, pageNumber, pageSize);
+        foreach (var listing in listings)
+        {
+            if (!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
+        }
         return Ok(new PagedResponseDto<ListingResponseDto>(
             listings.ToList().Select(mapper.Map<ListingResponseDto>), 
             pageSize, pageNumber));
@@ -39,28 +48,41 @@ public class ListingController(
     public async Task<IActionResult> GetListingById(Guid listingId) 
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is { } listing)
+        {
+            if(!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
+            
+            if (listing.ListingImages.Count > 0)
+            {
+                foreach (var image in listing.ListingImages)
+                    image.Url = await minioService.GeneratePresignedUrl(image.Url);
+            }
             return Ok(mapper.Map<ListingResponseDto>(listing));
+        }
         
         return NotFound();
     }
 
-    [HttpGet("GetByAgentId/{agentId:guid}")]
+    [HttpGet("GetAgentCounters/{agentId:guid}")]
     [Authorize(Policy = "ReadListing")]
-    public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgentId(
-        Guid agentId,
-        [FromQuery] ListingFilterDto filterDto,
-        [FromQuery] int? pageNumber,
-        [FromQuery] int? pageSize)
+    public async Task<IActionResult> GetAgentCounters(Guid agentId)
     {
-        if (pageNumber.HasValue ^ pageSize.HasValue) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
-        if (pageNumber <= 0 || pageSize <= 0) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+        var listings = await listingRepository.GetListingsAsync(
+            new ListingFilterDto() { AgentId = agentId }, null, null);
 
-        var listings = await listingRepository.GetListingsByAgentIdAsync(agentId, filterDto, pageNumber, pageSize);
-        return Ok(new PagedResponseDto<ListingResponseDto>(
-            listings.ToList().Select(mapper.Map<ListingResponseDto>), 
-            pageSize, pageNumber));
+        var forRentType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("RENT");
+        var forSaleType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("SALE");
+        
+        if (forRentType == null || forSaleType == null)
+            return StatusCode(500, new { error = "Property types 'RENT' and 'SALE' must exist in the database." });
+
+        var listingsEnumerable = listings.ToList();
+        
+        return Ok(new ListingAgentCountersResponseDto()
+        {
+            ForRentCount = listingsEnumerable.Count(l => l.TypeId == forRentType.Id),
+            ForSaleCount = listingsEnumerable.Count(l => l.TypeId == forSaleType.Id),
+        });
     }
 
     [HttpPost]
@@ -68,7 +90,44 @@ public class ListingController(
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);
-        await listingRepository.AddListingAsync(listing, request.Services, request.Tags, request.Images);
+
+        if (request.FeaturedImage.Length > 0)
+        {
+            try
+            {
+                using var featuredImageStream = new MemoryStream(request.FeaturedImage);
+                listing.FeaturedImage = await minioService.UploadImageAsync(featuredImageStream, listing.Id, listing.Id);
+            }
+            catch (Exception)
+            {
+                return BadRequest("L'immagine di copertina non è stata caricata");
+
+            }
+        }
+        foreach (var listingImage in  request.Images)
+        {
+            using var imageStream = new MemoryStream(listingImage.Image);
+
+            var newImage = new Image()
+            {
+                Id = Guid.NewGuid(),
+            };
+            try
+            {
+                newImage.Url = await minioService.UploadImageAsync(imageStream, listing.Id, newImage.Id);
+            }
+            catch (Exception)
+            {
+                return BadRequest("L'immagine non è stata caricata");
+            }
+            Console.WriteLine($"Immagine {newImage.Id} aggiunta all'elenco");
+            listing.ListingImages.Add(newImage);
+        }
+        
+        await listingRepository.AddListingAsync(listing, 
+            request.Services.Select(s=>s.Id).ToList(), 
+            request.Tags.Select(s=>s.Id).ToList(), 
+            listing.ListingImages.Select(s=>s.Url).ToList());
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
 

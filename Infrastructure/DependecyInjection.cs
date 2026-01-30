@@ -1,5 +1,6 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastracture.Config;
 using DietiEstate.Infrastracture.Data;
@@ -24,16 +25,16 @@ public static class DependecyInjection
             {
                 dboptions.MapEnum<UserRole>("user_role")
                     .EnableRetryOnFailure();
-                dboptions.MapEnum<BookingStatus>("booking_status")
-                    .EnableRetryOnFailure();
                 dboptions.EnableRetryOnFailure(0);
             });
         }, ServiceLifetime.Transient);
         
         services.AddScoped<IListingRepository, ListingRepository>();
-        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IOfferRepository, OfferRepository>();
+        services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
+        services.AddScoped<ITestRepository, TestRepository>();
         
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordService, BCryptPasswordService>();

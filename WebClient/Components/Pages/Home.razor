@@ -1,7 +1,263 @@
 ﻿@page "/"
+@using DietiEstate.WebClient.ApiService
+@using DietiEstate.WebClient.Components.Dialogs
+@using DietiEstate.WebClient.Data.Requests
+@using DietiEstate.WebClient.Data.Responses
+@inject ListingApiService ListingApiService
+@inject NavigationManager Navigator
+@inject IJSRuntime JsRuntime
+@inject IDialogService DialogService
+@inject AuthApiService AuthApiService
+@implements IAsyncDisposable
+@rendermode InteractiveServer
 
+<FluentDialogProvider />
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<FluentGrid>
+    <FluentGridItem xs="12" md="8">
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Style="width: 100%;">
+    
+            <FluentSearch Placeholder="Cerca indirizzo..."
+                          @bind-Value="_searchQuery"
+                          Style="width: 100%;" />
 
-Welcome to your new Fluent Blazor app.
+            <FluentButton Appearance="Appearance.Accent" 
+                          OnClick="@OpenListingFilterDialogAsync" 
+                          IconStart="@(new Icons.Regular.Size20.Filter())">
+                Filtri
+            </FluentButton>
+            
+            <FluentButton Appearance="Appearance.Accent" 
+                          OnClick="@SearchAddress" 
+                          IconStart="@(new Icons.Regular.Size20.Search())">
+                Cerca
+            </FluentButton>
+        </FluentStack>
+    </FluentGridItem>
+    <FluentGridItem xs="12" md="8">
+        <div id="map" style="height: 500px; width: 100% ;border-color: black; border-width: 3px; border-radius: 10px"></div>
+    </FluentGridItem>
+    <FluentGridItem md="4">
+        <div style="height: 500px; display: flex; flex-direction: column;">
+            <div style="flex-grow: 1; overflow-y: auto; padding-right: 8px; margin-bottom: 10px;">
+                <FluentStack Orientation="Orientation.Vertical">
+                    @if (_listings != null)
+                    {
+                        @foreach (var listing in _listings.Items)
+                        {
+                            <FluentCard @onclick="@(() => Navigator.NavigateTo($"View/{listing.Id}"))">
+                                <FluentStack Orientation="Orientation.Vertical">
+                                    <img src="@listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
+                                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                                        <FluentBadge BackgroundColor="black" Circular="true">@listing.Price €</FluentBadge>
+                                        <FluentLabel Typo="Typography.H4">@listing.Name</FluentLabel>
+                                        <FluentLabel Typo="Typography.Body">@listing.Address</FluentLabel>
+                                    </FluentStack>
+
+                                    <FluentDivider Style="width: 100%; color: black"></FluentDivider>
+
+                                    <FluentStack Orientation="Orientation.Horizontal">
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.ArrowMaximize())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.Dimensions Mq</FluentLabel>
+                                        </FluentStack>
+
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.Flash())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.EnergyClass </FluentLabel>
+                                        </FluentStack>
+
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.Door())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.Rooms stanze</FluentLabel>
+                                        </FluentStack>
+                                    </FluentStack>
+                                </FluentStack>
+                            </FluentCard>
+                        }
+                    }
+                </FluentStack>
+            </div>
+            
+            <FluentStack Orientation="Orientation.Horizontal">
+            @if (_listings != null)
+            {
+                @for (var pageIndex = 1; pageIndex <= _listings.TotalPages; pageIndex++)
+                {
+                    var capturedIndex = pageIndex;
+                    <FluentButton @onclick="@(() => GoToPageAsync(capturedIndex))"
+                                  Appearance="@PageButtonAppearance(capturedIndex)">
+                        @(capturedIndex)
+                    </FluentButton>
+                }
+            }
+            </FluentStack>
+        </div>
+    </FluentGridItem>
+</FluentGrid>
+<div style="margin-top: 1rem;">
+    <FluentButton @onclick="@OpenLoginDialogAsync" Appearance="Appearance.Accent">
+        Open Dialog
+    </FluentButton>
+</div>
+
+
+@code{
+
+    private PagedResponseDto<ListingResponseDto>? _listings;
+    private IJSObjectReference? _jsModule;
+    private string _searchQuery = "";
+    private int _pageSize = 10;
+    ListingFilterDto filter = new();
+
+    readonly ListingFilterDto _filters = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, _pageSize);
+        
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Home.razor.js");
+             await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+             if (_listings != null)
+                 foreach (var listing in _listings.Items)
+                 {
+                     await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id);
+                 }
+        }
+    }
+    
+    private async Task SearchAddress()
+    {
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            await _jsModule.InvokeVoidAsync("searchAddress", _searchQuery);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            try 
+            {
+                await _jsModule.DisposeAsync();
+            } catch (JSDisconnectedException) 
+            {
+                
+            }
+        }
+    }
+
+    private async Task OpenLoginDialogAsync()
+    {
+        LoginRequestDto loginUser = new() {
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters loginParameters = new() {
+            Title = "Accedi",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Accedi",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+        
+        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
+        DialogResult loginResult = await loginDialog.Result;
+
+        if (loginResult.Data is not null && !loginResult.Cancelled)
+        {
+            if (loginResult.Data is UserRequestDto)
+            {
+                await OpenRegisterDialogAsync();
+            }
+            else
+            {
+                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
+                Console.WriteLine($"Login dialog closed by {loginRequest?.Email} - Canceled: {loginResult.Cancelled}");
+                await AuthApiService.Login(loginRequest);
+            }
+        }
+    }
+    
+    private async Task OpenRegisterDialogAsync(){
+        
+        UserRequestDto registerUser = new() {
+            FirstName = "",
+            LastName = "",
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters registerParameters = new() {
+            Title = "Registrati",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Registrati",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+        
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+        
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+            Console.WriteLine($"Register dialog closed by {registerRequest?.Email} - Canceled: {registerResult.Cancelled}");
+            await AuthApiService.Register(registerRequest);
+        }
+    }
+    
+    private async Task OpenListingFilterDialogAsync()
+    {
+
+        
+
+        DialogParameters registerParameters = new() {
+            Title = "Filtri",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Applica",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+        
+        IDialogReference filterDialog = await DialogService.ShowDialogAsync<ListingFilterDialog>(filter, registerParameters);
+        DialogResult filterResult = await filterDialog.Result;
+        
+        if (filterResult.Data is not null && !filterResult.Cancelled)
+        {
+            ListingFilterDto? registerRequest = filterResult.Data as ListingFilterDto;
+            Console.WriteLine($"Register dialog closed by {filter.TypeId} - Canceled: {filterResult.Cancelled}");
+        }
+    }
+    
+    private async Task GoToPageAsync(int pageIndex)
+    {
+        if (_listings.PageNumber != pageIndex)
+        {
+            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,pageIndex, _pageSize);
+            if (_listings != null)
+                await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
+
+                foreach (var listing in _listings.Items)
+                {
+                    await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id);
+                }
+            StateHasChanged();
+        }
+    }
+
+    private Appearance PageButtonAppearance(int pageIndex)
+        => _listings.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
+}

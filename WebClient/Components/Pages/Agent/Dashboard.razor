@@ -1,10 +1,12 @@
+@using System.Globalization
 @using DietiEstate.WebClient.ApiService
-@using DietiEstate.WebClient.Components.Shared
 @using DietiEstate.WebClient.Data.Requests
 @using DietiEstate.WebClient.Data.Responses
 @rendermode InteractiveServer
 
 @inject ListingApiService ListingApiService
+@inject OfferApiService OfferApiService
+@inject NavigationManager Navigation
 
 @page "/agent/dashboard"
 
@@ -16,12 +18,14 @@
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Inserzioni"
                              LeftInfo="Vendita" RightInfo="Affitto"
-                             LeftNumber="17" RightNumber="8"/>
+                             LeftNumber="@(_listingCounters?.ForSaleCount ?? 0)" 
+                             RightNumber="@(_listingCounters?.ForSaleCount ?? 0)"/>
         </FluentGridItem>
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Offerte"
                              LeftInfo="Totali" RightInfo="Attesa"
-                             LeftNumber="75" RightNumber="28"/>
+                             LeftNumber="@(_offersCounters?.TotalOffers ?? 0)"  
+                             RightNumber="@(_offersCounters?.PendingOffers ?? 0)"/>
         </FluentGridItem>
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Prenotazioni"
@@ -37,22 +41,37 @@
             
             <PagedDataGrid TItem="ListingResponseDto"
                            DataProvider="GetListingData"
-                           PageSize="10">
+                           PageSize="10"
+                           OnRowClick="OnListingRowClick">
               <GridColumns>
-                <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)" />
-                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type)" />
-                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price)" />
+                <PropertyColumn Title="Nome" Property="@((ListingResponseDto l) => l.Name)"/>
+                <PropertyColumn Title="Tipologia" Property="@((ListingResponseDto l) => l.Type.Name)"/>
+                <PropertyColumn Title="Prezzo" Property="@((ListingResponseDto l) => l.Price.ToString("C", new CultureInfo("it-IT")))"/>
                 <TemplateColumn Title="Disponibilità" TGridItem="ListingResponseDto">
-                  <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent )" Circular="true">
-                    @(context.Available ? "Disponibile" : "Occupata" )
+                  <FluentBadge Appearance="@(context.Available ? Appearance.Neutral : Appearance.Accent)" Circular="true">
+                    @(context.Available ? "Disponibile" : "Occupata")
                   </FluentBadge>
-                </TemplateColumn> 
+                </TemplateColumn>
               </GridColumns>
             </PagedDataGrid>
             
           </FluentTab>
           <FluentTab Label="Offerte" Id="tab-offers">
-            Content for Offers tab.
+
+            <PagedDataGrid TItem="OfferResponseDto"
+                           DataProvider="GetOfferData"
+                           PageSize="10"
+                           OnRowClick="OnOfferRowClick">
+              <GridColumns>
+                <PropertyColumn Title="Cliente" Property="@((OfferResponseDto o) => o.CustomerName + " " + o.CustomerLastName)"/>
+                <PropertyColumn Title="Contatto" Property="@((OfferResponseDto o) => o.CustomerEmail)"/>
+                <PropertyColumn Title="Immobile" Property="@((OfferResponseDto o) => o.ListingName)"/>
+                <PropertyColumn Title="Data" Property="@((OfferResponseDto o) => o.Date.ToString("dd/MM/yyyy"))"/>
+                <PropertyColumn Title="Valore" Property="@((OfferResponseDto o) => o.Value.ToString("C", new CultureInfo("it-IT")))"/>
+                <PropertyColumn Title="Stato" Property="@((OfferResponseDto o) => o.Status.ToString())"/>
+              </GridColumns>
+            </PagedDataGrid>
+            
           </FluentTab>
           <FluentTab Label="Prenotazioni" Id="tab-bookings">
             Content for Bookings tab.
@@ -64,18 +83,151 @@
     
   </FluentGridItem>
   <FluentGridItem xs="12" sm="12" md="4">
-    <FluentCard>
-      Right side
-    </FluentCard>
+    <DetailsCard IsLoading="_isDetailsCardLoading"
+                 TopSection="_detailsCardTopSection"
+                 BottomSection="_detailsCardBottomSection">
+      <Actions>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+          <FluentLabel Typo="Typography.H5">Azioni</FluentLabel>
+          @if (_loadedItem is ListingResponseDto listing)
+          {
+            <FluentGrid Spacing="1" Style="width: 100%;">
+              <FluentGridItem xs="12">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()">
+                  Visualizza
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="12">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{listing.Id}/"); })">
+                  Modifica
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.DocumentArrowDown()">
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Share()">
+                </FluentButton>
+              </FluentGridItem>
+            </FluentGrid>
+          } else if (_loadedItem is OfferResponseDto offer)
+          {
+            <FluentGrid Spacing="1" Style="width: 100%;">
+              <FluentGridItem xs="4">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
+                              OnClick="@(() => HandleOfferAction(offer.Id, true))">
+                  Accetta
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="4">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
+                              OnClick="@(() => HandleOfferAction(offer.Id, false))">
+                  Rifiuta
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="4">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{offer.Id}/"); })">
+                  Contro-Offerta
+                </FluentButton>
+              </FluentGridItem>
+            </FluentGrid>
+          }
+        </FluentStack>
+      </Actions>
+      <!-- TODO: Insert actions for other tables -->
+    </DetailsCard>
   </FluentGridItem>
 </FluentGrid>
 
 @code {
-  ListingFilterDto _filters = new ListingFilterDto();
-  
-  private async Task<PagedResponseDto<ListingResponseDto>>GetListingData(Guid agentId, int? pageNumber, int? pageSize)
+
+  readonly ListingFilterDto _filters = new()
   {
-    return await ListingApiService.GetListingsByAgentIdAsync(agentId, _filters, pageNumber, pageSize);
+    AgentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15")
+  };
+
+  readonly OfferFilterDto _offerFilters = new();
+
+  private ListingAgentCountersResponseDto? _listingCounters;
+  private OfferAgentCountersResponseDto? _offersCounters;
+
+  private bool _isDetailsCardLoading;
+  private Dictionary<string, string>? _detailsCardTopSection;
+  private Dictionary<string, string>? _detailsCardBottomSection;
+  private object? _loadedItem;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!firstRender) return;
+    _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
+    _offersCounters = await OfferApiService.GetTotalOffersAsync(_filters.AgentId);
+    StateHasChanged();
+  }
+
+  private async Task<PagedResponseDto<ListingResponseDto>> GetListingData(int? pageNumber, int? pageSize)
+  {
+    return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
+  }
+
+  private void OnListingRowClick(ListingResponseDto listing)
+  {
+    _isDetailsCardLoading = true;
+    _detailsCardTopSection = new Dictionary<string, string>()
+    {
+      { "Nome", listing.Name },
+      { "Città", listing.City },
+      { "Indirizzo", listing.Address },
+      { "Tipologia", listing.Type.Name },
+      { "Prezzo", listing.Price.ToString("C", new CultureInfo("it-IT")) },
+      { "Disponibilità", listing.Available ? "Disponibile" : "Occupata" },
+      { "Servizi disponibili", listing.Services.Count().ToString() }
+    };
+    _detailsCardBottomSection = new Dictionary<string, string>()
+    {
+      { "Visualizzazioni", "350" },
+      { "Preferiti", "123" },
+      { "Offerenti", "75" },
+      { "Offerte", "24" },
+      { "Prenotazioni", "17" }
+    };
+
+    _loadedItem = listing;
+    _isDetailsCardLoading = false;
+  }
+  
+  
+  private async Task<PagedResponseDto<OfferResponseDto>> GetOfferData(int? pageNumber, int? pageSize)
+  {
+    return await OfferApiService.GetOffersByAgentIdAsync(_offerFilters, pageNumber, pageSize);
+  }
+  
+  private void OnOfferRowClick(OfferResponseDto offer)
+  {
+    _isDetailsCardLoading = true;
+    _detailsCardTopSection = new Dictionary<string, string>()
+    {
+      { "Cliente", offer.CustomerName + " " + offer.CustomerLastName },
+      { "Contatto", offer.CustomerEmail },
+      { "Immobile", offer.ListingName },
+      { "Data", offer.Date.ToString("dd/MM/yyyy") },
+      { "Valore", offer.Value.ToString("C", new CultureInfo("it-IT")) },
+      { "Stato", offer.Status.ToString() }
+    };
+
+    _detailsCardBottomSection = new Dictionary<string, string>();
+    _loadedItem = offer;
+    _isDetailsCardLoading = false;
+  }
+
+  private async Task HandleOfferAction(Guid offerId, bool accept)
+  {
+    await OfferApiService.AcceptOrRejectOfferAsync(offerId, accept);
+    _offersCounters = await OfferApiService.GetTotalOffersAsync(_filters.AgentId);
+    _detailsCardTopSection = null;
+    StateHasChanged();
   }
 
 }

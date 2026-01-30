@@ -7,6 +7,9 @@ public static class ListingQueryExtensions
 {
     public static IQueryable<Listing> ApplyFilters(this IQueryable<Listing> query, ListingFilterDto filters)
     {
+        if (filters.AgentId.HasValue)
+            query = query.Where(l => l.AgentUserId == filters.AgentId.Value);
+        
         if (filters.TypeId.HasValue)
             query = query.Where(l => l.TypeId == filters.TypeId.Value);
 

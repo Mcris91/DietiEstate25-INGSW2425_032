@@ -1,0 +1,52 @@
+<FluentCard>
+    <FluentLabel Typo="Typography.H4">Dettagli</FluentLabel>
+    <FluentLabel Typo="Typography.Body">Seleziona un elemento dalla tabella per visualizzarne i dettagli</FluentLabel>
+    <FluentDivider Style="margin: 20px 0; width: 100%;"></FluentDivider>
+    @if (IsLoading)
+    {
+        <FluentProgressRing></FluentProgressRing>    
+    }
+    else if(TopSection == null || BottomSection == null)
+    {
+        
+    }
+    else
+    {
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            @foreach(var item in TopSection)
+            {
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5"
+                             HorizontalAlignment="HorizontalAlignment.Left">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">@item.Key:</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">@item.Value</FluentLabel>
+                </FluentStack>
+            }
+        </FluentStack>
+        <FluentDivider Style="margin: 20px 0; width: 100%;"></FluentDivider>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+            @foreach(var item in BottomSection)
+            {
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5" HorizontalAlignment="HorizontalAlignment.Left">
+                    <FluentLabel Typo="Typography.Body" Weight="FontWeight.Bold">@item.Key:</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">@item.Value</FluentLabel>
+                </FluentStack>
+            }
+        </FluentStack>
+        <FluentDivider Style="margin: 20px 0; width: 100%;"></FluentDivider>
+        @Actions
+    }
+</FluentCard>
+
+@code {
+    [Parameter]
+    public required bool IsLoading { get; set; } = false;
+    
+    [Parameter] 
+    public required Dictionary<string, string>? TopSection { get; set; }
+    
+    [Parameter] 
+    public required Dictionary<string, string>? BottomSection { get; set; }
+    
+    [Parameter] 
+    public RenderFragment? Actions { get; set; }
+}

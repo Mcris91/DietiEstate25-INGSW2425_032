@@ -4,6 +4,8 @@ public class ListingFilterDto
 {
     public Guid? TypeId { get; init; }
     
+    public Guid? AgentId { get; init; }
+    
     public IReadOnlyList<Guid>? ServiceIds { get; init; }
 
     public IReadOnlyList<Guid>? TagIds { get; init; }
