@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DietiEstate.Infrastracture.Data;
 
-public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
+public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
 {
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
 
@@ -43,5 +43,4 @@ public class DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options
                 .IsUnique();
         });
     }
-
 }

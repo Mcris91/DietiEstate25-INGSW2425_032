@@ -32,10 +32,15 @@ public static class BookingQueryExtensions
 
     public static IQueryable<Booking> ApplySorting(this IQueryable<Booking> query, string sortBy, string sortOrder)
     {
-        return sortBy.ToLower() switch
+        string sortField = sortBy?.ToLower() ?? "date";
+
+        return sortField switch
         {
-            "DateCreation" => sortOrder == "desc" ? query.OrderByDescending(b => b.DateCreation) : query.OrderBy(b => b.DateCreation),
-            "DateMeeting" => sortOrder == "desc" ? query.OrderByDescending(b => b.DateMeeting) : query.OrderBy(b => b.DateMeeting)
+            // Gestiamo sia 'date' che 'data' per sicurezza
+            "date" or "data" => sortOrder == "desc" ? query.OrderByDescending(b => b.DateMeeting) : query.OrderBy(b => b.DateMeeting),
+        
+            // IL PEZZO MANCANTE: Il caso di default (_) gestisce qualsiasi altro valore (incluso "data" se non mappato sopra)
+            _ => query.OrderByDescending(b => b.Id) 
         };
     }
 }

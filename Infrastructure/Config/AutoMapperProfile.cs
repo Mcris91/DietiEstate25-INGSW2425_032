@@ -1,6 +1,7 @@
 using AutoMapper;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.ValueObjects;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.UserModels;
@@ -28,5 +29,12 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingTags.Select(tag => tag.Name)))
             .ForMember(listingDto => listingDto.Images, opt =>
                 opt.MapFrom(src => src.ListingImages.Select(image => image.Url)));
+        
+        //Booking
+        CreateMap<BookingRequestDto, Booking>();
+        CreateMap<Booking, BookingResponseDto>();
+        // Se nel DTO si chiama AnnuncioId ma nel DB è ListingId
+        CreateMap<BookingRequestDto, Booking>()
+            .ForMember(dest => dest.ListingId, opt => opt.MapFrom(src => src.ListingId));
     }
 }

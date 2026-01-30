@@ -96,7 +96,7 @@ public class BookingController(
 
     [HttpPost]
     public async Task<IActionResult> PostBooking(
-        [FromQuery] BookingRequestDto request)
+        [FromBody] BookingRequestDto request)
     {
         var booking = mapper.Map<Booking>(request);
         await bookingRepository.AddBookingAsync(booking);
