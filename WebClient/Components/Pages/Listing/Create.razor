@@ -7,6 +7,8 @@
 @inject ListingApiService ListingApiService
 @inject PropertyTypeApiService PropertyTypeApiService
 @inject IMapper Mapper
+@inject IJSRuntime JsRuntime
+
 
 @rendermode InteractiveServer
 
@@ -64,6 +66,7 @@
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">              
               <FluentTextField Name="Address" Label="Indirizzo" 
                                @bind-Value="_listingRequestDto.Address" Required
+                               @onkeyup="@HandleKeyUp"
                                Style="width: 100%;"/>
               <FluentValidationMessage For="@(() => _listingRequestDto.Address)"/>
             </FluentStack>
@@ -159,6 +162,10 @@
       </FluentCard>
       
       <FluentCard>
+          <div id="map" style="width: 100%; height: 300px; border-color: black; border-width: 3px; border-radius: 10px"></div>
+      </FluentCard>
+      
+      <FluentCard>
         <FluentButton Appearance="Appearance.Accent" Style="width: 100%;"
                       OnClick="@SaveListingAsync">Salva</FluentButton>
       </FluentCard>
@@ -177,8 +184,10 @@
   private bool _isCoverUploaded;
   private string _coverFile;
   private FluentInputFile? _galleryFileUpload;
-  
-  private ListingRequestDto _listingRequestDto = new();
+  private IJSObjectReference? _jsModule;
+
+
+private ListingRequestDto _listingRequestDto = new();
   private List<Option<string>> _listingTypes = [];
 
   private readonly List<Option<string>> _energyClasses =
@@ -196,7 +205,10 @@
   {
     if (!firstRender) return;
 
-    var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
+    _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Listing/Create.razor.js");
+    await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+    
+    /*var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
     _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
 
     var propertyTypes = await PropertyTypeApiService.GetPropertyTypesAsync();
@@ -206,7 +218,7 @@
     
     _energyClasses.Where(c => c.Value == _listingRequestDto.EnergyClass)
       .ToList()
-      .ForEach(c => c.Selected = true);
+      .ForEach(c => c.Selected = true);*/
     
     StateHasChanged();
   }
@@ -237,6 +249,22 @@
     else
     {
       //await ListingApiService.UpdateListingAsync(ListingId.Value, _listingRequestDto);
+    }
+  }
+  
+  private async Task HandleKeyUp(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+    {
+      await SearchAddress();
+    }
+  }
+  
+  private async Task SearchAddress()
+  {
+    if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address))
+    {
+      await _jsModule.InvokeVoidAsync("searchAddress", _listingRequestDto.Address);
     }
   }
   

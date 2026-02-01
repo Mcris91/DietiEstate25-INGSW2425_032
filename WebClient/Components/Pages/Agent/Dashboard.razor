@@ -93,13 +93,14 @@
           {
             <FluentGrid Spacing="1" Style="width: 100%;">
               <FluentGridItem xs="12">
-                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()" 
+                              OnClick="@(() => { Navigation.NavigateTo($"View/{listing.Id}/"); })">
                   Visualizza
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="12">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
-                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{listing.Id}/"); })">
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/update/{listing.Id}/"); })">
                   Modifica
                 </FluentButton>
               </FluentGridItem>
@@ -146,7 +147,7 @@
 
   readonly ListingFilterDto _filters = new()
   {
-    AgentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15")
+    AgentId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566")
   };
 
   readonly OfferFilterDto _offerFilters = new();

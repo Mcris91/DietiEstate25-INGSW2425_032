@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.Common;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 
 namespace DietiEstate.Core.Entities.ListingModels;
@@ -84,4 +86,9 @@ public class Listing
 
     [Required]
     public virtual ICollection<Tag> ListingTags { get; set; } = [];
+    
+    public virtual ICollection<Offer> ListingOffers { get; set; } = [];
+
+
+    public virtual ICollection<Booking> ListingBookings { get; set; } = [];
 }

@@ -7,11 +7,10 @@
 @inject NavigationManager Navigator
 @inject IJSRuntime JsRuntime
 @inject IDialogService DialogService
-@inject AuthApiService AuthApiService
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
-<FluentDialogProvider />
+
 <PageTitle>Home</PageTitle>
 
 <FluentGrid>
@@ -19,7 +18,7 @@
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Style="width: 100%;">
     
             <FluentSearch Placeholder="Cerca indirizzo..."
-                          @bind-Value="_searchQuery"
+                          @bind-Value="_searchAddress"
                           Style="width: 100%;" />
 
             <FluentButton Appearance="Appearance.Accent" 
@@ -96,20 +95,15 @@
         </div>
     </FluentGridItem>
 </FluentGrid>
-<div style="margin-top: 1rem;">
-    <FluentButton @onclick="@OpenLoginDialogAsync" Appearance="Appearance.Accent">
-        Open Dialog
-    </FluentButton>
-</div>
 
 
 @code{
 
     private PagedResponseDto<ListingResponseDto>? _listings;
     private IJSObjectReference? _jsModule;
-    private string _searchQuery = "";
+    private string _searchAddress = "";
     private int _pageSize = 10;
-    ListingFilterDto filter = new();
+    public ListingFilterDto filter = new();
 
     readonly ListingFilterDto _filters = new();
 
@@ -135,9 +129,9 @@
     
     private async Task SearchAddress()
     {
-        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        if (!string.IsNullOrWhiteSpace(_searchAddress))
         {
-            await _jsModule.InvokeVoidAsync("searchAddress", _searchQuery);
+            await _jsModule.InvokeVoidAsync("searchAddress", _searchAddress);
         }
     }
 
@@ -155,79 +149,13 @@
         }
     }
 
-    private async Task OpenLoginDialogAsync()
-    {
-        LoginRequestDto loginUser = new() {
-            Email = "",
-            Password = ""
-        };
-
-        DialogParameters loginParameters = new() {
-            Title = "Accedi",
-            TitleTypo = Typography.H2,
-            PrimaryAction = "Accedi",
-            SecondaryAction = "Annulla",
-            Width = "500px",
-            PreventScroll = true
-        };
-        
-        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
-        DialogResult loginResult = await loginDialog.Result;
-
-        if (loginResult.Data is not null && !loginResult.Cancelled)
-        {
-            if (loginResult.Data is UserRequestDto)
-            {
-                await OpenRegisterDialogAsync();
-            }
-            else
-            {
-                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
-                Console.WriteLine($"Login dialog closed by {loginRequest?.Email} - Canceled: {loginResult.Cancelled}");
-                await AuthApiService.Login(loginRequest);
-            }
-        }
-    }
     
-    private async Task OpenRegisterDialogAsync(){
-        
-        UserRequestDto registerUser = new() {
-            FirstName = "",
-            LastName = "",
-            Email = "",
-            Password = ""
-        };
-
-        DialogParameters registerParameters = new() {
-            Title = "Registrati",
-            TitleTypo = Typography.H2,
-            PrimaryAction = "Registrati",
-            SecondaryAction = "Annulla",
-            Width = "500px",
-            PreventScroll = true
-        };
-        
-        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
-        DialogResult registerResult = await registerDialog.Result;
-        
-        if (registerResult.Data is not null && !registerResult.Cancelled)
-        {
-            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
-            Console.WriteLine($"Register dialog closed by {registerRequest?.Email} - Canceled: {registerResult.Cancelled}");
-            await AuthApiService.Register(registerRequest);
-        }
-    }
     
     private async Task OpenListingFilterDialogAsync()
     {
-
-        
-
         DialogParameters registerParameters = new() {
             Title = "Filtri",
             TitleTypo = Typography.H2,
-            PrimaryAction = "Applica",
-            SecondaryAction = "Annulla",
             Width = "500px",
             PreventScroll = true
         };
@@ -237,8 +165,16 @@
         
         if (filterResult.Data is not null && !filterResult.Cancelled)
         {
-            ListingFilterDto? registerRequest = filterResult.Data as ListingFilterDto;
-            Console.WriteLine($"Register dialog closed by {filter.TypeId} - Canceled: {filterResult.Cancelled}");
+            ListingFilterDto? _filter = filterResult.Data as ListingFilterDto;
+            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filter,1, _pageSize);
+            await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
+             
+            if (_listings != null)
+                foreach (var listing in _listings.Items)
+                {
+                    await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id);
+                }
+            StateHasChanged();
         }
     }
     

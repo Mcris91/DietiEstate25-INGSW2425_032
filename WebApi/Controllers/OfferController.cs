@@ -5,7 +5,6 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Data.Migrations;
 using DietiEstate.Infrastracture.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -119,7 +118,7 @@ public class OfferController(
         //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
         //if (adminSession is null)
         //    return Unauthorized("Access denied");
-        var agentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15");
+        var agentId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566");
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});

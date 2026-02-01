@@ -71,6 +71,11 @@ public static class Program
 */
         builder.Services.AddScoped<IMinioService, MinioService>();
         
+        builder.Services.AddHttpClient<GeoapifyService>(client => 
+        {
+            client.BaseAddress = new Uri("https://api.geoapify.com/v2/");
+        });
+        
         builder.Services.AddScoped<IMinioClient>(sp => 
         {
             var config = sp.GetRequiredService<IConfiguration>();

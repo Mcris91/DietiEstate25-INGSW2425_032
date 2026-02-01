@@ -19,6 +19,7 @@ public class AutoMapperProfile : Profile
         CreateMap<User, UserResponseDto>();
         CreateMap<User, LoginResponseDto>();
         CreateMap<AdminUserTemplate, User>();
+        CreateMap<DefaultTagTemplate, Tag>();
         
         // Listing
         CreateMap<ListingRequestDto, Listing>();
@@ -41,7 +42,12 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingServices.Select(service => new ListingServiceDto
                 {
                     Id = service.Id,
-                    Name = service.Name
+                    Name = service.Name,
+                    Type = service.Type,
+                    Address = service.Address,
+                    Distance = service.Distance,
+                    Latitude = service.Latitude,
+                    Longitude = service.Longitude
                 })))
             .ForMember(listingDto => listingDto.Tags, opt =>
                 opt.MapFrom(src => src.ListingTags.Select(tag => new ListingTagDto

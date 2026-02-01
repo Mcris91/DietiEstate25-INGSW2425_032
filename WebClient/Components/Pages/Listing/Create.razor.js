@@ -68,7 +68,7 @@ export async function searchAddress (address) {
             const lat = parseFloat(data[0].lat);
             const lon = parseFloat(data[0].lon);
             map.setView([lat, lon], 15);
-            marker.setLatLng([lat, lon]); 
+            marker.setLatLng([lat, lon]);
         } else {
             alert("Indirizzo non trovato");
         }
@@ -76,27 +76,3 @@ export async function searchAddress (address) {
         console.error("Errore nella ricerca dell'indirizzo:");
     }
 }
-
-export function addMarker (elementId, lat, lon, title, listingId){
-    if (map) {
-        const newMarker = L.marker([lat, lon]);
-
-        newMarker.bindTooltip(title, {
-            permanent: false,
-            direction: 'top'
-        });
-
-        newMarker.on('click', function() {
-            window.location.href = `/View/${listingId}`;
-        });
-
-        newMarker.addTo(markerGroup);
-    }
-}
-
-export async function removeAllMarkers(elementId){
-    if (markerGroup) {
-        markerGroup.clearLayers();
-    }
-}
-    

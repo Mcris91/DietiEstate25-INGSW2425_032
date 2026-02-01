@@ -10,16 +10,15 @@ public static class ListingQueryExtensions
         if (filters.AgentId.HasValue)
             query = query.Where(l => l.AgentUserId == filters.AgentId.Value);
         
+        if (!string.IsNullOrEmpty(filters.EnergyClass))
+            query = query.Where(l => l.EnergyClass == filters.EnergyClass);
+        
         if (filters.TypeId.HasValue)
             query = query.Where(l => l.TypeId == filters.TypeId.Value);
-
-        if (filters.ServiceIds?.Count > 0)
-            query = query.Where(l => l.ListingServices
-                .Any(ls => filters.ServiceIds.Contains(ls.Id)));
         
-        if (filters.TagIds?.Count > 0)
+        if (filters.Tags?.Count > 0)
             query = query.Where(l => l.ListingTags
-                .Any(ls => filters.TagIds.Contains(ls.Id)));
+                .Any(ls => filters.Tags.Contains(ls.Name)));
             
         return query;
     }

@@ -6,9 +6,7 @@ public class ListingFilterDto
     
     public Guid? AgentId { get; init; }
     
-    public IReadOnlyList<Guid>? ServiceIds { get; init; }
-
-    public IReadOnlyList<Guid>? TagIds { get; init; }
+    public IReadOnlyList<string>? Tags { get; init; }
 
     public decimal? MinPrice { get; init; }
 
@@ -21,6 +19,8 @@ public class ListingFilterDto
     public decimal? MinSize { get; init; }
 
     public decimal? MaxSize { get; init; }
+
+    public string EnergyClass { get; init; } = string.Empty;
 
     public string SortBy { get; init; } = "views";
 

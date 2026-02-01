@@ -92,15 +92,15 @@ else
                     <FluentLabel Typo="Typography.H4"> Costi e contatti </FluentLabel>
                     
                     <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
-                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="3">
                             <FluentIcon Value="@(new Icons.Regular.Size24.Money())" Color="Color.Neutral"/>
                             <FluentLabel Typo="Typography.H6">Prezzo: </FluentLabel>
                             <FluentBadge BackgroundColor="black" Circular="true">$@_listing.Price</FluentBadge>
                         </FluentStack>
-                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="3">
                             <FluentIcon Value="@(new Icons.Regular.Size24.Building())" Color="Color.Neutral"/>
-                            <FluentLabel Typo="Typography.H6">Condominio: </FluentLabel>
-                            <FluentBadge Circular="true">$prezzo</FluentBadge>
+                            <FluentLabel Typo="Typography.H6">Disponibile: </FluentLabel>
+                            <FluentBadge Circular="true" Appearance=@(_listing.Available ? Appearance.Neutral : Appearance.Accent )>@(_listing.Available ? "Si" : "No")</FluentBadge>
                         </FluentStack>
                     </FluentStack>
                     
@@ -130,12 +130,14 @@ else
                         {
                             <FluentStack Orientation="Orientation.Vertical">
                                 <FluentNumberField TValue="decimal" Label="Importo($)" Appearance="FluentInputAppearance.Outline" @bind-Value="@_offer.Value" Style="width: 100%"></FluentNumberField>
-                                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Send())" OnClick="MakeOffer" Style="width: 100%"></FluentButton>
+                                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Send())" Style="width: 100%"
+                                              OnClick="MakeOffer" ></FluentButton>
                             </FluentStack>
                         }
                         else
                         {
-                            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" OnClick="@(() => _makeOffer = true)" Style="width: 100%">
+                            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available)" Style="width: 100%"
+                                          OnClick="@(() => _makeOffer = true)">
                                 Fai un'offerta
                             </FluentButton>
                         }
@@ -151,27 +153,42 @@ else
             <FluentCard>
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
                     <FluentLabel Typo="Typography.H4">Servizi nelle vicinanze</FluentLabel>
+@{
+                        var servicesPerTag = _listing.Tags
+                            .Select(tag => new {
+                                TagName = tag.Name,
+                                Services = _listing.Services.Where(s => s.Type.Equals(tag.Name)).ToList()
+                            })
+                            .Where(tag => tag.Services.Any());
+                    }
 
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0" Style="width: 100%; max-width: 500px;">
-                        <FluentLabel Typo="Typography.H6"> Piano </FluentLabel>
-                        <FluentLabel Typo="Typography.H6"> Camere da letto </FluentLabel>
-                        <FluentLabel Typo="Typography.H6"> Bagni </FluentLabel>
+                    @foreach (var tag in servicesPerTag)
+                    {
+                        <div style="margin-bottom: 10px;">
+                            <FluentLabel Typo="Typography.H5" Style=" margin-bottom: 8px; text-transform: capitalize;">
+                                @tag.TagName
+                            </FluentLabel>
 
-                        @if (_showAll)
-                        {
-                            <FluentLabel Typo="Typography.H6"> Quadratura </FluentLabel>
-                            <FluentLabel Typo="Typography.H6"> Posti auto </FluentLabel>
-                            <FluentLabel Typo="Typography.H6"> Riscaldamento </FluentLabel>
-                        }
-                    </FluentStack>
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                                @foreach (var service in tag.Services)
+                                {
+                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                        <FluentLabel Typo="Typography.Body">@service.Name</FluentLabel>
+                                        <FluentLabel Typo="Typography.Body">
+                                            @((int)service.Distance) m
+                                        </FluentLabel>
+                                    </FluentStack>
+                                }
+                            </FluentStack>
+                        </div>
+                    }
+                    @if (!_listing.Tags.Any())
+                    {
+                        <FluentLabel Typo="Typography.Body" Style="font-style: italic;">
+                            Nessun servizio catalogato trovato nelle vicinanze.
+                        </FluentLabel>
+                    }
                 </FluentStack>
-                <div style="display: flex; justify-content: center; margin-top: 20px;">
-                    <FluentButton Appearance="Appearance.Stealth"
-                                  Style="font-weight: bold;"
-                                  OnClick="@(() => _showAll = !_showAll)">
-                        @(_showAll ? "Mostra meno" : "Mostra tutto")
-                    </FluentButton>
-                </div>
             </FluentCard>
         </FluentGridItem>
 
@@ -185,10 +202,6 @@ else
         </FluentGridItem>
     </FluentGrid>
 }
-
-
-
-
 @code {
     [Parameter] public Guid ListingId { get; set; }
 

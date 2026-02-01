@@ -1,13 +1,14 @@
 ﻿using System.Text.Json;
 using DietiEstate.WebClient.Data.Requests;
+using DietiEstate.WebClient.Data.Responses;
 
 namespace DietiEstate.WebClient.ApiService;
 
 public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
-    public async Task Login(LoginRequestDto loginRequest)
+    public async Task<LoginResponseDto?> Login(LoginRequestDto loginRequest)
     {
-        await httpClient.PostAsJsonAsync("login", loginRequest);
+        return await httpClient.PostAsJsonAsync("login", loginRequest).Result.Content.ReadFromJsonAsync<LoginResponseDto>();
     }
 
     public async Task Register(UserRequestDto registerRequest)
@@ -18,5 +19,11 @@ public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
     public async Task Logout()
     {
         await httpClient.PostAsync("logout", null);
+    }
+
+    public async Task RegisterAgency(RegisterAgencyDto registerAgencyRequest)
+    {
+        await httpClient.PostAsJsonAsync("register-agency", registerAgencyRequest);
+
     }
 }

@@ -3,6 +3,7 @@ using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
 using DietiEstate.Core.Enums;
@@ -19,6 +20,7 @@ public class AuthController(
     //IUserVerificationRepository userVerificationRepository,
     IPasswordResetService passwordResetService,
     IUserSessionService userSessionService,
+    IAgencyRepository agencyRepository,
     IPasswordService passwordService,
     IUserRepository userRepository,
     IEmailService emailService,
@@ -27,6 +29,33 @@ public class AuthController(
     //IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
+    [HttpPost("register-agency")]
+    public async Task<IActionResult> RegisterAgency([FromBody] RegisterAgencyDto request)
+    {
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+            return BadRequest("Email already exists.");
+        
+        var agency = new Agency()
+        {
+            Name = request.Name
+        };
+
+        var administrator = new User()
+        {
+            Email = request.Email.ToLowerInvariant(),
+            Password = passwordService.HashPassword(request.Password),
+            AgencyId = agency.Id,
+            Role = UserRole.SuperAdmin
+        };
+        
+        agency.Administrator = administrator;
+        
+        await agencyRepository.AddAgencyAsync(agency);
+
+        return Ok();
+    }
+    
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {

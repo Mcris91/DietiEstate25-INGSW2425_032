@@ -1,6 +1,8 @@
 using DietiEstate.Core.Enums;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DietiEstate.Core.Entities.AgencyModels;
 
 namespace DietiEstate.Core.Entities.UserModels;
 
@@ -24,4 +26,7 @@ public class User
     
     [Required]
     public UserRole Role { get; set; } = UserRole.Client;
+
+    [ForeignKey(nameof(Agency))] 
+    public Guid? AgencyId { get; set; } = null;
 }

@@ -1,13 +1,21 @@
+@using DietiEstate.WebClient.ApiService
+@using DietiEstate.WebClient.Components.Dialogs
+@using DietiEstate.WebClient.Data.Requests
+@using DietiEstate.WebClient.Data.Responses
 @inject NavigationManager NavigationManager
+@inject AuthApiService AuthApiService
+@inject IDialogService DialogService
 
 @rendermode InteractiveServer
-
+<FluentDialogProvider />
 <FluentDesignTheme Mode="@Mode" CustomColor="#EF4444" StorageName="theme"/>
 @if (!_isLoggedIn)
 {
-  <FluentAnchor Href="/" Appearance="Appearance.Stealth">Registra la tua azienda</FluentAnchor>
+    <FluentButton Appearance="Appearance.Stealth"
+                  @onclick="@OpenRegisterAgencyDialogAsync">Registra la tua azienda</FluentButton>
   <FluentButton IconStart="@(new Icons.Regular.Size20.PersonAccounts())"
-                Appearance="Appearance.Accent">Accedi</FluentButton>
+                Appearance="Appearance.Accent"
+                @onclick="@OpenLoginDialogAsync">Accedi</FluentButton>
 }
 else
 {
@@ -18,7 +26,7 @@ else
     <FluentAnchor Href="/agent/offers" Appearance="Appearance.Outline">Offerte</FluentAnchor>
     <FluentAnchor Href="/agent/listings" Appearance="Appearance.Outline">Inserzioni</FluentAnchor>
     <FluentProfileMenu Image=""
-                       HeaderLabel="@_currentUser.Role" Initials="@_currentUser.Initials"
+                       HeaderLabel="@_currentUser.Role"
                        FullName="@($"{_currentUser.FirstName} {_currentUser.LastName}")"
                        EMail="@_currentUser.Email" PopoverStyle="min-width: 330px;"
                        OnHeaderButtonClick="@SignOUt">
@@ -38,21 +46,125 @@ else
 }
 
 @code {
-  public DesignThemeModes Mode { get; set; }
-  
-  private bool _isLoggedIn = true;
-  private bool _isAgent = true;
-  private CurrentUser _currentUser = new();
-  
-  private void SignOUt() => NavigationManager.NavigateTo("user/logout", true);
-  
-  public class CurrentUser
-  {
-    public string FirstName { get; init; } = "Simone";
-    public string LastName { get; init; } = "Liberti";
-    public string Email { get; init; } = "sim.liberti@gmail.com";
-    public string Role { get; init; } = "Agent";
+    public DesignThemeModes Mode { get; set; }
 
-    public string Initials => $"{FirstName[0]}{LastName[0]}".ToUpper();
-  }
+    private bool _isLoggedIn = false;
+
+    private bool _isAgent = false;
+
+    //private CurrentUser _currentUser = new();
+    private LoginResponseDto? _currentUser;
+
+    private void SignOUt() => NavigationManager.NavigateTo("user/logout", true);
+
+    public class CurrentUser
+    {
+        public string FirstName { get; init; } = "Stefano";
+        public string LastName { get; init; } = "Murano";
+        public string Email { get; init; } = "s.murano@studenti.unina.it";
+        public string Role { get; init; } = "Agent";
+
+        public string Initials => $"{FirstName[0]}{LastName[0]}".ToUpper();
+    }
+
+    private async Task OpenLoginDialogAsync()
+    {
+        LoginRequestDto loginUser = new()
+        {
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters loginParameters = new()
+        {
+            Title = "Accedi",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Accedi",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
+        DialogResult loginResult = await loginDialog.Result;
+
+        if (loginResult.Data is not null && !loginResult.Cancelled)
+        {
+            if (loginResult.Data is UserRequestDto)
+            {
+                await OpenRegisterDialogAsync();
+            }
+            else
+            {
+                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
+                Console.WriteLine($"Login dialog closed by {loginRequest?.Email} - Canceled: {loginResult.Cancelled}");
+                _currentUser = await AuthApiService.Login(loginRequest);
+                _isLoggedIn = true;
+                _isAgent = true;
+            }
+        }
+    }
+
+    private async Task OpenRegisterDialogAsync()
+    {
+
+        UserRequestDto registerUser = new()
+        {
+            FirstName = "",
+            LastName = "",
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters registerParameters = new()
+        {
+            Title = "Registrati",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Registrati",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+            Console.WriteLine($"Register dialog closed by {registerRequest?.Email} - Canceled: {registerResult.Cancelled}");
+            await AuthApiService.Register(registerRequest);
+        }
+    }
+    
+    private async Task OpenRegisterAgencyDialogAsync()
+    {
+
+        RegisterAgencyDto registerAgency = new()
+        {
+            Name = "",
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters registerParameters = new()
+        {
+            Title = "Registra la tua azienda",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Registra",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterAgencyDialog>(registerAgency, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            RegisterAgencyDto? registerRequest = registerResult.Data as RegisterAgencyDto;
+            Console.WriteLine($"Register dialog closed by {registerRequest?.Email} - Canceled: {registerResult.Cancelled}");
+            await AuthApiService.RegisterAgency(registerRequest);
+        }
+    }
 }

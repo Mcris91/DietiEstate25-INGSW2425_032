@@ -23,7 +23,6 @@ public class MinioService(IMinioClient minioClient, MinioConfiguration minioConf
             .WithContentType(mimeType);
         
             await minioClient.PutObjectAsync(args);
-
         
         return fileName;
     }
