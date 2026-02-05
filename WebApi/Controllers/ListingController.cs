@@ -126,7 +126,7 @@ public class ListingController(
             listing.ListingImages.Add(newImage);
         }
 
-        listing.ListingServices = await geoapifyService.GetNearbyServicesAsync(listing.Id, listing.Latitude, listing.Longitude);
+        listing.ListingServices = await geoapifyService.GetNearbyServicesAsync(listing.Id, listing.Location.Y, listing.Location.X);
         var tags = listing.ListingServices.Select(s => s.Type).Distinct().ToList();
         var type = await propertyTypeRepository.GetPropertyTypeByCodeAsync(request.TypeCode);
         listing.TypeId = type.Id;

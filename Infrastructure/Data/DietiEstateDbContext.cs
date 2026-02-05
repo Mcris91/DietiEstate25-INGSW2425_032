@@ -36,11 +36,16 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasPostgresExtension("postgis");
         
         modelBuilder.Entity<Listing>()
             .HasMany(l => l.ListingImages)
             .WithMany(i => i.Listings)
             .UsingEntity("ListingImage");
+        
+        modelBuilder.Entity<Listing>()
+            .Property(l => l.Location)
+            .HasColumnType("geography");
         
         modelBuilder.Entity<Image>(entity =>
         {

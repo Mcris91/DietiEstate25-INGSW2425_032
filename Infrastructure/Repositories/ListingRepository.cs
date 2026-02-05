@@ -4,6 +4,7 @@ using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Infrastracture.Data;
 using DietiEstate.Infrastracture.Extensions;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Repositories;
 
@@ -20,7 +21,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .Include(l => l.ListingBookings)
             .ApplyFilters(filters)
             .ApplyNumericFilters(filters)
-            .ApplySorting(filters.SortBy, filters.SortOrder)
+            .ApplySorting(filters.SortBy, filters.SortOrder, new Point(filters.Longitude, filters.Latitude) { SRID = 4326 })
             .ToListAsync();
     }
     

@@ -111,14 +111,12 @@
     private PagedResponseDto<ListingResponseDto>? _listings;
     private IJSObjectReference? _jsModule;
     private string _searchAddress = "";
-    private int _pageSize = 10;
-    public ListingFilterDto filter = new();
-
-    readonly ListingFilterDto _filters = new();
-
+    private const int PageSize = 1;
+    private readonly ListingFilterDto _filters = new();
+    
     protected override async Task OnInitializedAsync()
     {
-        _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, _pageSize);
+        _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, PageSize);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -168,13 +166,13 @@
             PreventScroll = true
         };
         
-        IDialogReference filterDialog = await DialogService.ShowDialogAsync<ListingFilterDialog>(filter, registerParameters);
+        IDialogReference filterDialog = await DialogService.ShowDialogAsync<ListingFilterDialog>(_filters, registerParameters);
         DialogResult filterResult = await filterDialog.Result;
         
         if (filterResult.Data is not null && !filterResult.Cancelled)
         {
-            ListingFilterDto? _filter = filterResult.Data as ListingFilterDto;
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filter,1, _pageSize);
+            ListingFilterDto? filter = filterResult.Data as ListingFilterDto;
+            _listings = await ListingApiService.GetListingsByAgentIdAsync(filter,1, PageSize);
             await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
              
             if (_listings != null)
@@ -188,9 +186,9 @@
     
     private async Task GoToPageAsync(int pageIndex)
     {
-        if (_listings.PageNumber != pageIndex)
+        if (_listings != null && _listings.PageNumber != pageIndex)
         {
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,pageIndex, _pageSize);
+            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,pageIndex, PageSize);
             if (_listings != null)
                 await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
 

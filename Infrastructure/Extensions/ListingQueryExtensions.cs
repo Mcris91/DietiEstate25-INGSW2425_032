@@ -1,5 +1,6 @@
 using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.ListingModels;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Extensions;
 
@@ -43,8 +44,9 @@ public static class ListingQueryExtensions
         return query;
     }
 
-    public static IQueryable<Listing> ApplySorting(this IQueryable<Listing> query, string sortBy, string sortOrder)
+    public static IQueryable<Listing> ApplySorting(this IQueryable<Listing> query, string sortBy, string sortOrder, Point position)
     {
+        position.SRID = 4326;
         return sortBy.ToLower() switch
         {
             "price" => sortOrder == "desc" ? query.OrderByDescending(l => l.Price) : query.OrderBy(l => l.Price),
@@ -52,7 +54,7 @@ public static class ListingQueryExtensions
             "dimensions" => sortOrder == "desc" ? query.OrderByDescending(l => l.Dimensions) : query.OrderBy(l => l.Dimensions),
             "views" => sortOrder == "desc" ? query.OrderByDescending(l => l.Views) : query.OrderBy(l => l.Views),
             "floor" => sortOrder == "desc" ? query.OrderByDescending(l => l.Floor) : query.OrderBy(l => l.Floor),
-            _ => query.OrderBy(l => l.Views)
+            _ => query.OrderBy(l => l.Location.Distance(position))
         };
     }
 }

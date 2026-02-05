@@ -7,6 +7,7 @@ using DietiEstate.Core.ValueObjects;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Config;
 
@@ -22,8 +23,13 @@ public class AutoMapperProfile : Profile
         CreateMap<DefaultTagTemplate, Tag>();
         
         // Listing
-        CreateMap<ListingRequestDto, Listing>();
+        CreateMap<ListingRequestDto, Listing>().ForMember(listing => listing.Location, opt => 
+            opt.MapFrom(src => new Point(src.Longitude, src.Latitude) { SRID = 4326 }));
         CreateMap<Listing, ListingResponseDto>()
+            .ForMember(listingDto => listingDto.Latitude, opt => 
+                opt.MapFrom(src => src.Location.Y))
+            .ForMember(listingDto => listingDto.Longitude, opt => 
+                opt.MapFrom(src => src.Location.X))
             .ForMember(listingDto => listingDto.Type, opt =>
                 opt.MapFrom(src => new ListingTypeDto
                 {

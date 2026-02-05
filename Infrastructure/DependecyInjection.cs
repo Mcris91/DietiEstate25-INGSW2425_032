@@ -23,6 +23,7 @@ public static class DependecyInjection
         {
             options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"), dboptions =>
             {
+                dboptions.UseNetTopologySuite();
                 dboptions.MapEnum<UserRole>("user_role")
                     .EnableRetryOnFailure();
                 dboptions.EnableRetryOnFailure(0);

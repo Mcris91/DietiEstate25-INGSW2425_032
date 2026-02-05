@@ -13,7 +13,7 @@ public class GeoapifyService(
 {
     private readonly string _apiKey = config["GEOAPIFY_KEY"];
 
-    public async Task<List<Service>> GetNearbyServicesAsync(Guid listingId, float listingLat, float listingLon, int radiusMetri = 1000)
+    public async Task<List<Service>> GetNearbyServicesAsync(Guid listingId, double listingLat, double listingLon, int radiusMetri = 1000)
     {
         var categories = "commercial.supermarket,education.school,public_transport,healthcare";
         string lonStr = listingLon.ToString(CultureInfo.InvariantCulture);
