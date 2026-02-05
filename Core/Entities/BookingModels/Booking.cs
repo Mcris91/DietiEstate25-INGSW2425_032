@@ -32,12 +32,12 @@ public class Booking
     public User? Agent{get;set;}
     
     [ForeignKey(nameof(Agent))]
-    public Guid AgentUserId { get; set; }
+    public Guid AgentId { get; set; }
     
     [Required] 
     public User? Client { get; set; }
     
     [ForeignKey(nameof(Client))]
-    public Guid ClientUserId { get; set; }
+    public Guid ClientId { get; set; }
 }
 

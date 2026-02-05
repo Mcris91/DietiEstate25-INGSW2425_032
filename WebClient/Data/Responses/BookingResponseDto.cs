@@ -1,6 +1,6 @@
-using DietiEstate.Core.Enums;
+﻿using DietiEstate.WebClient.Data.Common;
 
-namespace DietiEstate.Application.Dtos.Responses;
+namespace DietiEstate.WebClient.Data.Responses;
 
 public class BookingResponseDto
 {
@@ -20,9 +20,9 @@ public class BookingResponseDto
 
     public BookingStatus Status { get; init; } = BookingStatus.Pending;
     
-    public Guid ListingId { get; init; }
+    public Guid ListingId { get; init;}
    
-    public Guid AgentId { get; init; }
+    public Guid AgentId { get; init;}
    
-    public Guid ClientId { get; init; }
+    public Guid ClientId { get; init;}
 }

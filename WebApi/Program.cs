@@ -13,6 +13,7 @@ using DietiEstate.WebApi.Handlers;
 using DietiEstate.WebApi.Middlewares;
 using DotNetEnv;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -63,12 +64,15 @@ public static class Program
         
         builder.Services.AddScoped<DatabaseSeeder>();
 
-    /*    builder.Services.AddHangfire(options =>
+        builder.Services.AddHangfire(config =>
         {
-            options.UseSimpleAssemblyNameTypeSerializer();
-            options.UseRecommendedSerializerSettings();
+            config.UseSimpleAssemblyNameTypeSerializer();
+            config.UseRecommendedSerializerSettings();
+            config.UsePostgreSqlStorage(options => { 
+                    options.UseNpgsqlConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
+                });
         });
-*/
+
         builder.Services.AddScoped<IMinioService, MinioService>();
         
         builder.Services.AddHttpClient<GeoapifyService>(client => 
@@ -204,7 +208,7 @@ public static class Program
             app.MapScalarApiReference();
         }
 
-        //app.UseHangfireDashboard();
+        app.UseHangfireDashboard();
 
         if (!app.Environment.IsStaging())
         {

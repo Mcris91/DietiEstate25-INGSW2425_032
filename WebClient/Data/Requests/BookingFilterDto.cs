@@ -1,11 +1,8 @@
-using DietiEstate.Core.Entities.BookingModels;
-using DietiEstate.Core.Entities.ListingModels;
-using DietiEstate.Core.Enums;
-using Microsoft.VisualBasic;
+﻿using DietiEstate.WebClient.Data.Common;
 
-namespace DietiEstate.Application.Dtos.Filters;
+namespace DietiEstate.WebClient.Data.Requests;
 
-public class BookingFilterDto
+public class BookingFilterDto : BaseFilterDto
 {
     public BookingStatus? Status { get; init; }
     

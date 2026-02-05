@@ -2,7 +2,7 @@ namespace DietiEstate.WebClient.Data.Requests;
 
 public class ListingFilterDto : BaseFilterDto
 {
-    public Guid? TypeId { get; init; }
+    public string TypeCode { get; set; } = string.Empty;
     
     public Guid? AgentId { get; init; }
     

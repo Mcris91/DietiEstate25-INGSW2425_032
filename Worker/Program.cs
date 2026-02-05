@@ -2,6 +2,7 @@
 using Hangfire;
 using Microsoft.Extensions.Hosting;
 using DotNetEnv;
+using Hangfire.PostgreSql;
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
 if (File.Exists(envPath))
@@ -15,7 +16,9 @@ builder.Services.AddDependencies(builder.Configuration);
 
 builder.Services.AddHangfire(config =>
 {
-    config.UseSqlServerStorage(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
+    config.UsePostgreSqlStorage(options => { 
+        options.UseNpgsqlConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
+    });
 });
 
 builder.Services.AddHangfireServer();

@@ -4,21 +4,15 @@ namespace DietiEstate.Core.ValueObjects;
 
 public class SmtpOptions
 {
-    [JsonPropertyName("SERVER")]
-    public string Server { get; init; } = string.Empty;
+    public string Server { get; set; } = string.Empty;
     
-    [JsonPropertyName("PORT")]
-    public string Port { get; init; } = string.Empty;
+    public string Port { get; set; } = string.Empty;
     
-    [JsonPropertyName("USERNAME")]
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
     
-    [JsonPropertyName("PASSWORD")]
-    public string Password { get; init; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     
-    [JsonPropertyName("FROMEMAIL")]
-    public string FromEmail { get; init; } = string.Empty;
+    public string FromEmail { get; set; } = string.Empty;
 
-    [JsonPropertyName("FROMNAME")] 
-    public string FromName { get; init; } = string.Empty;
+    public string FromName { get; set; } = string.Empty;
 }

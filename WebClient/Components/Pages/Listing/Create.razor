@@ -20,11 +20,9 @@
     
     <FluentCard AreaRestricted="false">
         
-      <EditForm Model="_listingRequestDto">
+      <EditForm EditContext="_editContext">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
           <DataAnnotationsValidator/>
-          <FluentValidationSummary/>
-          
           <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
             <FluentLabel Typo="Typography.H4">Tipologia e Prezzo</FluentLabel>
             <FluentLabel Typo="Typography.Body">Scegli il prezzo e la tipologia del nuovo immobile</FluentLabel>
@@ -34,7 +32,7 @@
                        HorizontalAlignment="HorizontalAlignment.SpaceBetween">
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
               <FluentNumberField Name="Price" @bind-Value="_listingRequestDto.Price"
-                                 Label="Prezzo" Required
+                                 Label="Prezzo" Required Min="0"
                                  Style="width: 100%;"/>
               <FluentValidationMessage For="@(() => _listingRequestDto.Price)"/>
             </FluentStack>
@@ -43,9 +41,9 @@
                               Autofocus="false" Items="_listingTypes" 
                               OptionText="@(o => o.Text)" 
                               OptionValue="@(o => o.Value)"
-                              @bind-value="_listingRequestDto.Type.Code" 
+                              @bind-value="_listingRequestDto.TypeCode" 
                               Height="200px" Width="100%" Required/>
-              <FluentValidationMessage For="@(() => _listingRequestDto.Type.Name)"/>
+              <FluentValidationMessage For="@(() => _listingRequestDto.TypeCode)"/>
             </FluentStack>
           </FluentStack>
           
@@ -110,8 +108,7 @@
           
         </FluentStack>
       </EditForm>
-        
-        
+      
     </FluentCard>
     
   </FluentGridItem>
@@ -126,17 +123,17 @@
             <FluentLabel Typo="Typography.Body">Carica le immagini dell'immobile</FluentLabel>
           </FluentStack>
           
+          <FluentInputFile @ref="_coverFileUpload"
+                           Mode="InputFileMode.Stream"
+                           AnchorId="cover-file-upload"                 
+                           DragDropZoneVisible="false"
+                           MaximumFileCount="1"
+                           MaximumFileSize="@(10*1024*1024)"
+                           Accept="image/*"
+                           OnFileUploaded="@OnCoverFileUploaded"
+                           OnCompleted="@OnCoverFileUploadComplete"/>
           @if (!_isCoverUploaded)
           {
-            <FluentInputFile @ref="_coverFileUpload"
-                             Mode="InputFileMode.Stream"
-                             AnchorId="cover-file-upload"                 
-                             DragDropZoneVisible="false"
-                             MaximumFileCount="1"
-                             MaximumFileSize="@(10*1024*1024)"
-                             Accept="image/*"
-                             OnFileUploaded="@OnCoverFileUploaded"
-                             OnCompleted="@OnCoverFileUploadComplete"/>
             <FluentStack Orientation="Orientation.Vertical">
               <FluentLabel Typo="Typography.Body">Scegli un'immagine di copertina: </FluentLabel>
               <FluentButton Id="cover-file-upload" IconStart="@(new Icons.Regular.Size20.ArrowUpload())">Carica</FluentButton>
@@ -154,7 +151,7 @@
           {
             <FluentStack Orientation="Orientation.Vertical">
               <FluentLabel Typo="Typography.Body">Immagine di copertina caricata:</FluentLabel>
-              <img src="@_coverFile" alt="Cover Image" width="100%" height="auto"/>
+              <img id="cover-file-upload" src="@_coverFile" alt="Cover Image" width="100%" height="auto" style="cursor: pointer;" role="button" tabindex="0"/>
             </FluentStack>
           }
         </FluentStack>
@@ -185,10 +182,10 @@
   private string _coverFile;
   private FluentInputFile? _galleryFileUpload;
   private IJSObjectReference? _jsModule;
+  private EditContext _editContext = default!;
 
 
 private ListingRequestDto _listingRequestDto = new();
-  private List<Option<string>> _listingTypes = [];
 
   private readonly List<Option<string>> _energyClasses =
   [
@@ -201,12 +198,40 @@ private ListingRequestDto _listingRequestDto = new();
     new() { Value = "G", Text = "G" }
   ];
   
+  private readonly List<Option<string>> _listingTypes =
+  [
+    new() { Value = "SALE", Text = "In vendita" },
+    new() { Value = "RENT", Text = "In affitto" }
+  ];
+
+protected override void OnInitialized()
+{
+_editContext = new EditContext(_listingRequestDto);
+}
+  
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (!firstRender) return;
 
     _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Listing/Create.razor.js");
-    await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+
+    if (ListingId != Guid.Empty)
+    {
+      var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
+      _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
+      _editContext = new EditContext(_listingRequestDto);
+      if (_listingRequestDto.Latitude != 0 && _listingRequestDto.Longitude != 0)
+      {
+        await _jsModule.InvokeVoidAsync("setupMap", "map", _listingRequestDto.Latitude, _listingRequestDto.Longitude);
+        _coverFile = _listingRequestDto.FeaturedImageUrl;
+        _isCoverUploaded = true;
+      }
+      else
+        await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+    } else
+      await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+    
+    
     
     /*var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
     _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
@@ -225,13 +250,13 @@ private ListingRequestDto _listingRequestDto = new();
 
   private async Task OnCoverFileUploaded(FluentInputFileEventArgs file)
   {
-    var localFile = "tmp/" + file.Name;
-    
-    await using FileStream fs = new("./wwwroot/" + localFile, FileMode.Create);
-    await file.Stream!.CopyToAsync(fs);
-    await file.Stream!.DisposeAsync();
-    
-    _coverFile = localFile;
+    var ms = new MemoryStream();
+    await file.Stream!.CopyToAsync(ms);
+    var bytes = ms.ToArray();
+
+    _coverFile = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
+    _listingRequestDto.FeaturedImage = bytes;
+    _isCoverUploaded = true;
   }
   
   void OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
@@ -242,13 +267,18 @@ private ListingRequestDto _listingRequestDto = new();
   
   private async Task SaveListingAsync()
   {
-    if (ListingId == null)
+    if (_editContext.Validate())
     {
-      //await ListingApiService.CreateListingAsync(_listingRequestDto);
-    }
-    else
-    {
-      //await ListingApiService.UpdateListingAsync(ListingId.Value, _listingRequestDto);
+      if (ListingId == Guid.Empty)
+      {
+        _listingRequestDto.AgentUserId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566");
+        _listingRequestDto.OwnerEmail = "s.murano@studenti.unina.it";
+        await ListingApiService.CreateListingAsync(_listingRequestDto);
+      }
+      else
+      {
+        //await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
+      }
     }
   }
   
@@ -264,7 +294,11 @@ private ListingRequestDto _listingRequestDto = new();
   {
     if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address))
     {
-      await _jsModule.InvokeVoidAsync("searchAddress", _listingRequestDto.Address);
+      var coords = await _jsModule.InvokeAsync<float[]?>("searchAddress", _listingRequestDto.Address);
+      if (coords != null){
+        _listingRequestDto.Latitude = coords[0];
+        _listingRequestDto.Longitude = coords[1];
+      }
     }
   }
   

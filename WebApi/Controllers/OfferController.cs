@@ -37,7 +37,7 @@ public class OfferController(
             if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId))
                 return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
-        if (offer.Value< 0 || offer.Value > listing.Price) 
+        if (offer.Value <= 0 || offer.Value > listing.Price) 
             return BadRequest("Valore dell'offerta non valido");
 
         if (offer.FirstOfferId == Guid.Empty)
@@ -113,8 +113,6 @@ public class OfferController(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
-        pageNumber = 1;
-        pageSize = 10;
         //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
         //if (adminSession is null)
         //    return Unauthorized("Access denied");
@@ -180,6 +178,5 @@ public class OfferController(
             TotalOffers = offers.Total,
             PendingOffers = offers.Pending
         });
-            
     }
 }

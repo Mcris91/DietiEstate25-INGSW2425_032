@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Globalization
 @using DietiEstate.WebClient.ApiService
 @using DietiEstate.WebClient.Components.Dialogs
 @using DietiEstate.WebClient.Data.Requests
@@ -49,9 +50,17 @@
                                 <FluentStack Orientation="Orientation.Vertical">
                                     <img src="@listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
                                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
-                                        <FluentBadge BackgroundColor="black" Circular="true">@listing.Price €</FluentBadge>
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
+                                            @foreach (var tag in listing.Tags)
+                                            {
+                                                <FluentBadge BackgroundColor="black" Circular="true">@tag.Name</FluentBadge>
+                                            }
+                                        </FluentStack>
                                         <FluentLabel Typo="Typography.H4">@listing.Name</FluentLabel>
-                                        <FluentLabel Typo="Typography.Body">@listing.Address</FluentLabel>
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                            <FluentLabel Typo="Typography.Body">@listing.Address</FluentLabel>
+                                            <FluentBadge BackgroundColor="black" Circular="true">@listing.Price.ToString("C", new CultureInfo("it-IT"))</FluentBadge>
+                                        </FluentStack>
                                     </FluentStack>
 
                                     <FluentDivider Style="width: 100%; color: black"></FluentDivider>
@@ -110,7 +119,6 @@
     protected override async Task OnInitializedAsync()
     {
         _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, _pageSize);
-        
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

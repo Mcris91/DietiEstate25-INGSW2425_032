@@ -13,12 +13,12 @@ public static class ListingQueryExtensions
         if (!string.IsNullOrEmpty(filters.EnergyClass))
             query = query.Where(l => l.EnergyClass == filters.EnergyClass);
         
-        if (filters.TypeId.HasValue)
-            query = query.Where(l => l.TypeId == filters.TypeId.Value);
+        if (!string.IsNullOrEmpty(filters.TypeCode))
+            query = query.Where(l => l.Type.Code == filters.TypeCode);
         
         if (filters.Tags?.Count > 0)
             query = query.Where(l => l.ListingTags
-                .Any(ls => filters.Tags.Contains(ls.Name)));
+                .Count(ls => filters.Tags.Contains(ls.Name)) == filters.Tags.Count);
             
         return query;
     }

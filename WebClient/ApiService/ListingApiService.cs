@@ -6,6 +6,11 @@ namespace DietiEstate.WebClient.ApiService;
 
 public class ListingApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
+
+    public async Task CreateListingAsync(ListingRequestDto listingDto)
+    {
+        await httpClient.PostAsJsonAsync("", listingDto);
+    }
     public async Task<ListingResponseDto> GetListingByIdAsync(Guid listingId)
     {
         var uri = $"{listingId}";
@@ -41,5 +46,12 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         
         var uri = $"GetAgentCounters/{agentId}";
         return await GetAsync<ListingAgentCountersResponseDto>(uri);
+    }
+
+    public async Task<byte[]> GetReportAsync(Guid? agentId)
+    {
+        var uri = $"GetReport/{agentId}";
+        var response = await httpClient.GetAsync(uri);
+        return await response.Content.ReadAsByteArrayAsync();
     }
 }

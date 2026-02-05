@@ -80,10 +80,17 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.Listing.Price));
         
         //Booking
-        CreateMap<BookingRequestDto, Booking>();
-        CreateMap<Booking, BookingResponseDto>();
         // Se nel DTO si chiama AnnuncioId ma nel DB è ListingId
         CreateMap<BookingRequestDto, Booking>()
             .ForMember(dest => dest.ListingId, opt => opt.MapFrom(src => src.ListingId));
+        CreateMap<Booking, BookingResponseDto>()
+            .ForMember(bookingDto => bookingDto.CustomerName, opt => 
+                opt.MapFrom(src => src.Client.FirstName))
+            .ForMember(offerDto => offerDto.CustomerLastName, opt => 
+                opt.MapFrom(src => src.Client.LastName))
+            .ForMember(offerDto => offerDto.CustomerEmail, opt => 
+                opt.MapFrom(src => src.Client.Email))
+            .ForMember(offerDto => offerDto.ListingName, opt => 
+                opt.MapFrom(src => src.Listing.Name));
     }
 }

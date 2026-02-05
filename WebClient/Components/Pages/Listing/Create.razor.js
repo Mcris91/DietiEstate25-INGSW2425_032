@@ -60,7 +60,7 @@ export function setupMap(elementId, lat, lon){
 }
 
 export async function searchAddress (address) {
-    if (!map) return;
+    if (!map) return null;
     try {
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}`);
         const data = await response.json();
@@ -69,10 +69,13 @@ export async function searchAddress (address) {
             const lon = parseFloat(data[0].lon);
             map.setView([lat, lon], 15);
             marker.setLatLng([lat, lon]);
+            return [lat, lon];
         } else {
             alert("Indirizzo non trovato");
+            return null
         }
     } catch (exception) {
         console.error("Errore nella ricerca dell'indirizzo:");
+        return null
     }
 }

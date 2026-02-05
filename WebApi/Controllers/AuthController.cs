@@ -17,7 +17,7 @@ namespace DietiEstate.WebApi.Controllers;
 [AllowAnonymous]
 [Route("api/v1/[controller]")]
 public class AuthController(
-    //IUserVerificationRepository userVerificationRepository,
+    IUserVerificationRepository userVerificationRepository,
     IPasswordResetService passwordResetService,
     IUserSessionService userSessionService,
     IAgencyRepository agencyRepository,
@@ -26,7 +26,7 @@ public class AuthController(
     IEmailService emailService,
     IUserService userService,
     IJwtService jwtService,
-    //IBackgroundJobClient jobClient,
+    IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
     [HttpPost("register-agency")]
@@ -128,10 +128,10 @@ public class AuthController(
         {
             UserId = user.Id
         };
-        //await userVerificationRepository.AddVerificationAsync(userVerification);
+        await userVerificationRepository.AddVerificationAsync(userVerification);
 
         var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
-        //jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         
         return CreatedAtAction(
             actionName: "GetUserById", 
@@ -147,7 +147,7 @@ public class AuthController(
         
         var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
         var emailData = await emailService.PrepareEmailAsync(EmailType.PasswordReset, user.FirstName, user.Email);
-        //jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return Ok();
     }
 

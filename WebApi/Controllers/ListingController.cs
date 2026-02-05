@@ -123,12 +123,13 @@ public class ListingController(
             {
                 return BadRequest("L'immagine non è stata caricata");
             }
-            Console.WriteLine($"Immagine {newImage.Id} aggiunta all'elenco");
             listing.ListingImages.Add(newImage);
         }
 
         listing.ListingServices = await geoapifyService.GetNearbyServicesAsync(listing.Id, listing.Latitude, listing.Longitude);
         var tags = listing.ListingServices.Select(s => s.Type).Distinct().ToList();
+        var type = await propertyTypeRepository.GetPropertyTypeByCodeAsync(request.TypeCode);
+        listing.TypeId = type.Id;
         await listingRepository.AddListingAsync(listing, tags);
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
