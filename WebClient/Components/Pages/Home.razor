@@ -111,7 +111,7 @@
     private PagedResponseDto<ListingResponseDto>? _listings;
     private IJSObjectReference? _jsModule;
     private string _searchAddress = "";
-    private const int PageSize = 1;
+    private const int PageSize = 10;
     private readonly ListingFilterDto _filters = new();
     
     protected override async Task OnInitializedAsync()
