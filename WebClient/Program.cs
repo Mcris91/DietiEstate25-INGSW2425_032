@@ -22,7 +22,6 @@ builder.Services.AddApiService<OfferApiService>(builder.Configuration["ApiUrl"]!
 builder.Services.AddApiService<BookingApiService>(builder.Configuration["ApiUrl"]!, "Booking");
 builder.Services.AddApiService<AuthApiService>(builder.Configuration["ApiUrl"]!, "Auth");
 
-
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
 var app = builder.Build();

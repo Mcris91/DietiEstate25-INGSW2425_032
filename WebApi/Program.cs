@@ -54,7 +54,9 @@ public static class Program
             options.AddPolicy("AllowedOrigins",
                 policy => policy.WithOrigins(
                         "https://localhost:7007",
-                        "http://localhost:5155"
+                        "http://localhost:5155",
+                        "https://localhost:7250",
+                        "https://localhost:5208"
                     )
                     .AllowAnyMethod()
                     .AllowAnyHeader()

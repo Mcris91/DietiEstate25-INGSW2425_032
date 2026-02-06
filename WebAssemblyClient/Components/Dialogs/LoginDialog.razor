@@ -1,11 +1,20 @@
 ﻿
+@using WebAssemblyClient.ApiService
+@using WebAssemblyClient.Extensions
 @implements IDialogContentComponent<LoginRequestDto>
+
+@inject HostAuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JsRuntime
+@inject AuthApiService AuthApiService
+@inject NavigationManager NavigationManager
 
 <FluentTextField Label="Email" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
 <FluentTextField Label="Password" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
+<div id="googleBtn" style="margin-top: 10px; margin-bottom: 10px;"></div>
 <FluentLabel Style="cursor: pointer; text-decoration: underline;" @onclick="OpenRegisterDialogAsync">
     Non hai un account? Registrati subito!
 </FluentLabel>
+
 @code {
     [Parameter]
     public LoginRequestDto Content { get; set; } = default!;
@@ -16,5 +25,25 @@
     private async Task OpenRegisterDialogAsync()
     {
         await Dialog.CloseAsync(new UserRequestDto());
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            await JsRuntime.InvokeVoidAsync("renderGoogleButton", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task ProcessGoogleLogin(string googleJwt)
+    {
+        var request = new GoogleLoginRequestDto()
+        {
+            GoogleJwt = googleJwt
+        };
+        var result = await AuthApiService.GoogleLogin(request);
+        if (result != null) {
+            AuthStateProvider.NotifyAuthenticationStateChanged();
+            NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        }
     }
 }

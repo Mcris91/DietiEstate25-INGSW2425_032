@@ -7,6 +7,15 @@ namespace WebAssemblyClient.ApiService;
 
 public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
+    public async Task<LoginResponseDto?> GoogleLogin(GoogleLoginRequestDto googleLoginRequest)
+    {
+        var response = await httpClient.PostAsJsonAsync("google-callback", googleLoginRequest);
+        
+        response.EnsureSuccessStatusCode();
+        
+        return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+    }
+    
     public async Task<LoginResponseDto?> Login(LoginRequestDto loginRequest)
     {
         var response = await httpClient.PostAsJsonAsync("login", loginRequest);

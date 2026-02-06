@@ -40,6 +40,22 @@
 
 <script src="_framework/blazor.webassembly.js"></script>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+    function renderGoogleButton(dotNetHelper) {
+        google.accounts.id.initialize({
+            client_id: "969083423287-k13lcullhsjftr1champ3qgeqo2uaa64.apps.googleusercontent.com",
+            callback: (response) => {
+                dotNetHelper.invokeMethodAsync('ProcessGoogleLogin', response.credential);
+            }
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("googleBtn"),
+            { theme: "outline", size: "large" }
+        );
+    }
+</script>
+
 <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 

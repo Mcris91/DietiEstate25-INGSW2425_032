@@ -16,7 +16,6 @@ public class HostAuthenticationStateProvider(IJSRuntime js) : AuthenticationStat
         {
             var token = await js.InvokeAsync<string>("getCookies", "id_token");
             
-
             if (string.IsNullOrEmpty(token)) return _anonymous;
 
             var claims = ParseClaimsFromJwt(token);

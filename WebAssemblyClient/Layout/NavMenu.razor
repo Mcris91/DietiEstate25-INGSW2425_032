@@ -20,7 +20,7 @@
 
         <FluentProfileMenu Image=""
                            HeaderLabel="@context.User.FindFirst("role")?.Value"
-                           FullName="@context.User.Identity?.Name"
+                           FullName="@context.User.FindFirst("given_name")?.Value"
                            Email="@context.User.FindFirst("email")?.Value" 
                            PopoverStyle="min-width: 330px;"
                            OnHeaderButtonClick="@SignOut">

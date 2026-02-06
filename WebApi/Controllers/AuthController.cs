@@ -7,6 +7,8 @@ using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
 using DietiEstate.Core.Enums;
+using Google.Apis.Auth;
+using Google.Apis.Auth.OAuth2.Requests;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +31,54 @@ public class AuthController(
     IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
+    [HttpPost("google-callback")]
+    public async Task<IActionResult> GoogleCallback([FromBody] GoogleLoginRequestDto request)
+    {
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings()
+            {
+                Audience = ["969083423287-k13lcullhsjftr1champ3qgeqo2uaa64.apps.googleusercontent.com"]
+            };
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(request.GoogleJwt, settings);
+
+            var user = await userRepository.GetUserByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new User()
+                {
+                    FirstName = payload.GivenName,
+                    LastName = payload.FamilyName,
+                    Email = payload.Email,
+                    Role = UserRole.Client
+                };
+                await userRepository.AddUserAsync(user);
+            }
+
+            var idToken = jwtService.GenerateJwtIdToken(user);
+            var accessToken = jwtService.GenerateJwtAccessToken(user);
+            var refreshToken = jwtService.GenerateJwtRefreshToken(user);
+
+            var sessionId = await userSessionService.CreateSessionAsync(user, accessToken, refreshToken);
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = false,
+                // Secure = true, // https only, uncomment in production
+                SameSite = SameSiteMode.Lax,
+                MaxAge = TimeSpan.FromDays(30)
+            };
+            Response.Cookies.Append("session_id", sessionId, cookieOptions);
+            Response.Cookies.Append("id_token", idToken, cookieOptions);
+
+            return Ok(mapper.Map<LoginResponseDto>(user));
+        }
+        catch (InvalidJwtException)
+        {
+            return BadRequest("Invalid Google token.");
+        }
+    }
+    
     [HttpPost("register-agency")]
     public async Task<IActionResult> RegisterAgency([FromBody] RegisterAgencyDto request)
     {
