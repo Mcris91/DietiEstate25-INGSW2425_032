@@ -1,0 +1,20 @@
+﻿
+@implements IDialogContentComponent<LoginRequestDto>
+
+<FluentTextField Label="Email" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
+<FluentTextField Label="Password" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
+<FluentLabel Style="cursor: pointer; text-decoration: underline;" @onclick="OpenRegisterDialogAsync">
+    Non hai un account? Registrati subito!
+</FluentLabel>
+@code {
+    [Parameter]
+    public LoginRequestDto Content { get; set; } = default!;
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+
+    private async Task OpenRegisterDialogAsync()
+    {
+        await Dialog.CloseAsync(new UserRequestDto());
+    }
+}

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using DietiEstate.Application.Interfaces.Services;
 
 namespace DietiEstate.Infrastracture.Services;
@@ -37,5 +39,17 @@ public class BCryptPasswordService : IPasswordService
             return "Password must contain at least one digit";
         
         return "";
+    }
+
+    public string GenerateRandomSecurePassword(int length = 12)
+    {
+        const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789!@$?_-";
+        string securePass;
+        do
+        {
+            var chars = RandomNumberGenerator.GetItems<char>(validChars.ToCharArray(), length);
+            securePass = new string(chars);
+        } while (!ValidatePasswordStrength(securePass).Equals(""));
+        return securePass;
     }
 }

@@ -116,14 +116,13 @@ public class OfferController(
         //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
         //if (adminSession is null)
         //    return Unauthorized("Access denied");
-        var agentId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566");
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
-        var offers = await offerRepository.GetOffersByAgentIdAsync(agentId, filterDto);
+        var offers = await offerRepository.GetOffersByAgentIdAsync(filterDto);
         return Ok(new PagedResponseDto<OfferResponseDto>(
             offers.ToList().Select(mapper.Map<OfferResponseDto>), 
             pageSize, pageNumber));

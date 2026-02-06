@@ -51,10 +51,9 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
             .ToListAsync();
     }
     
-    public async Task<IEnumerable<Offer?>> GetOffersByAgentIdAsync(Guid agentId, OfferFilterDto filters)
+    public async Task<IEnumerable<Offer?>> GetOffersByAgentIdAsync(OfferFilterDto filters)
     {
         return await context.Offer
-            .Where(o => o.AgentId == agentId)
             .Include(o => o.Listing)
             .Include(o => o.Customer)
             .ApplyFilters(filters)

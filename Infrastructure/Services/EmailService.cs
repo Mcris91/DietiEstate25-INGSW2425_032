@@ -23,6 +23,12 @@ public class EmailService(
         {
             case EmailType.Verification:
                 subject = "Benvenuto su DietiEstate!";
+                body = $@"La tua azienda è stata registrata con successo!
+                        La tua password è: {toName}";
+                break;
+            
+            case EmailType.Welcome:
+                subject = "Benvenuto su DietiEstate!";
                 body = $@"Ciao {toName},
                       Il tuo account è stato creato con successo!";
                 break;

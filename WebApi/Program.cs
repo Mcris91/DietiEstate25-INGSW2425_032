@@ -34,6 +34,7 @@ public static class Program
         }
         
         var builder = WebApplication.CreateBuilder(args);
+        
         ConfigureMinio(builder);
         ConfigureServices(builder);
 
@@ -48,6 +49,18 @@ public static class Program
     
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowedOrigins",
+                policy => policy.WithOrigins(
+                        "https://localhost:7007",
+                        "http://localhost:5155"
+                    )
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
+        });
+        
         builder.Services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
@@ -220,7 +233,8 @@ public static class Program
             await seeder.SeedAsync();
         }
         
-        //app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
+        app.UseCors("AllowedOrigins");
         app.UseRouting();
         app.UseMiddleware<UserSessionAuthMiddleware>();
         app.UseAuthentication();

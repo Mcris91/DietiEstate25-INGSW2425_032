@@ -40,10 +40,11 @@ public class AuthController(
             Name = request.Name
         };
 
+        var randomPassword = passwordService.GenerateRandomSecurePassword();
         var administrator = new User()
         {
             Email = request.Email.ToLowerInvariant(),
-            Password = passwordService.HashPassword(request.Password),
+            Password = passwordService.HashPassword(randomPassword),
             AgencyId = agency.Id,
             Role = UserRole.SuperAdmin
         };
@@ -51,6 +52,15 @@ public class AuthController(
         agency.Administrator = administrator;
         
         await agencyRepository.AddAgencyAsync(agency);
+        
+        var userVerification = new UserVerification()
+        {
+            UserId = administrator.Id
+        };
+        await userVerificationRepository.AddVerificationAsync(userVerification);
+
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, randomPassword, administrator.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
 
         return Ok();
     }
@@ -69,9 +79,9 @@ public class AuthController(
         var sessionId = await userSessionService.CreateSessionAsync(user, accessToken, refreshToken);
         var cookieOptions = new CookieOptions
         {
-            HttpOnly = true,
-            // Secure = true, // https only, uncomment in production
-            SameSite = SameSiteMode.Strict,
+            HttpOnly = false,
+            Secure = true, // https only, uncomment in production
+            SameSite = SameSiteMode.Lax,
             MaxAge = TimeSpan.FromDays(30)
         };
         Response.Cookies.Append("session_id", sessionId, cookieOptions);
