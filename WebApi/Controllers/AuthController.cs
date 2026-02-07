@@ -190,7 +190,7 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Welcome, user.FirstName, user.Email);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         
         return CreatedAtAction(

@@ -21,6 +21,7 @@ public class AutoMapperProfile : Profile
         CreateMap<User, LoginResponseDto>();
         CreateMap<AdminUserTemplate, User>();
         CreateMap<DefaultTagTemplate, Tag>();
+        CreateMap<DefaultPropertyTypeTemplate, PropertyType>();
         
         // Listing
         CreateMap<ListingRequestDto, Listing>().ForMember(listing => listing.Location, opt => 

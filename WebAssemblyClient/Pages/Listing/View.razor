@@ -2,6 +2,8 @@
 @using System.Globalization
 @using WebAssemblyClient.ApiService
 @using WebAssemblyClient.Components.Dialogs
+@using WebAssemblyClient.Extensions
+@inject HostAuthenticationStateProvider AuthStateProvider
 @inject ListingApiService ListingApiService
 @inject BookingApiService BookingApiService
 @inject OfferApiService OfferApiService
@@ -198,8 +200,6 @@ else
     [Parameter] public Guid ListingId { get; set; }
 
     ListingResponseDto? _listing;
-    OfferRequestDto? _offer;
-    BookingRequestDto? _booking;
     private bool _showAll;
     private bool _makeOffer;
     private bool _makeBooking;
@@ -207,22 +207,18 @@ else
     protected override async Task OnInitializedAsync()
     {
         _listing = await ListingApiService.GetListingByIdAsync(ListingId);
-        _offer = new OfferRequestDto()
-        {
-            AgentId = _listing.Agent.Id,
-            ListingId = _listing.Id,
-            CustomerId = _listing.Agent.Id
-        };
     }
     
     private async Task OpenMakeOfferDialog()
     {
-
+        var user = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return;
         OfferRequestDto offerRequest = new()
         {
             AgentId = _listing.Agent.Id,
             ListingId =_listing.Id,
-            CustomerId = _listing.Agent.Id,
+            CustomerId = Guid.Parse(userId),
             Value = 0
         };
 
@@ -257,12 +253,16 @@ else
     
     private async Task OpenMakeBookingDialog()
     {
+        
+        var user = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return;
 
         BookingRequestDto bookingRequest = new()
         {
             AgentId = _listing.Agent.Id,
             ListingId =_listing.Id, 
-            ClientId = _listing.Agent.Id, 
+            ClientId = Guid.Parse(userId), 
             DateCreation = DateTime.Now, 
             DateMeeting = DateTime.Now
         };
@@ -286,8 +286,8 @@ else
         if (bookingResult.Data is not null && !bookingResult.Cancelled)
         {
             BookingRequestDto? _booking = bookingResult.Data as BookingRequestDto;
-            Console.WriteLine($"Register dialog closed by {_booking?.DateMeeting} - Canceled: {bookingResult.Cancelled}");
             await BookingApiService.PostBookingAsync(_booking);
+            ToastService.ShowSuccess("Prenotazione inviata con successo!");
         }
     }
 }

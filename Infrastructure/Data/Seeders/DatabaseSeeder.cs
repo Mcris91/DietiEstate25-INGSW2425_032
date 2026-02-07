@@ -21,6 +21,7 @@ public class DatabaseSeeder(
     {
         await SeedSystemAdminAsync();
         await SeedDefaultTagsAsync();
+        await SeedDefaultPropertyTypesAsync();
     }
 
     private async Task SeedSystemAdminAsync()
@@ -109,5 +110,47 @@ public class DatabaseSeeder(
         }
         await context.Database.CommitTransactionAsync();
         logger.LogInformation("Seeding default tags to database completed.");
+    }
+    
+    private async Task SeedDefaultPropertyTypesAsync()
+    {
+        var defaultPropertyTypes = configuration.GetSection("DefaultPropertyTypes:PropertyTypes").Get<List<DefaultPropertyTypeTemplate>>();
+        if (defaultPropertyTypes is null)
+        {
+            logger.LogWarning("No property types found in configuration. Skipping database seeding.");
+            return;
+        }
+        
+        var propertyTypeCodes = defaultPropertyTypes.Select(p => p.Code.ToLowerInvariant()).ToList();
+
+        var existingPropertyTypes = await context.PropertyType
+            .Where(p => propertyTypeCodes.Contains(p.Code.ToLower()))
+            .Select(p => p.Name.ToLower())
+            .ToListAsync();
+
+        defaultPropertyTypes = defaultPropertyTypes
+            .Where(t => !existingPropertyTypes.Contains(t.Name.ToLowerInvariant()))
+            .ToList();
+
+        if (defaultPropertyTypes.Count == 0)
+        {
+            logger.LogInformation("All default property types found in configuration already exist in the database. Skipping database seeding.");
+            return;
+        }
+      
+        await context.Database.BeginTransactionAsync();
+        try
+        {
+            var propertyTypes = mapper.Map<List<PropertyType>>(defaultPropertyTypes);
+            await context.PropertyType.AddRangeAsync(propertyTypes);
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Cannot seed default property types to database.");
+            return;
+        }
+        await context.Database.CommitTransactionAsync();
+        logger.LogInformation("Seeding default property types to database completed.");
     }
 }
