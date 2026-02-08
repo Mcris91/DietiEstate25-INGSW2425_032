@@ -62,5 +62,36 @@ public class PatchListingsTests
         Assert.IsType<NotFoundResult>(result);
         _mockListingRepository.Verify(r => r.UpdateListingAsync(It.IsAny<Listing>()), Times.Never);
     }
+    
+    // TC2: GUID esistente + patch che viola validazione = BadRequest
+    [Fact]
+    public async Task PatchListing_WithInvalidPatchData_ReturnsBadRequest()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        var existingListing = new Listing { Id = existingId, Name = "Original" };
+        var patchDocument = new JsonPatchDocument<ListingRequestDto>();
+        patchDocument.Replace(l => l.Name, ""); // Titolo vuoto viola validazione
+
+        var listingDto = new ListingRequestDto { Name = "" };
+
+        _mockListingRepository
+            .Setup(r => r.GetListingByIdAsync(existingId))
+            .ReturnsAsync(existingListing);
+
+        _mockMapper
+            .Setup(m => m.Map<ListingRequestDto>(existingListing))
+            .Returns(new ListingRequestDto { Name = "Original" });
+
+        // Simula validazione fallita
+        _controller.ModelState.AddModelError("Title", "Title is required");
+
+        // Act
+        var result = await _controller.PatchListing(existingId, patchDocument);
+
+        // Assert
+        Assert.IsType<BadRequestObjectResult>(result);
+        _mockListingRepository.Verify(r => r.UpdateListingAsync(It.IsAny<Listing>()), Times.Never);
+    }
 
 }
