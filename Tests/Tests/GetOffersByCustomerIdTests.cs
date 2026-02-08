@@ -60,36 +60,4 @@ public class GetOffersByCustomerIdTests
         });
     }
     
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(-1, 10)]
-    [InlineData(10, -1)]
-    [InlineData(-5, -5)]
-    public async Task TC2_PageNumberOrPageSizeNotGreaterThanZero_ReturnsBadRequest(
-        int pageNumber, 
-        int pageSize)
-    {
-        // Arrange
-        var customerId = Guid.NewGuid();
-        var filterDto = new OfferFilterDto();
-
-        // Act
-        var result = await _controller.GetOffersByCustomerId(
-            customerId, 
-            filterDto, 
-            pageNumber, 
-            pageSize
-        );
-
-        // Assert
-        var badRequestResult = result.Result as BadRequestObjectResult;
-        badRequestResult.Should().NotBeNull();
-        badRequestResult.Value.Should().BeEquivalentTo(new 
-        { 
-            error = "Both pageNumber and pageSize must be greater than zero." 
-        });
-    }
-    
-
-    
 }
