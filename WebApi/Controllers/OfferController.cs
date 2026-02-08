@@ -5,7 +5,6 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Data.Migrations;
 using DietiEstate.Infrastracture.Services;
 using Microsoft.AspNetCore.Mvc;
 
