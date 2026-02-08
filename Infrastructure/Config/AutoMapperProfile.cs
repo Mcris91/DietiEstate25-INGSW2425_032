@@ -7,6 +7,7 @@ using DietiEstate.Core.ValueObjects;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Config;
 
@@ -19,10 +20,17 @@ public class AutoMapperProfile : Profile
         CreateMap<User, UserResponseDto>();
         CreateMap<User, LoginResponseDto>();
         CreateMap<AdminUserTemplate, User>();
+        CreateMap<DefaultTagTemplate, Tag>();
+        CreateMap<DefaultPropertyTypeTemplate, PropertyType>();
         
         // Listing
-        CreateMap<ListingRequestDto, Listing>();
+        CreateMap<ListingRequestDto, Listing>().ForMember(listing => listing.Location, opt => 
+            opt.MapFrom(src => new Point(src.Longitude, src.Latitude) { SRID = 4326 }));
         CreateMap<Listing, ListingResponseDto>()
+            .ForMember(listingDto => listingDto.Latitude, opt => 
+                opt.MapFrom(src => src.Location.Y))
+            .ForMember(listingDto => listingDto.Longitude, opt => 
+                opt.MapFrom(src => src.Location.X))
             .ForMember(listingDto => listingDto.Type, opt =>
                 opt.MapFrom(src => new ListingTypeDto
                 {
@@ -41,7 +49,12 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingServices.Select(service => new ListingServiceDto
                 {
                     Id = service.Id,
-                    Name = service.Name
+                    Name = service.Name,
+                    Type = service.Type,
+                    Address = service.Address,
+                    Distance = service.Distance,
+                    Latitude = service.Latitude,
+                    Longitude = service.Longitude
                 })))
             .ForMember(listingDto => listingDto.Tags, opt =>
                 opt.MapFrom(src => src.ListingTags.Select(tag => new ListingTagDto
@@ -74,10 +87,17 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.Listing.Price));
         
         //Booking
-        CreateMap<BookingRequestDto, Booking>();
-        CreateMap<Booking, BookingResponseDto>();
         // Se nel DTO si chiama AnnuncioId ma nel DB è ListingId
         CreateMap<BookingRequestDto, Booking>()
             .ForMember(dest => dest.ListingId, opt => opt.MapFrom(src => src.ListingId));
+        CreateMap<Booking, BookingResponseDto>()
+            .ForMember(bookingDto => bookingDto.CustomerName, opt => 
+                opt.MapFrom(src => src.Client.FirstName))
+            .ForMember(offerDto => offerDto.CustomerLastName, opt => 
+                opt.MapFrom(src => src.Client.LastName))
+            .ForMember(offerDto => offerDto.CustomerEmail, opt => 
+                opt.MapFrom(src => src.Client.Email))
+            .ForMember(offerDto => offerDto.ListingName, opt => 
+                opt.MapFrom(src => src.Listing.Name));
     }
 }

@@ -23,14 +23,17 @@ public static class DependecyInjection
         {
             options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"), dboptions =>
             {
+                dboptions.UseNetTopologySuite();
                 dboptions.MapEnum<UserRole>("user_role")
                     .EnableRetryOnFailure();
                 dboptions.EnableRetryOnFailure(0);
             });
         }, ServiceLifetime.Transient);
         
+        services.AddScoped<IAgencyRepository, AgencyRepository>();
         services.AddScoped<IListingRepository, ListingRepository>();
         services.AddScoped<IOfferRepository, OfferRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
@@ -41,8 +44,9 @@ public static class DependecyInjection
         services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<IUserSessionService, RedisSessionService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IExcelService, ExcelService>();
         
-        services.AddScoped<IBookingRepository, BookingRepository>();
+        
         
         services.AddScoped<IEmailService, EmailService>();
         

@@ -6,6 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.ListingModels;
+using DietiEstate.Infrastracture.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,8 @@ public class ListingController(
     IListingRepository listingRepository,
     IPropertyTypeRepository propertyTypeRepository,
     IMinioService minioService,
+    GeoapifyService geoapifyService,
+    IExcelService excelService,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -104,7 +107,7 @@ public class ListingController(
 
             }
         }
-        foreach (var listingImage in  request.Images)
+        foreach (var listingImage in request.Images)
         {
             using var imageStream = new MemoryStream(listingImage.Image);
 
@@ -120,14 +123,14 @@ public class ListingController(
             {
                 return BadRequest("L'immagine non è stata caricata");
             }
-            Console.WriteLine($"Immagine {newImage.Id} aggiunta all'elenco");
             listing.ListingImages.Add(newImage);
         }
-        
-        await listingRepository.AddListingAsync(listing, 
-            request.Services.Select(s=>s.Id).ToList(), 
-            request.Tags.Select(s=>s.Id).ToList(), 
-            listing.ListingImages.Select(s=>s.Url).ToList());
+
+        listing.ListingServices = await geoapifyService.GetNearbyServicesAsync(listing.Id, listing.Location.Y, listing.Location.X);
+        var tags = listing.ListingServices.Select(s => s.Type).Distinct().ToList();
+        var type = await propertyTypeRepository.GetPropertyTypeByCodeAsync(request.TypeCode);
+        listing.TypeId = type.Id;
+        await listingRepository.AddListingAsync(listing, tags);
         return CreatedAtAction(nameof(GetListingById), new {listingId = listing.Id}, mapper.Map<ListingResponseDto>(listing));
     }
 
@@ -156,5 +159,14 @@ public class ListingController(
             return NotFound();
         await listingRepository.DeleteListingAsync(listing);
         return NoContent();
+    }
+
+    [HttpGet("GetReport/{agentId:guid}")]
+    public async Task<IActionResult> GetReport(Guid agentId)
+    {
+        IList<Listing> listings = (IList<Listing>)await listingRepository.GetListingsAsync(new ListingFilterDto(){AgentId = agentId}, 0, 1000);
+        var report = await excelService.GetReportForAgent(listings);
+        
+        return File(report, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report.xlsx"); 
     }
 }

@@ -4,6 +4,7 @@ using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Infrastracture.Data;
 using DietiEstate.Infrastracture.Extensions;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Repositories;
 
@@ -13,12 +14,14 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     {
         return await context.Listing
             .Include(l => l.Type)
-            .Include(l => l.ListingServices)
+            //.Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
-            .Include(l => l.ListingImages)
+            //.Include(l => l.ListingImages)
+            .Include(l => l.ListingOffers)
+            .Include(l => l.ListingBookings)
             .ApplyFilters(filters)
             .ApplyNumericFilters(filters)
-            .ApplySorting(filters.SortBy, filters.SortOrder)
+            .ApplySorting(filters.SortBy, filters.SortOrder, new Point(filters.Longitude.Value, filters.Latitude.Value) { SRID = 4326 })
             .ToListAsync();
     }
     
@@ -33,18 +36,11 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .FirstOrDefaultAsync(l => l.Id == listingId);
     }
 
-    public async Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images)
+    public async Task AddListingAsync(Listing listing, List<string> tags)
     {
-        // TODO: Add images to the database
-        listing.ListingServices = await context.Service
-            .Where(s => services.Contains(s.Id))
-            .ToListAsync();
         listing.ListingTags = await context.Tag
-            .Where(t => tags.Contains(t.Id))
+            .Where(t => tags.Contains(t.Name))
             .ToListAsync();
-        /*listing.ListingImages = await context.Image
-            .Where(i => images.Contains(i.Url))
-            .ToListAsync();*/
         
         await context.Database.BeginTransactionAsync();
         await context.Listing.AddAsync(listing);

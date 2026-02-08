@@ -12,10 +12,10 @@ public static class BookingQueryExtensions
             query = query.Where(b => b.ListingId == filterDto.ListingId);
         
         if(filterDto.AgentId.HasValue)
-            query = query.Where(b => b.AgentUserId == filterDto.AgentId);
+            query = query.Where(b => b.AgentId == filterDto.AgentId);
         
         if(filterDto.ClientId.HasValue)
-            query = query.Where(b => b.ClientUserId == filterDto.ClientId);
+            query = query.Where(b => b.ClientId == filterDto.ClientId);
         
         if(filterDto.DateMeeting.HasValue)
             query = query.Where(b => b.DateMeeting >= filterDto.DateMeeting.Value);

@@ -1,0 +1,73 @@
+﻿@using System.Globalization
+@implements IDialogContentComponent<BookingRequestDto>
+
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+        <FluentLabel>
+            Stai facendo un'offerta per: <b>@Name</b>
+        </FluentLabel>
+        <FluentLabel Typo="Typography.Body">
+            Indirizzo: <b>@Address</b>
+        </FluentLabel>
+        <FluentLabel Typo="Typography.Body">
+            Valore dell'immobile: <b>@Price.ToString("C", new CultureInfo("it-IT"))</b>
+        </FluentLabel>
+    </FluentStack>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Bottom" Width="100%">
+        <FluentDatePicker TValue="DateTime?" 
+                          Value="@Content.DateMeeting" 
+                          ValueChanged="@((DateTime? nuovaData) => UpdateDate(nuovaData))"
+                          DisabledDateFunc="@(day => IsDateDisabled(day))" 
+                          Label="Giorno" />
+
+        <FluentTimePicker TValue="DateTime?" 
+                          Value="@Content.DateMeeting" 
+                          ValueChanged="@((DateTime? nuovoOrario) => UpdateTime(nuovoOrario))"
+                          Label="Orario" />
+    </FluentStack>
+</FluentStack>
+
+
+@code {
+    [Parameter] public BookingRequestDto Content { get; set; }
+    
+    private string Name => Dialog.Instance.Parameters.Get<string>("Name");
+    private string Address => Dialog.Instance.Parameters.Get<string>("Address");
+    private decimal Price => Dialog.Instance.Parameters.Get<decimal>("Price");
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+    
+    private bool IsDateDisabled(DateTime day)
+    {
+        return day.Date < DateTime.Today || day.Date > DateTime.Today.AddDays(14);
+    }
+    
+    private void UpdateDate(DateTime? nuovaData)
+    {
+        Content.DateMeeting = new DateTime(
+            nuovaData.Value.Year,
+            nuovaData.Value.Month,
+            nuovaData.Value.Day,
+            Content.DateMeeting.Value.Hour,
+            Content.DateMeeting.Value.Minute,
+            0
+        );
+    }
+
+    private void UpdateTime(DateTime? nuovoOrario)
+    {
+        if (nuovoOrario.HasValue)
+        {
+            Content.DateMeeting = new DateTime(
+                Content.DateMeeting.Value.Year,
+                Content.DateMeeting.Value.Month,
+                Content.DateMeeting.Value.Day,
+                nuovoOrario.Value.Hour,
+                nuovoOrario.Value.Minute,
+                0
+            );
+        }
+    }
+}

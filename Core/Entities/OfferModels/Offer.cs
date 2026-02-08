@@ -33,10 +33,9 @@ public class Offer
     public Guid AgentId { get; set; }
     
     [Required]
-    [ForeignKey(nameof(Listing))]
     public Guid ListingId { get; set; }
     
-    [Required]
+    [ForeignKey(nameof(ListingId))]
     public virtual Listing Listing { get; set; }
     
     [Required]

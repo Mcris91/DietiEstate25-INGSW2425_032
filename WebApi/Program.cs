@@ -13,6 +13,7 @@ using DietiEstate.WebApi.Handlers;
 using DietiEstate.WebApi.Middlewares;
 using DotNetEnv;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,7 @@ public static class Program
         }
         
         var builder = WebApplication.CreateBuilder(args);
+        
         ConfigureMinio(builder);
         ConfigureServices(builder);
 
@@ -47,6 +49,20 @@ public static class Program
     
     private static void ConfigureServices(WebApplicationBuilder builder)
     {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowedOrigins",
+                policy => policy.WithOrigins(
+                        "https://localhost:7007",
+                        "http://localhost:5155",
+                        "https://localhost:7250",
+                        "https://localhost:5208"
+                    )
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
+        });
+        
         builder.Services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
@@ -63,13 +79,21 @@ public static class Program
         
         builder.Services.AddScoped<DatabaseSeeder>();
 
-    /*    builder.Services.AddHangfire(options =>
+        builder.Services.AddHangfire(config =>
         {
-            options.UseSimpleAssemblyNameTypeSerializer();
-            options.UseRecommendedSerializerSettings();
+            config.UseSimpleAssemblyNameTypeSerializer();
+            config.UseRecommendedSerializerSettings();
+            config.UsePostgreSqlStorage(options => { 
+                    options.UseNpgsqlConnection(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
+                });
         });
-*/
+
         builder.Services.AddScoped<IMinioService, MinioService>();
+        
+        builder.Services.AddHttpClient<GeoapifyService>(client => 
+        {
+            client.BaseAddress = new Uri("https://api.geoapify.com/v2/");
+        });
         
         builder.Services.AddScoped<IMinioClient>(sp => 
         {
@@ -199,7 +223,7 @@ public static class Program
             app.MapScalarApiReference();
         }
 
-        //app.UseHangfireDashboard();
+        app.UseHangfireDashboard();
 
         if (!app.Environment.IsStaging())
         {
@@ -211,7 +235,8 @@ public static class Program
             await seeder.SeedAsync();
         }
         
-        //app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
+        app.UseCors("AllowedOrigins");
         app.UseRouting();
         app.UseMiddleware<UserSessionAuthMiddleware>();
         app.UseAuthentication();

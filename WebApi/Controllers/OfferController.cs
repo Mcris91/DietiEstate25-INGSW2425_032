@@ -37,7 +37,7 @@ public class OfferController(
             if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId))
                 return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
-        if (offer.Value< 0 || offer.Value > listing.Price) 
+        if (offer.Value <= 0 || offer.Value > listing.Price) 
             return BadRequest("Valore dell'offerta non valido");
 
         if (offer.FirstOfferId == Guid.Empty)
@@ -113,19 +113,16 @@ public class OfferController(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
-        pageNumber = 1;
-        pageSize = 10;
         //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
         //if (adminSession is null)
         //    return Unauthorized("Access denied");
-        var agentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15");
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
-        var offers = await offerRepository.GetOffersByAgentIdAsync(agentId, filterDto);
+        var offers = await offerRepository.GetOffersByAgentIdAsync(filterDto);
         return Ok(new PagedResponseDto<OfferResponseDto>(
             offers.ToList().Select(mapper.Map<OfferResponseDto>), 
             pageSize, pageNumber));
@@ -180,6 +177,5 @@ public class OfferController(
             TotalOffers = offers.Total,
             PendingOffers = offers.Pending
         });
-            
     }
 }

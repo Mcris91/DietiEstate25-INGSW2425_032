@@ -1,5 +1,6 @@
 using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.ListingModels;
+using NetTopologySuite.Geometries;
 
 namespace DietiEstate.Infrastracture.Extensions;
 
@@ -10,16 +11,15 @@ public static class ListingQueryExtensions
         if (filters.AgentId.HasValue)
             query = query.Where(l => l.AgentUserId == filters.AgentId.Value);
         
-        if (filters.TypeId.HasValue)
-            query = query.Where(l => l.TypeId == filters.TypeId.Value);
-
-        if (filters.ServiceIds?.Count > 0)
-            query = query.Where(l => l.ListingServices
-                .Any(ls => filters.ServiceIds.Contains(ls.Id)));
+        if (!string.IsNullOrEmpty(filters.EnergyClass))
+            query = query.Where(l => l.EnergyClass == filters.EnergyClass);
         
-        if (filters.TagIds?.Count > 0)
+        if (!string.IsNullOrEmpty(filters.TypeCode))
+            query = query.Where(l => l.Type.Code == filters.TypeCode);
+        
+        if (filters.Tags?.Count > 0)
             query = query.Where(l => l.ListingTags
-                .Any(ls => filters.TagIds.Contains(ls.Id)));
+                .Count(ls => filters.Tags.Contains(ls.Name)) == filters.Tags.Count);
             
         return query;
     }
@@ -44,8 +44,9 @@ public static class ListingQueryExtensions
         return query;
     }
 
-    public static IQueryable<Listing> ApplySorting(this IQueryable<Listing> query, string sortBy, string sortOrder)
+    public static IQueryable<Listing> ApplySorting(this IQueryable<Listing> query, string sortBy, string sortOrder, Point position)
     {
+        position.SRID = 4326;
         return sortBy.ToLower() switch
         {
             "price" => sortOrder == "desc" ? query.OrderByDescending(l => l.Price) : query.OrderBy(l => l.Price),
@@ -53,7 +54,7 @@ public static class ListingQueryExtensions
             "dimensions" => sortOrder == "desc" ? query.OrderByDescending(l => l.Dimensions) : query.OrderBy(l => l.Dimensions),
             "views" => sortOrder == "desc" ? query.OrderByDescending(l => l.Views) : query.OrderBy(l => l.Views),
             "floor" => sortOrder == "desc" ? query.OrderByDescending(l => l.Floor) : query.OrderBy(l => l.Floor),
-            _ => query.OrderBy(l => l.Views)
+            _ => query.OrderBy(l => l.Location.Distance(position))
         };
     }
 }

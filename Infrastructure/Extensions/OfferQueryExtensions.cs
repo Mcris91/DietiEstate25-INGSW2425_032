@@ -7,8 +7,12 @@ public static class OfferQueryExtensions
 {
     public static IQueryable<Offer> ApplyFilters(this IQueryable<Offer> query, OfferFilterDto filters)
     {
+        if (filters.AgentId.HasValue)
+            query = query.Where(o => o.AgentId == filters.AgentId.Value);
+        
         if (!string.IsNullOrEmpty(filters.CustomerFirstName) && !string.IsNullOrEmpty(filters.CustomerLastName))
             query = query.Where(o => o.Customer.FirstName == filters.CustomerFirstName && o.Customer.LastName == filters.CustomerLastName);
+        
         if (!string.IsNullOrEmpty(filters.ListingName))
             query = query.Where(o => o.Listing.Name == filters.ListingName);
         

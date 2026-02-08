@@ -4,6 +4,7 @@ using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
+using DietiEstate.Core.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,7 @@ namespace DietiEstate.WebApi.Controllers;
 [Route("api/v1/[controller]")]
 public class BookingController(
     IBookingRepository bookingRepository,
+    IListingRepository listingRepository,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -27,7 +29,7 @@ public class BookingController(
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
         
         var bookings = await bookingRepository.GetBookingsAsync(filterDto,pageNumber,pageSize);
-        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageSize, pageNumber));
     }
     
     [HttpGet("{bookingId:guid}")]
@@ -99,6 +101,8 @@ public class BookingController(
         [FromBody] BookingRequestDto request)
     {
         var booking = mapper.Map<Booking>(request);
+        booking.DateMeeting = booking.DateMeeting.ToUniversalTime();
+        booking.DateCreation = booking.DateCreation.ToUniversalTime();
         await bookingRepository.AddBookingAsync(booking);
         return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, mapper.Map<BookingResponseDto>(booking));
     }
@@ -124,5 +128,37 @@ public class BookingController(
         return NoContent();
     }
     
+    [HttpGet("GetTotalBookings/{agentId:guid}")]
+    public async Task<ActionResult> GetTotalBookings(Guid agentId)
+    {
+        var bookings = await bookingRepository.GetTotalBookingsAsync(agentId);
+        return Ok(new BookingAgentCountersResponseDto()
+        {
+            ScheduledBookings = bookings.Total,
+            PendingBookings = bookings.Pending
+        });
+    }
+    
+    [HttpPut("AcceptOrRejectBooking/{bookingId:guid}/{accept:bool}")]
+    public async Task<IActionResult> AcceptOrRejectOffer(Guid bookingId, bool accept)
+    {
+        var booking = await bookingRepository.GetBookingByIdAsync(bookingId);
+        if (booking is null) return NotFound();
+
+        if (booking.Status != BookingStatus.Pending)
+            return Unauthorized();
+        
+        booking.Status = accept ? BookingStatus.Accepted : BookingStatus.Rejected;
+        
+        var listing = await listingRepository.GetListingByIdAsync(booking.ListingId);
+        if (listing is null) return NotFound();
+        
+        if (!listing.Available)
+            return Unauthorized();
+        
+        await bookingRepository.UpdateBookingAsync(booking);
+        
+        return Ok();
+    }
     
 }

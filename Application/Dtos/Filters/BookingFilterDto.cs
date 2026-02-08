@@ -7,7 +7,7 @@ namespace DietiEstate.Application.Dtos.Filters;
 
 public class BookingFilterDto
 {
-    public BookingStatus? Status { get; init; } = BookingStatus.Pending;
+    public BookingStatus? Status { get; init; }
     
     public DateTime? DateCreation { get; init; }
     

@@ -1,3 +1,4 @@
+using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
@@ -11,6 +12,7 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
 {
     public DietiEstateDbContext() : this(new DbContextOptions<DietiEstateDbContext>()) {}
 
+    public virtual DbSet<Agency> Agency { get; set; }
     public virtual DbSet<Listing> Listing { get; set; }
     
     public virtual DbSet<Offer> Offer { get; set; }
@@ -34,11 +36,16 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasPostgresExtension("postgis");
         
         modelBuilder.Entity<Listing>()
             .HasMany(l => l.ListingImages)
             .WithMany(i => i.Listings)
             .UsingEntity("ListingImage");
+        
+        modelBuilder.Entity<Listing>()
+            .Property(l => l.Location)
+            .HasColumnType("geography");
         
         modelBuilder.Entity<Image>(entity =>
         {

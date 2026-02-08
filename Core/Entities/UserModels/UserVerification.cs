@@ -23,6 +23,5 @@ public class UserVerification
     [Required]
     public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(60);
     
-    [Required]
     public DateTime? VerifiedAt { get; set; }
 }

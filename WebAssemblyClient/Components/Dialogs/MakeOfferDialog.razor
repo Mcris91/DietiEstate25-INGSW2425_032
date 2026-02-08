@@ -1,0 +1,87 @@
+﻿@using System.Globalization
+@implements IDialogContentComponent<OfferRequestDto>
+
+
+<FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center">
+    <FluentGrid>
+        <FluentGridItem xs="6">
+            <FluentLabel Weight="FontWeight.Bold">Offerta per</FluentLabel>
+        </FluentGridItem>
+        <FluentGridItem xs="6">
+            <FluentLabel>@Name</FluentLabel>
+        </FluentGridItem>
+        <FluentGridItem xs="6">
+            <FluentLabel Weight="FontWeight.Bold">Indirizzo</FluentLabel>
+        </FluentGridItem>
+        <FluentGridItem xs="6">
+            <FluentLabel>@Address</FluentLabel>
+        </FluentGridItem>
+        <FluentGridItem xs="6">
+            <FluentLabel Weight="FontWeight.Bold">Valore</FluentLabel>
+        </FluentGridItem>
+        <FluentGridItem xs="6">
+            <FluentLabel>@Price.ToString("C", new CultureInfo("it-IT"))</FluentLabel>
+        </FluentGridItem>
+    </FluentGrid>
+    <EditForm EditContext="_editContext">
+        <DataAnnotationsValidator />
+        <FluentNumberField TValue="decimal"
+                           Label="Importo"
+                           @bind-Value="Content.Value"
+                           @bind-Value:after="OnValueChanged"
+                           Placeholder="Importo in €"
+                           Immediate="true" 
+                           Appearance="FluentInputAppearance.Outline" 
+                           ParsingErrorMessage="Inserisci un valore numerico"  
+                           HideStep="true"
+                           autocomplete="off"
+                           Style="width: 100%;">
+        </FluentNumberField>
+        <FluentValidationMessage For="@(() => Content.Value)"/>
+        @if (_isOverPrice)
+        {
+            <FluentLabel Color="Color.Error">L'offerta non può superare il valore dell'immobile</FluentLabel>
+        }
+    </EditForm>
+</FluentStack>
+
+<FluentDialogFooter>
+    <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Width="100%">
+        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Style="width: 100%"
+                      OnClick="@CloseAsync">
+            Fai un'offerta
+        </FluentButton>
+    </FluentStack>
+</FluentDialogFooter>
+
+
+@code {
+    [Parameter] public OfferRequestDto Content { get; set; }
+    
+    private string Name => Dialog.Instance.Parameters.Get<string>("Name");
+    private string Address => Dialog.Instance.Parameters.Get<string>("Address");
+    private decimal Price => Dialog.Instance.Parameters.Get<decimal>("Price");
+    private EditContext _editContext = default!;
+    private bool _isOverPrice;
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(Content);
+    }
+
+    private void OnValueChanged()
+    {
+        _isOverPrice = Content.Value > Price;
+    }
+    
+    private async Task CloseAsync()
+    {
+        if (_editContext.Validate() && !_isOverPrice)
+        {
+            await Dialog!.CloseAsync(Content);
+        }
+    }
+}

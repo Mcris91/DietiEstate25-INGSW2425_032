@@ -10,11 +10,11 @@
         </FluentStack>
         
         <FluentSelect TOption="Option<string>"
-                      Items="_listingTypes"
+                      Items="ListingTypes"
                       OptionText="@(i => i.Text)"
                       OptionValue="@(i => i.Value)"
                       Width="100%"
-                      @bind-SelectedOption="@_selectedType"/>
+                      @bind-Value="@Content.TypeCode"/>
     </FluentStack>
 
     <FluentStack Orientation="Orientation.Vertical">
@@ -24,11 +24,26 @@
         </FluentStack>
 
         <FluentSelect TOption="Option<string>"
-                      Items="_listingEnergeticClasses"
+                      Items="ListingEnergeticClasses"
                       OptionText="@(i => i.Text)"
                       OptionValue="@(i => i.Value)"
                       Width="100%"
-                      @bind-SelectedOption="@_selectedEnergyClass"/>
+                      @bind-Value="@Content.EnergyClass"/>
+    </FluentStack>
+    
+    <FluentStack Orientation="Orientation.Vertical">
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Tag())" Color="@Color.Accent"/>
+            <FluentLabel Typo="Typography.H5">Servizi nelle vicinanze</FluentLabel>
+        </FluentStack>
+
+        <FluentAutocomplete TOption="Option<string>"
+                            Items="_availableTags"
+                            OptionText="@(t => t.Text)"
+                            @bind-SelectedOptions="@_selectedOptions"
+                            Placeholder="Seleziona servizi..."
+                            autocomplete="off" 
+                            Width="100%" />
     </FluentStack>
     
     <FluentStack Orientation="Orientation.Vertical">
@@ -38,8 +53,8 @@
         </FluentStack>
         
         <FluentStack Orientation="Orientation.Horizontal">
-            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinPrice"></FluentNumberField>
-            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxPrice"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinPrice" autocomplete="off"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxPrice" autocomplete="off"></FluentNumberField>
         </FluentStack>
     </FluentStack>
     
@@ -50,8 +65,8 @@
         </FluentStack>
         
         <FluentStack Orientation="Orientation.Horizontal">
-            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinSize"></FluentNumberField>
-            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxSize"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="Da" @bind-Value="Content.MinSize" autocomplete="off"></FluentNumberField>
+            <FluentNumberField TValue="decimal?" Label="A" @bind-Value="Content.MaxSize" autocomplete="off"></FluentNumberField>
         </FluentStack>
     </FluentStack>
     
@@ -62,12 +77,23 @@
         </FluentStack>
         
         <FluentStack Orientation="Orientation.Horizontal">
-            <FluentNumberField TValue="int?" Label="Da" @bind-Value="Content.MinRooms"></FluentNumberField>
-            <FluentNumberField TValue="int?" Label="A" @bind-Value="Content.MaxRooms"></FluentNumberField>
+            <FluentNumberField TValue="int?" Label="Da" @bind-Value="Content.MinRooms" autocomplete="off"></FluentNumberField>
+            <FluentNumberField TValue="int?" Label="A" @bind-Value="Content.MaxRooms" autocomplete="off"></FluentNumberField>
         </FluentStack>
     </FluentStack>
     
 </FluentStack>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent"
+                  OnClick="@CloseAsync">
+        Applica
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Neutral"
+                  OnClick="@(() => Dialog!.CancelAsync())">
+        Annulla
+    </FluentButton>
+</FluentDialogFooter>
 
 @code {
     [Parameter] 
@@ -75,29 +101,50 @@
     
     [CascadingParameter]
     public FluentDialog? Dialog {get; set; }
-
-
-    Option<string> _selectedType = _listingTypes[0];
     
-    Option<string> _selectedEnergyClass = _listingTypes[0];
-
-    static List<Option<string>> _listingTypes = new()
+    private IEnumerable<Option<string>> _selectedOptions = [];
+    
+    private List<Option<string>> _availableTags = new()
     {
-        { new Option<string> { Value = "", Text = "Nessuna preferenza" } },
-        { new Option<string> { Value = "Sale", Text = "In vendita" } },
-        { new Option<string> { Value = "Rent", Text = "In affitto" } }
+        new Option<string> { Value = "education", Text = "Vicino a scuole" },
+        new Option<string> { Value = "commercial", Text = "Vicino a negozi" },
+        new Option<string> { Value = "public_transport", Text = "Vicino a servizi pubblici" },
+        new Option<string> { Value = "healthcare", Text = "Vicino a servizi sanitari" }
     };
     
-    static List<Option<string>> _listingEnergeticClasses = new()
+    static readonly List<Option<string>> ListingTypes =
+    [
+        new() { Value = "", Text = "Nessuna preferenza" },
+        new() { Value = "SALE", Text = "In vendita" },
+        new() { Value = "RENT", Text = "In affitto" }
+    ];
+    
+    static readonly List<Option<string>> ListingEnergeticClasses =
+    [
+        new() { Value = "", Text = "Nessuna preferenza" },
+        new() { Value = "A", Text = "A" },
+        new() { Value = "B", Text = "B" },
+        new() { Value = "C", Text = "C" },
+        new() { Value = "D", Text = "D" },
+        new() { Value = "E", Text = "E" },
+        new() { Value = "F", Text = "F" },
+        new() { Value = "G", Text = "G" }
+    ];
+
+    protected override void OnInitialized()
     {
-        { new Option<string> { Value = "", Text = "Nessuna preferenza" } },
-        { new Option<string> { Value = "A", Text = "A" } },
-        { new Option<string> { Value = "B", Text = "B" } },
-        { new Option<string> { Value = "C", Text = "C" } },
-        { new Option<string> { Value = "D", Text = "D" } },
-        { new Option<string> { Value = "E", Text = "E" } },
-        { new Option<string> { Value = "F", Text = "F" } },
-        { new Option<string> { Value = "G", Text = "G" } },
-    };
+        if (Content.Tags != null && Content.Tags.Any())
+        {
+            _selectedOptions = _availableTags
+            .Where(t => Content.Tags.Contains(t.Value))
+            .ToList();
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        Content.Tags = _selectedOptions.Select(o => o.Value).ToList();
+        await Dialog!.CloseAsync(Content);
+    }
 
 }

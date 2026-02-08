@@ -28,7 +28,7 @@ public class ListingRequestDto
 
     public int Floor { get; init; }
 
-    public bool Available { get; init; } = false;
+    public bool Available { get; init; } = true;
 
     public bool Elevator { get; init; } = false;
 
@@ -39,9 +39,9 @@ public class ListingRequestDto
     public string OwnerEmail { get; init; } = string.Empty;
 
     public Guid? AgentUserId { get; init; } = null;
-
-    public required ListingTypeDto Type { get; init; }
-
+    
+    public string TypeCode { get; init; } = string.Empty;
+    
     public List<ListingImageRequestDto> Images { get; init; } = [];
 
     public List<ListingServiceDto> Services { get; init; } = [];

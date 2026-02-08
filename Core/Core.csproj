@@ -7,4 +7,8 @@
         <RootNamespace>DietiEstate.Core</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="9.0.4" />
+    </ItemGroup>
+
 </Project>

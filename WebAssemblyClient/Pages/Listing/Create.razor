@@ -1,0 +1,294 @@
+﻿@using AutoMapper
+@using WebAssemblyClient.ApiService
+@using WebAssemblyClient.Extensions
+@inject HostAuthenticationStateProvider AuthStateProvider
+
+
+@inject ListingApiService ListingApiService
+@inject IMapper Mapper
+@inject IJSRuntime JsRuntime
+
+@page "/listing/update/{ListingId:guid}/"
+@page "/listing/create/"
+
+<FluentGrid Spacing="2" Style="margin: 1rem 3rem;">
+    <FluentGridItem xs="12" sm="12" md="8">
+        <FluentCard AreaRestricted="false">
+            <EditForm EditContext="_editContext">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+                    <DataAnnotationsValidator/>
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                        <FluentLabel Typo="Typography.H4">Tipologia e Prezzo</FluentLabel>
+                        <FluentLabel Typo="Typography.Body">Scegli il prezzo e la tipologia del nuovo immobile</FluentLabel>
+                    </FluentStack>
+                    
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10"
+                                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentNumberField Name="Price" @bind-Value="_listingRequestDto.Price"
+                                               Label="Prezzo" Required Min="0" HideStep="true"
+                                               autocomplete="off" Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Price)"/>
+                        </FluentStack>
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentCombobox Placeholder="Make a selection..." Label="Tipologia" 
+                                            Autofocus="false" Items="_listingTypes" 
+                                            OptionText="@(o => o.Text)" 
+                                            OptionValue="@(o => o.Value)"
+                                            @bind-value="_listingRequestDto.TypeCode" 
+                                            Height="200px" Width="100%" Required/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.TypeCode)"/>
+                        </FluentStack>
+                    </FluentStack>
+                    
+                    <FluentDivider Style="width: 100%;"></FluentDivider>
+                    
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                        <FluentLabel Typo="Typography.H4">Dettagli</FluentLabel>
+                        <FluentLabel Typo="Typography.Body">Inserisci i dati principali dell'inserzione</FluentLabel>
+                    </FluentStack>
+                    
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentTextField Name="Name" Label="Nome" 
+                                             @bind-Value="_listingRequestDto.Name" Required
+                                             autocomplete="off" Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Name)"/>
+                        </FluentStack>
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">              
+                            <FluentTextField Name="Address" Label="Indirizzo" 
+                                             @bind-Value="_listingRequestDto.Address" Required
+                                             @onkeyup="@HandleKeyUp" autocomplete="off"
+                                             Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Address)"/>
+                        </FluentStack>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="10">
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentNumberField Name="Dimensions" @bind-Value="_listingRequestDto.Dimensions"
+                                               Label="Dimensioni" Required
+                                               HideStep="true"autocomplete="off"
+                                               Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Dimensions)"/>
+                            
+                        </FluentStack>
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentNumberField Name="Rooms" @bind-Value="_listingRequestDto.Rooms"
+                                               Label="N. Stanze" Required
+                                               HideStep="true" autocomplete="off"
+                                               Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Rooms)"/>
+                        </FluentStack>
+                        
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentNumberField Name="Floor" @bind-Value="_listingRequestDto.Floor"
+                                               Label="Piano" Required
+                                               HideStep="true" autocomplete="off"
+                                               Style="width: 100%;"/>
+                            <FluentValidationMessage For="@(() => _listingRequestDto.Floor)"/>
+                        </FluentStack>
+                        
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                            <FluentCombobox Placeholder="Seleziona..." Label="Classe Energetica" 
+                                            Autofocus="false" Items="_energyClasses" 
+                                            OptionText="@(o => o.Text)" 
+                                            OptionValue="@(o => o.Value)"
+                                            @bind-value="_listingRequestDto.EnergyClass" 
+                                            Height="200px" Width="100%" Required/>
+                        </FluentStack>
+                    </FluentStack>
+                    
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                        <FluentTextArea Name="Description" Label="Descrizione" 
+                                      @bind-Value="_listingRequestDto.Description" Required
+                                      Style="width: 100%;" Rows="5"/>
+                        <FluentValidationMessage For="@(() => _listingRequestDto.Description)"/>
+                    </FluentStack>
+                    
+                </FluentStack>
+            </EditForm>
+        </FluentCard>
+    </FluentGridItem>
+    
+    <FluentGridItem xs="12" sm="12" md="4">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+          
+            <FluentCard>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                        <FluentLabel Typo="Typography.H4">Immagini</FluentLabel>
+                        <FluentLabel Typo="Typography.Body">Carica le immagini dell'immobile</FluentLabel>
+                    </FluentStack>
+                    
+                    <FluentInputFile @ref="_coverFileUpload"
+                                     Mode="InputFileMode.Stream"
+                                     AnchorId="cover-file-upload"                 
+                                     DragDropZoneVisible="false"
+                                     MaximumFileCount="1"
+                                     MaximumFileSize="@(10*1024*1024)"
+                                     Accept="image/*"
+                                     OnFileUploaded="@OnCoverFileUploaded"
+                                     OnCompleted="@OnCoverFileUploadComplete"/>
+                    @if (!_isCoverUploaded)
+                    {
+                        <FluentStack Orientation="Orientation.Vertical">
+                            <FluentLabel Typo="Typography.Body">Scegli un'immagine di copertina: </FluentLabel>
+                            <FluentButton Id="cover-file-upload" IconStart="@(new Icons.Regular.Size20.ArrowUpload())">Carica</FluentButton>
+                        </FluentStack>
+                      
+                        <FluentProgress Min="0" Max="100" Visible="@(_coverUploadProgressPercent > 0)" Value="@_coverUploadProgressPercent" />
+                        @if (_coverUploadProgressPercent > 0)
+                        {
+                            <FluentLabel Alignment="HorizontalAlignment.Center">
+                                @_coverUploadProgressTitle
+                            </FluentLabel>
+                        }
+                    }
+                    else
+                    {
+                        <FluentStack Orientation="Orientation.Vertical">
+                            <FluentLabel Typo="Typography.Body">Immagine di copertina caricata:</FluentLabel>
+                            <img id="cover-file-upload" src="@_coverFile" alt="Cover Image" width="100%" height="auto" style="cursor: pointer;" role="button" tabindex="0"/>
+                        </FluentStack>
+                    }
+                </FluentStack>
+              
+            </FluentCard>
+            
+            <FluentCard>
+                <div id="map" style="width: 100%; height: 300px; border-color: black; border-width: 3px; border-radius: 10px"></div>
+            </FluentCard>
+            
+            <FluentCard>
+                <FluentButton Appearance="Appearance.Accent" Style="width: 100%;"
+                            OnClick="@SaveListingAsync">Salva</FluentButton>
+            </FluentCard>
+        </FluentStack>
+    </FluentGridItem>
+</FluentGrid>
+
+@code {
+    [Parameter]
+    public Guid ListingId { get; set; }
+
+    private FluentInputFile? _coverFileUpload;
+    private int? _coverUploadProgressPercent;
+    private string? _coverUploadProgressTitle;
+    private bool _isCoverUploaded;
+    private string _coverFile;
+    private FluentInputFile? _galleryFileUpload;
+    private IJSObjectReference? _jsModule; 
+    private EditContext _editContext = default!;
+
+
+    private ListingRequestDto _listingRequestDto = new();
+
+    private readonly List<Option<string>> _energyClasses =
+    [
+      new() { Value = "A", Text = "A" },
+      new() { Value = "B", Text = "B" },
+      new() { Value = "C", Text = "C" },
+      new() { Value = "D", Text = "D" },
+      new() { Value = "E", Text = "E" },
+      new() { Value = "F", Text = "F" },
+      new() { Value = "G", Text = "G" }
+    ];
+
+    private readonly List<Option<string>> _listingTypes =
+    [
+      new() { Value = "SALE", Text = "In vendita" },
+      new() { Value = "RENT", Text = "In affitto" }
+    ];
+
+    protected override void OnInitialized()
+    { 
+        _editContext = new EditContext(_listingRequestDto);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/CreateListing.js");
+        
+        if (ListingId != Guid.Empty)
+        {
+            var listingData = await ListingApiService.GetListingByIdAsync(ListingId);
+            _listingRequestDto = Mapper.Map<ListingRequestDto>(listingData);
+            _editContext = new EditContext(_listingRequestDto);
+            if (_listingRequestDto.Latitude != 0 && _listingRequestDto.Longitude != 0)
+            {
+                await _jsModule.InvokeVoidAsync("setupMap", "map", _listingRequestDto.Latitude, _listingRequestDto.Longitude);
+                _coverFile = _listingRequestDto.FeaturedImageUrl;
+                _isCoverUploaded = true;
+            }
+            else
+            await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+        } 
+        else
+        await _jsModule.InvokeVoidAsync("setupMap", "map", null, null);
+
+        StateHasChanged();
+    }
+
+    private async Task OnCoverFileUploaded(FluentInputFileEventArgs file)
+    {
+        var ms = new MemoryStream();
+        await file.Stream!.CopyToAsync(ms);
+        var bytes = ms.ToArray();
+
+        _coverFile = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
+        _listingRequestDto.FeaturedImage = bytes;
+        _isCoverUploaded = true;
+    }
+
+    void OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
+    {
+        _coverUploadProgressPercent = _coverFileUpload!.ProgressPercent;
+        _coverUploadProgressTitle = _coverFileUpload!.ProgressTitle;
+    }
+
+    private async Task SaveListingAsync()
+    { 
+        if (!_editContext.Validate()) return;
+        
+        var user = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userEmail = user.User.FindFirst("email")?.Value;
+        
+        if (userId == null || userEmail == null) return;
+        
+
+        if (ListingId == Guid.Empty)
+        {
+            _listingRequestDto.AgentUserId = Guid.Parse(userId);
+            _listingRequestDto.OwnerEmail = userEmail;
+            await ListingApiService.CreateListingAsync(_listingRequestDto);
+        }
+        else
+        {
+        //await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
+        }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAddress();
+        }
+    }
+
+    private async Task SearchAddress()
+    {
+        if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address))
+        {
+            var coords = await _jsModule.InvokeAsync<float[]?>("searchAddress", _listingRequestDto.Address);
+            if (coords != null){
+                _listingRequestDto.Latitude = coords[0];
+                _listingRequestDto.Longitude = coords[1];
+            }
+        }
+    }
+}

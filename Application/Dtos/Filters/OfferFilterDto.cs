@@ -4,6 +4,7 @@ namespace DietiEstate.Application.Dtos.Filters;
 
 public class OfferFilterDto
 {
+    public Guid? AgentId { get; init; }
     public string CustomerFirstName { get; init; } = string.Empty;
     public string CustomerLastName { get; init; } = string.Empty;
     public string CustomerEmail { get; init; } = string.Empty;

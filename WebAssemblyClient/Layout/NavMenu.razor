@@ -1,0 +1,158 @@
+﻿@using WebAssemblyClient.ApiService
+@using WebAssemblyClient.Components.Dialogs
+@using WebAssemblyClient.Extensions
+@inject AuthApiService AuthApiService
+@inject IDialogService DialogService
+@inject HostAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigator
+@inject IToastService ToastService
+
+<FluentDesignTheme Mode="@Mode" CustomColor="#EF4444" StorageName="theme"/>
+<AuthorizeView>
+    <Authorized>
+        @if (context.User.IsInRole("Agent") || context.User.IsInRole("SystemAdmin") || context.User.IsInRole("SuperAdmin"))
+        {
+            <FluentAnchor Href="/agent/dashboard" Appearance="Appearance.Stealth">Dashboard</FluentAnchor>
+            <FluentAnchor Href="/agent/calendar" Appearance="Appearance.Outline">Calendario</FluentAnchor>
+            <FluentAnchor Href="/agent/offers" Appearance="Appearance.Outline">Offerte</FluentAnchor>
+            <FluentAnchor Href="/agent/listings" Appearance="Appearance.Outline">Inserzioni</FluentAnchor>
+        }
+
+        <FluentProfileMenu Image=""
+                           HeaderLabel="@context.User.FindFirst("role")?.Value"
+                           FullName="@context.User.FindFirst("given_name")?.Value"
+                           Email="@context.User.FindFirst("email")?.Value" 
+                           PopoverStyle="min-width: 330px;"
+                           OnHeaderButtonClick="@SignOut">
+            <FooterTemplate>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                    <FluentGridItem>
+                        <FluentSelect Width="150px"
+                                      Items="@(Enum.GetValues<DesignThemeModes>())"
+                                      @bind-SelectedOption="@Mode"/>
+                    </FluentGridItem>
+                    <FluentSpacer/>
+                    <FluentAnchor Href="/user/profile" Appearance="Appearance.Hypertext">View Profile</FluentAnchor>
+                </FluentStack>
+            </FooterTemplate>
+        </FluentProfileMenu>
+    </Authorized>
+
+    <NotAuthorized>
+        @* Se l'utente NON è loggato *@
+        <FluentButton Appearance="Appearance.Stealth"
+                      @onclick="@OpenRegisterAgencyDialogAsync">Registra la tua azienda</FluentButton>
+        <FluentButton IconStart="@(new Icons.Regular.Size20.PersonAccounts())"
+                      Appearance="Appearance.Accent"
+                      @onclick="@OpenLoginDialogAsync">Accedi</FluentButton>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private DesignThemeModes Mode { get; set; }
+    private async Task SignOut()
+    {
+        await AuthApiService.Logout();
+        Navigator.NavigateTo("/");
+        AuthStateProvider.NotifyAuthenticationStateChanged();
+    }
+
+    private async Task OpenLoginDialogAsync()
+    {
+        LoginRequestDto loginUser = new() { Email = "", Password = "" };
+
+        DialogParameters loginParameters = new()
+        {
+            Title = "Accedi",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Accedi",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
+        DialogResult loginResult = await loginDialog.Result;
+
+        if (loginResult.Data is not null && !loginResult.Cancelled)
+        {
+            if (loginResult.Data is UserRequestDto)
+            {
+                await OpenRegisterDialogAsync();
+            }
+            else
+            {
+                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
+                
+                var response = await AuthApiService.Login(loginRequest);
+                
+                if (response != null)
+                {
+                    AuthStateProvider.NotifyAuthenticationStateChanged();
+                }
+            }
+        }
+    }
+
+    private async Task OpenRegisterDialogAsync()
+    {
+
+        UserRequestDto registerUser = new()
+        {
+            FirstName = "",
+            LastName = "",
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters registerParameters = new()
+        {
+            Title = "Registrati",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Registrati",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+            await AuthApiService.Register(registerRequest);
+            ToastService.ShowSuccess("Registrazione effettuata con successo!");
+        }
+    }
+    
+    private async Task OpenRegisterAgencyDialogAsync()
+    {
+
+        RegisterAgencyDto registerAgency = new()
+        {
+            Name = "",
+            Email = "",
+        };
+
+        DialogParameters registerParameters = new()
+        {
+            Title = "Registra la tua azienda",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Registra",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterAgencyDialog>(registerAgency, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            RegisterAgencyDto? registerRequest = registerResult.Data as RegisterAgencyDto;
+            await AuthApiService.RegisterAgency(registerRequest);
+            ToastService.ShowSuccess("Azienda registrata con successo! Controlla la mail per le credenziali di accesso.");
+        }
+    }
+}

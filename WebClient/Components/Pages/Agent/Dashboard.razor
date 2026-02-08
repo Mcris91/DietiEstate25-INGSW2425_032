@@ -1,12 +1,15 @@
 @using System.Globalization
 @using DietiEstate.WebClient.ApiService
+@using DietiEstate.WebClient.Data.Common
 @using DietiEstate.WebClient.Data.Requests
 @using DietiEstate.WebClient.Data.Responses
 @rendermode InteractiveServer
 
 @inject ListingApiService ListingApiService
+@inject BookingApiService BookingApiService
 @inject OfferApiService OfferApiService
 @inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
 
 @page "/agent/dashboard"
 
@@ -30,16 +33,17 @@
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Prenotazioni"
                              LeftInfo="Prossime" RightInfo="Attesa"
-                             LeftNumber="17" RightNumber="28"/>
+                             LeftNumber="@(_bookingCounters?.ScheduledBookings ?? 0)" 
+                             RightNumber="@(_bookingCounters?.PendingBookings ?? 0)"/>
         </FluentGridItem>
       </FluentGrid>  
       
       <FluentCard>
         <FluentTabs Size="TabSize.Medium">
-          
+
           <FluentTab Label="Inserzioni" Id="tab-listings">
-            
-            <PagedDataGrid TItem="ListingResponseDto"
+            <PagedDataGrid @ref="_listingGrid"
+                           TItem="ListingResponseDto"
                            DataProvider="GetListingData"
                            PageSize="10"
                            OnRowClick="OnListingRowClick">
@@ -54,11 +58,12 @@
                 </TemplateColumn>
               </GridColumns>
             </PagedDataGrid>
-            
+
           </FluentTab>
           <FluentTab Label="Offerte" Id="tab-offers">
 
-            <PagedDataGrid TItem="OfferResponseDto"
+            <PagedDataGrid @ref="_offerGrid"
+                           TItem="OfferResponseDto"
                            DataProvider="GetOfferData"
                            PageSize="10"
                            OnRowClick="OnOfferRowClick">
@@ -71,12 +76,28 @@
                 <PropertyColumn Title="Stato" Property="@((OfferResponseDto o) => o.Status.ToString())"/>
               </GridColumns>
             </PagedDataGrid>
-            
+
           </FluentTab>
           <FluentTab Label="Prenotazioni" Id="tab-bookings">
-            Content for Bookings tab.
+            
+            <PagedDataGrid @ref="_bookingGrid"
+                           TItem="BookingResponseDto"
+                           DataProvider="GetBookingData"
+                           PageSize="10"
+                           OnRowClick="OnBookingrRowClick">
+              <GridColumns>
+                <PropertyColumn Title="Cliente" Property="@((BookingResponseDto b) => b.CustomerName + " " + b.CustomerLastName)"/>
+                <PropertyColumn Title="Contatto" Property="@((BookingResponseDto b) => b.CustomerEmail)"/>
+                <PropertyColumn Title="Immobile" Property="@((BookingResponseDto b) => b.ListingName)"/>
+                <PropertyColumn Title="Data" Property="@((BookingResponseDto b) => b.DateMeeting.ToString("dd/MM/yyyy hh:mm"))"/>
+                <PropertyColumn Title="Stato" Property="@((BookingResponseDto b) => b.Status.ToString())"/>
+              </GridColumns>
+            </PagedDataGrid>
+            
           </FluentTab>
-          
+          <div slot="end">
+            <FluentButton IconStart="new Icons.Regular.Size20.DocumentArrowDown()" OnClick="DownloadReport">Stampa Report</FluentButton>
+          </div>
         </FluentTabs>
       </FluentCard>
     </FluentStack>
@@ -93,13 +114,14 @@
           {
             <FluentGrid Spacing="1" Style="width: 100%;">
               <FluentGridItem xs="12">
-                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()">
+                <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()" 
+                              OnClick="@(() => { Navigation.NavigateTo($"View/{listing.Id}/"); })">
                   Visualizza
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="12">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
-                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{listing.Id}/"); })">
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/update/{listing.Id}/"); })">
                   Modifica
                 </FluentButton>
               </FluentGridItem>
@@ -134,25 +156,50 @@
                 </FluentButton>
               </FluentGridItem>
             </FluentGrid>
+          } else if (_loadedItem is BookingResponseDto booking && booking.Status == BookingStatus.Pending)
+          {
+            <FluentGrid Spacing="1" Style="width: 100%;">
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
+                              OnClick="@(() => HandleBookingAction(booking.Id, true))">
+                  Accetta
+                </FluentButton>
+              </FluentGridItem>
+              <FluentGridItem xs="6">
+                <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
+                              OnClick="@(() => HandleBookingAction(booking.Id, false))">
+                  Rifiuta
+                </FluentButton>
+              </FluentGridItem>
+            </FluentGrid>
           }
         </FluentStack>
       </Actions>
-      <!-- TODO: Insert actions for other tables -->
     </DetailsCard>
   </FluentGridItem>
 </FluentGrid>
 
 @code {
 
+  private IJSObjectReference? _jsModule;
+  private PagedDataGrid<ListingResponseDto> _listingGrid;
+  private PagedDataGrid<OfferResponseDto> _offerGrid;
+  private PagedDataGrid<BookingResponseDto> _bookingGrid;
   readonly ListingFilterDto _filters = new()
   {
-    AgentId = Guid.Parse("1dc9260e-e1d7-445d-bf14-c05cc9a60c15")
+    AgentId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566")
   };
 
   readonly OfferFilterDto _offerFilters = new();
+  
+  readonly BookingFilterDto _bookingFilters = new()
+  {
+    AgentId = Guid.Parse("71c91ad9-2b67-49e1-a252-7802e3657566")
+  };
 
   private ListingAgentCountersResponseDto? _listingCounters;
   private OfferAgentCountersResponseDto? _offersCounters;
+  private BookingAgentCountersResponseDto? _bookingCounters;
 
   private bool _isDetailsCardLoading;
   private Dictionary<string, string>? _detailsCardTopSection;
@@ -162,8 +209,10 @@
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
     if (!firstRender) return;
+    _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Agent/Dashboard.razor.js");
     _listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
-    _offersCounters = await OfferApiService.GetTotalOffersAsync(_filters.AgentId);
+    _offersCounters = await OfferApiService.GetOffersAgentCountersAsync(_filters.AgentId);
+    _bookingCounters = await BookingApiService.GetBookingsAgentCountersAsync(_filters.AgentId);
     StateHasChanged();
   }
 
@@ -221,13 +270,56 @@
     _loadedItem = offer;
     _isDetailsCardLoading = false;
   }
+  
+  private async Task<PagedResponseDto<BookingResponseDto>> GetBookingData(int? pageNumber, int? pageSize)
+  {
+    return await BookingApiService.GetBookingsByAgentIdAsync(_bookingFilters, pageNumber, pageSize);
+  }
+  
+  private void OnBookingrRowClick(BookingResponseDto booking)
+  {
+    _isDetailsCardLoading = true;
+    _detailsCardTopSection = new Dictionary<string, string>()
+    {
+      { "Cliente", booking.CustomerName + " " + booking.CustomerLastName },
+      { "Contatto", booking.CustomerEmail },
+      { "Immobile", booking.ListingName },
+      { "Data", booking.DateMeeting.ToString("dd/MM/yyyy hh:mm") },
+      { "Stato", booking.Status.ToString() }
+    };
+
+    _detailsCardBottomSection = new Dictionary<string, string>();
+    _loadedItem = booking;
+    _isDetailsCardLoading = false;
+  }
 
   private async Task HandleOfferAction(Guid offerId, bool accept)
   {
     await OfferApiService.AcceptOrRejectOfferAsync(offerId, accept);
-    _offersCounters = await OfferApiService.GetTotalOffersAsync(_filters.AgentId);
+    _offersCounters = await OfferApiService.GetOffersAgentCountersAsync(_filters.AgentId);
     _detailsCardTopSection = null;
+    await _offerGrid.LoadData(1,10);
+    await _listingGrid.LoadData(1, 10);
+    await _bookingGrid.LoadData(1, 10);
+    StateHasChanged();
+  }
+  
+  private async Task HandleBookingAction(Guid bookingId, bool accept)
+  {
+    await BookingApiService.AcceptOrRejectBookingAsync(bookingId, accept);
+    _bookingCounters = await BookingApiService.GetBookingsAgentCountersAsync(_filters.AgentId);
+    _detailsCardTopSection = null;
+    await _offerGrid.LoadData(1,10);
+    await _listingGrid.LoadData(1, 10);
+    await _bookingGrid.LoadData(1, 10);
     StateHasChanged();
   }
 
+  private async Task DownloadReport()
+  {
+    var file = await ListingApiService.GetReportAsync(_filters.AgentId);
+    var fileName = "Report.xlsx";
+    await _jsModule.InvokeVoidAsync("downloadFileFromStream", fileName, file);
+
+  }
 }

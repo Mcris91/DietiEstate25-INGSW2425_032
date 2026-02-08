@@ -1,0 +1,12 @@
+﻿@implements IDialogContentComponent<RegisterAgencyDto>
+<FluentStack>
+    <FluentTextField @bind-Value="Content.Name" Style="width: 50%">Nome*</FluentTextField>
+</FluentStack>
+<FluentTextField Label="Email*" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
+@code {
+    [Parameter]
+    public RegisterAgencyDto Content { get; set; } = default!;
+    
+    [CascadingParameter]
+    public FluentDialog? Dialog {get; set; }
+}

@@ -1,0 +1,113 @@
+@typeparam TItem
+
+@inject ILogger<TItem> Logger
+@inject IToastService ToastService
+
+@if (_isLoading)
+{
+    <FluentProgressRing></FluentProgressRing>
+}
+else if (_pagedResult == null || !_pagedResult.Items.Any())
+{
+    <p><em>Nessun dato trovato.</em></p>
+}
+else
+{
+    <FluentDataGrid Items="@_pagedResult.Items.AsQueryable()"
+                    @attributes="AdditionalAttributes">
+        <SelectColumn TGridItem="TItem"
+                      SelectMode="DataGridSelectMode.Single"
+                      SelectFromEntireRow="true"
+                      OnSelect="@((context) => HandleRowClick(context.Item))"/>
+        @GridColumns
+    </FluentDataGrid>
+
+    <div style="margin-top: 20px;">
+        @if (_totalPages > 1)
+        {
+            for (var i = 1; i <= _totalPages; i++)
+            {
+                var capturedIndex = i;
+                <FluentButton @onclick="@(() => GoToPageAsync(capturedIndex))"
+                              Appearance="@PageButtonAppearance(capturedIndex)"
+                              aria-current="@AriaCurrentValue(capturedIndex)"
+                              aria-label="@($"Vai alla pagina {capturedIndex}")">
+                    @(capturedIndex)
+                </FluentButton>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required Func<int?, int?, Task<PagedResponseDto<TItem>>> DataProvider { get; set; }
+    
+    [Parameter]
+    public EventCallback<TItem> OnRowClick { get; set; }
+
+    [Parameter, EditorRequired]
+    public required RenderFragment GridColumns { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public required IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
+
+    
+    private IQueryable<TItem>? _items = Enumerable.Empty<TItem>().AsQueryable();
+    private int? _currentPage;
+    private int? _totalPages;
+    private bool _isLoading = true;
+
+    private PagedResponseDto<TItem>? _pagedResult;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return; 
+        await LoadData(1, PageSize);
+        StateHasChanged();
+    }
+
+    public async Task LoadData(int? pageNumber, int? pageSize)
+    {
+        _isLoading = true;
+        
+        try
+        {
+            _pagedResult = await DataProvider.Invoke(pageNumber, pageSize);
+            _items = _pagedResult.Items.AsQueryable();
+            _currentPage = _pagedResult.PageNumber;
+            _totalPages = _pagedResult.TotalPages;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Error retreiving data from the API. {Error}", ex.Message);
+            _items = Enumerable.Empty<TItem>().AsQueryable();
+            ToastService.ShowError("Impossibile caricare i dati per la griglia. Riprova più tardi.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task GoToPageAsync(int pageIndex)
+    {
+        if (pageIndex == _currentPage) return;
+        await LoadData(pageIndex, PageSize);
+    }
+
+    private Appearance PageButtonAppearance(int pageIndex)
+        => _currentPage == pageIndex ? Appearance.Accent : Appearance.Neutral;
+
+    private string? AriaCurrentValue(int pageIndex)
+        => _currentPage == pageIndex ? "page" : null;
+    
+    private async Task HandleRowClick(TItem item)
+    {
+        if (OnRowClick.HasDelegate)
+            await OnRowClick.InvokeAsync(item);
+    }
+}

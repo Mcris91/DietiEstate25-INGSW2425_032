@@ -8,4 +8,6 @@ public interface IPasswordService
     bool VerifyPassword(string password, string hashedPassword);
     
     string ValidatePasswordStrength(string password);
+
+    string GenerateRandomSecurePassword(int length = 12);
 }

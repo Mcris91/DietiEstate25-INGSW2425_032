@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebAssemblyClient</title>
+    <base href="/" />
+
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css" rel="stylesheet" />
+    <link href="WebAssemblyClient.styles.css" rel="stylesheet" />
+
+    <link href="manifest.webmanifest" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+</head>
+
+<body>
+<div id="app">
+    <svg class="loading-progress">
+        <circle r="40%" cx="50%" cy="50%" />
+        <circle r="40%" cx="50%" cy="50%" />
+    </svg>
+    <div class="loading-progress-text"></div>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="_content/Microsoft.FluentUI.AspNetCore.Components/js/loading-theme.js" type="text/javascript"></script>
+<loading-theme storage-name="theme"></loading-theme>
+
+<script src="js/getCookies.js"></script>
+
+<script src="_framework/blazor.webassembly.js"></script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+    function renderGoogleButton(dotNetHelper) {
+        google.accounts.id.initialize({
+            client_id: "969083423287-k13lcullhsjftr1champ3qgeqo2uaa64.apps.googleusercontent.com",
+            callback: (response) => {
+                dotNetHelper.invokeMethodAsync('ProcessGoogleLogin', response.credential);
+            }
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("googleBtn"),
+            { theme: "outline", size: "large" }
+        );
+    }
+</script>
+
+<script>navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+
+</html>

@@ -14,6 +14,7 @@ public interface IBookingRepository
     
     Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto, int? pageNumber, int? pageSize);
     
+    Task<(int Total, int Pending)> GetTotalBookingsAsync(Guid agentId);
     Task AddBookingAsync(Booking booking);
     Task UpdateBookingAsync(Booking booking);
     Task DeleteBookingAsync(Booking booking);

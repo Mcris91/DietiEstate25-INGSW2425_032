@@ -14,14 +14,54 @@ public class EmailService(
     IConfiguration configuration,
     ILogger<EmailService> logger) : IEmailService
 {
-    public Task<EmailData> PrepareEmailAsync(EmailType type, string toName, string toEmail)
+    public async Task<EmailData> PrepareEmailAsync(EmailType type, string toName, string toEmail)
     {
-        throw new NotImplementedException();
+        string subject = "";
+        string body = "";
+
+        switch (type)
+        {
+            case EmailType.Verification:
+                subject = "Benvenuto su DietiEstate!";
+                body = $@"La tua azienda è stata registrata con successo!
+                        La tua password è: {toName}";
+                break;
+            
+            case EmailType.Welcome:
+                subject = "Benvenuto su DietiEstate!";
+                body = $@"Ciao {toName},
+                      Il tuo account è stato creato con successo!";
+                break;
+
+            case EmailType.PasswordReset:
+                subject = "Recupero Password";
+                body = $"Ciao {toName}, ecco il tuo codice di ripristino...";
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type), "Tipo email non supportato.");
+        }
+        return new EmailData
+        {
+            ToEmail = toEmail,
+            ToName = toName,
+            Subject = subject,
+            Body = body
+        };
     }
 
     public async Task SendEmailAsync(EmailData emailData)
     {
-        var smtpOptions = configuration.GetSection("Smtp").Get<SmtpOptions>();
+        var smtpOptions = new SmtpOptions
+        {
+            Server = Environment.GetEnvironmentVariable("SMTP_SERVER"), 
+            Port = Environment.GetEnvironmentVariable("SMTP_PORT"),
+            Username = Environment.GetEnvironmentVariable("SMTP_USERNAME"),
+            Password = Environment.GetEnvironmentVariable("SMTP_PASSWORD"),
+            FromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL"),
+            FromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME")
+
+        };
         if (smtpOptions == null)
         {
             logger.LogError("SMTP options are not configured properly.");

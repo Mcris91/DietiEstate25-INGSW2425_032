@@ -2,13 +2,11 @@ namespace DietiEstate.WebClient.Data.Requests;
 
 public class ListingFilterDto : BaseFilterDto
 {
-    public Guid? TypeId { get; init; }
+    public string TypeCode { get; set; } = string.Empty;
     
     public Guid? AgentId { get; init; }
     
-    public IReadOnlyList<Guid>? ServiceIds { get; init; }
-
-    public IReadOnlyList<Guid>? TagIds { get; init; }
+    public IList<string>? Tags { get; set; }
 
     public decimal? MinPrice { get; set; }
 
@@ -22,7 +20,13 @@ public class ListingFilterDto : BaseFilterDto
 
     public decimal? MaxSize { get; set; }
 
-    public string SortBy { get; init; } = "views";
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
+    public string EnergyClass { get; set; } = string.Empty;
+
+    public string SortBy { get; init; } = "position";
 
     public string SortOrder { get; init; } = "desc";
 }

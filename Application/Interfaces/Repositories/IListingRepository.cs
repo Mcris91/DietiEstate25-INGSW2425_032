@@ -9,7 +9,7 @@ public interface IListingRepository
 
     Task<Listing?> GetListingByIdAsync(Guid listingId);
 
-    Task AddListingAsync(Listing listing, List<Guid> services, List<Guid> tags, List<string> images);
+    Task AddListingAsync(Listing listing, List<string> tags);
 
     Task UpdateListingAsync(Listing listing);
 

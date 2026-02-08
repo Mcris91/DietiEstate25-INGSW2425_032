@@ -59,10 +59,10 @@ export function setupMap(elementId, lat, lon){
     });
 }
 
-export async function searchAddress (query) {
+export async function searchAddress (address) {
     if (!map) return;
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}`);
         const data = await response.json();
         if (data && data.length > 0) {
             const lat = parseFloat(data[0].lat);
@@ -77,7 +77,7 @@ export async function searchAddress (query) {
     }
 }
 
-export function addMarker (elementId, lat, lon, title, catlistingId){
+export function addMarker (elementId, lat, lon, title, listingId){
     if (map) {
         const newMarker = L.marker([lat, lon]);
 
@@ -87,7 +87,7 @@ export function addMarker (elementId, lat, lon, title, catlistingId){
         });
 
         newMarker.on('click', function() {
-            window.location.href = `/ListingPage/${catlistingId}`;
+            window.location.href = `/View/${listingId}`;
         });
 
         newMarker.addTo(markerGroup);

@@ -3,9 +3,12 @@ using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
 using DietiEstate.Core.Enums;
+using Google.Apis.Auth;
+using Google.Apis.Auth.OAuth2.Requests;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +19,103 @@ namespace DietiEstate.WebApi.Controllers;
 [AllowAnonymous]
 [Route("api/v1/[controller]")]
 public class AuthController(
-    //IUserVerificationRepository userVerificationRepository,
+    IUserVerificationRepository userVerificationRepository,
     IPasswordResetService passwordResetService,
     IUserSessionService userSessionService,
+    IAgencyRepository agencyRepository,
     IPasswordService passwordService,
     IUserRepository userRepository,
     IEmailService emailService,
     IUserService userService,
     IJwtService jwtService,
-    //IBackgroundJobClient jobClient,
+    IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
+    [HttpPost("google-callback")]
+    public async Task<IActionResult> GoogleCallback([FromBody] GoogleLoginRequestDto request)
+    {
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings()
+            {
+                Audience = ["969083423287-k13lcullhsjftr1champ3qgeqo2uaa64.apps.googleusercontent.com"]
+            };
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(request.GoogleJwt, settings);
+
+            var user = await userRepository.GetUserByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new User()
+                {
+                    FirstName = payload.GivenName,
+                    LastName = payload.FamilyName,
+                    Email = payload.Email,
+                    Role = UserRole.Client
+                };
+                await userRepository.AddUserAsync(user);
+            }
+
+            var idToken = jwtService.GenerateJwtIdToken(user);
+            var accessToken = jwtService.GenerateJwtAccessToken(user);
+            var refreshToken = jwtService.GenerateJwtRefreshToken(user);
+
+            var sessionId = await userSessionService.CreateSessionAsync(user, accessToken, refreshToken);
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = false,
+                // Secure = true, // https only, uncomment in production
+                SameSite = SameSiteMode.Lax,
+                MaxAge = TimeSpan.FromDays(30)
+            };
+            Response.Cookies.Append("session_id", sessionId, cookieOptions);
+            Response.Cookies.Append("id_token", idToken, cookieOptions);
+
+            return Ok(mapper.Map<LoginResponseDto>(user));
+        }
+        catch (InvalidJwtException)
+        {
+            return BadRequest("Invalid Google token.");
+        }
+    }
+    
+    [HttpPost("register-agency")]
+    public async Task<IActionResult> RegisterAgency([FromBody] RegisterAgencyDto request)
+    {
+        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
+            return BadRequest("Email already exists.");
+        
+        var agency = new Agency()
+        {
+            Name = request.Name
+        };
+
+        var randomPassword = passwordService.GenerateRandomSecurePassword();
+        var administrator = new User()
+        {
+            Email = request.Email.ToLowerInvariant(),
+            Password = passwordService.HashPassword(randomPassword),
+            AgencyId = agency.Id,
+            Role = UserRole.SuperAdmin
+        };
+        
+        agency.Administrator = administrator;
+        
+        await agencyRepository.AddAgencyAsync(agency);
+        
+        var userVerification = new UserVerification()
+        {
+            UserId = administrator.Id
+        };
+        await userVerificationRepository.AddVerificationAsync(userVerification);
+
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, randomPassword, administrator.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+
+        return Ok();
+    }
+    
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
@@ -40,9 +129,9 @@ public class AuthController(
         var sessionId = await userSessionService.CreateSessionAsync(user, accessToken, refreshToken);
         var cookieOptions = new CookieOptions
         {
-            HttpOnly = true,
-            // Secure = true, // https only, uncomment in production
-            SameSite = SameSiteMode.Strict,
+            HttpOnly = false,
+            Secure = true, // https only, uncomment in production
+            SameSite = SameSiteMode.Lax,
             MaxAge = TimeSpan.FromDays(30)
         };
         Response.Cookies.Append("session_id", sessionId, cookieOptions);
@@ -99,10 +188,10 @@ public class AuthController(
         {
             UserId = user.Id
         };
-        //await userVerificationRepository.AddVerificationAsync(userVerification);
+        await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
-        //jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+        var emailData = await emailService.PrepareEmailAsync(EmailType.Welcome, user.FirstName, user.Email);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         
         return CreatedAtAction(
             actionName: "GetUserById", 
@@ -118,7 +207,7 @@ public class AuthController(
         
         var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
         var emailData = await emailService.PrepareEmailAsync(EmailType.PasswordReset, user.FirstName, user.Email);
-        //jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return Ok();
     }
 
