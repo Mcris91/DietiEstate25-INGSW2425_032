@@ -147,5 +147,19 @@ public class PatchListingsTests
         // Assert
         Assert.IsType<NotFoundResult>(result);
     }
+    
+    // TC5: GUID esistente + patch null = Exception o gestione errore
+    [Fact]
+    public async Task PatchListing_WithNullPatchDocument_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        JsonPatchDocument<ListingRequestDto> nullPatch = null;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            async () => await _controller.PatchListing(existingId, nullPatch)
+        );
+    }
 
 }
