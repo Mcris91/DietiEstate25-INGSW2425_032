@@ -169,4 +169,33 @@ public class GetOffersByCustomerIdTests
         pagedResponse.Items.Should().HaveCount(1);
     }
     
+    [Fact]
+    public async Task TC5_EmptyResultSet_ReturnsOkWithEmptyPagedData()
+    {
+        // Arrange
+        var customerId = Guid.NewGuid();
+        var filterDto = new OfferFilterDto();
+        int pageNumber = 1;
+        int pageSize = 10;
+
+        _mockOfferRepository
+            .Setup(r => r.GetOffersByCustomerIdAsync(customerId, filterDto))
+            .ReturnsAsync(Enumerable.Empty<Offer>());
+
+        // Act
+        var result = await _controller.GetOffersByCustomerId(
+            customerId, 
+            filterDto, 
+            pageNumber, 
+            pageSize
+        );
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull();
+        
+        var pagedResponse = okResult.Value as PagedResponseDto<OfferResponseDto>;
+        pagedResponse.Should().NotBeNull();
+        pagedResponse.Items.Should().BeEmpty();
+    }
 }
