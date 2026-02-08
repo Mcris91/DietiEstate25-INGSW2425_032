@@ -90,4 +90,46 @@ public class GetOffersByCustomerIdTests
         });
     }
     
+    [Fact]
+    public async Task TC3_ValidParametersWithFilter_ReturnsOkWithPagedData()
+    {
+        // Arrange
+        var customerId = Guid.NewGuid();
+        var filterDto = new OfferFilterDto 
+        { 
+            // Popola con proprietà appropriate
+        };
+        int pageNumber = 1;
+        int pageSize = 10;
+
+        var mockOffers = new List<Offer>
+        {
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId },
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId },
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId }
+        }.AsEnumerable();
+
+        _mockOfferRepository
+            .Setup(r => r.GetOffersByCustomerIdAsync(customerId, filterDto))
+            .ReturnsAsync(mockOffers);
+
+        // Act
+        var result = await _controller.GetOffersByCustomerId(
+            customerId, 
+            filterDto, 
+            pageNumber, 
+            pageSize
+        );
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull();
+        
+        var pagedResponse = okResult.Value as PagedResponseDto<OfferResponseDto>;
+        pagedResponse.Should().NotBeNull();
+        pagedResponse.PageSize.Should().Be(pageSize);
+        pagedResponse.PageNumber.Should().Be(pageNumber);
+        pagedResponse.Items.Should().HaveCount(3);
+    }
+    
 }
