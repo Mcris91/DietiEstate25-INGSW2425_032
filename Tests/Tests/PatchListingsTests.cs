@@ -127,5 +127,25 @@ public class PatchListingsTests
         Assert.IsType<NoContentResult>(result);
         _mockListingRepository.Verify(r => r.UpdateListingAsync(existingListing), Times.Once);
     }
+    
+    // TC4: GUID vuoto + patch valido = NotFound
+    [Fact]
+    public async Task PatchListing_WithEmptyGuid_ReturnsNotFound()
+    {
+        // Arrange
+        var emptyId = Guid.Empty;
+        var patchDocument = new JsonPatchDocument<ListingRequestDto>();
+        patchDocument.Replace(l => l.Name, "Updated Title");
+
+        _mockListingRepository
+            .Setup(r => r.GetListingByIdAsync(emptyId))
+            .ReturnsAsync((Listing?)null);
+
+        // Act
+        var result = await _controller.PatchListing(emptyId, patchDocument);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 
 }
