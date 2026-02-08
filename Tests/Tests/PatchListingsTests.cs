@@ -93,5 +93,39 @@ public class PatchListingsTests
         Assert.IsType<BadRequestObjectResult>(result);
         _mockListingRepository.Verify(r => r.UpdateListingAsync(It.IsAny<Listing>()), Times.Never);
     }
+    
+    // TC3: GUID esistente + patch valido = NoContent (successo)
+    [Fact]
+    public async Task PatchListing_WithValidData_ReturnsNoContent()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        var existingListing = new Listing { Id = existingId, Name = "Original" };
+        var patchDocument = new JsonPatchDocument<ListingRequestDto>();
+        patchDocument.Replace(l => l.Name, "Updated Title");
+
+        _mockListingRepository
+            .Setup(r => r.GetListingByIdAsync(existingId))
+            .ReturnsAsync(existingListing);
+
+        _mockMapper
+            .Setup(m => m.Map<ListingRequestDto>(existingListing))
+            .Returns(new ListingRequestDto { Name = "Original" });
+
+        _mockMapper
+            .Setup(m => m.Map(It.IsAny<ListingRequestDto>(), existingListing))
+            .Returns(existingListing);
+
+        _mockListingRepository
+            .Setup(r => r.UpdateListingAsync(existingListing))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.PatchListing(existingId, patchDocument);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+        _mockListingRepository.Verify(r => r.UpdateListingAsync(existingListing), Times.Once);
+    }
 
 }
