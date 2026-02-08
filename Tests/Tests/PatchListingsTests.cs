@@ -161,5 +161,38 @@ public class PatchListingsTests
             async () => await _controller.PatchListing(existingId, nullPatch)
         );
     }
+    
+    // TC6: GUID esistente + patch vuoto = NoContent (nessuna modifica)
+    [Fact]
+    public async Task PatchListing_WithEmptyPatchDocument_ReturnsNoContent()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        var existingListing = new Listing { Id = existingId, Name = "Original" };
+        var emptyPatchDocument = new JsonPatchDocument<ListingRequestDto>(); // Nessuna operazione
+
+        _mockListingRepository
+            .Setup(r => r.GetListingByIdAsync(existingId))
+            .ReturnsAsync(existingListing);
+
+        _mockMapper
+            .Setup(m => m.Map<ListingRequestDto>(existingListing))
+            .Returns(new ListingRequestDto { Name = "Original" });
+
+        _mockMapper
+            .Setup(m => m.Map(It.IsAny<ListingRequestDto>(), existingListing))
+            .Returns(existingListing);
+
+        _mockListingRepository
+            .Setup(r => r.UpdateListingAsync(existingListing))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.PatchListing(existingId, emptyPatchDocument);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+        _mockListingRepository.Verify(r => r.UpdateListingAsync(existingListing), Times.Once);
+    }
 
 }
