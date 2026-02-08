@@ -1,6 +1,8 @@
 using AutoMapper;
 using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -57,5 +59,37 @@ public class GetOffersByCustomerIdTests
             error = "Both pageNumber and pageSize must be provided for pagination." 
         });
     }
+    
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(-1, 10)]
+    [InlineData(10, -1)]
+    [InlineData(-5, -5)]
+    public async Task TC2_PageNumberOrPageSizeNotGreaterThanZero_ReturnsBadRequest(
+        int pageNumber, 
+        int pageSize)
+    {
+        // Arrange
+        var customerId = Guid.NewGuid();
+        var filterDto = new OfferFilterDto();
+
+        // Act
+        var result = await _controller.GetOffersByCustomerId(
+            customerId, 
+            filterDto, 
+            pageNumber, 
+            pageSize
+        );
+
+        // Assert
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull();
+        badRequestResult.Value.Should().BeEquivalentTo(new 
+        { 
+            error = "Both pageNumber and pageSize must be greater than zero." 
+        });
+    }
+    
+
     
 }
