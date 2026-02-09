@@ -13,8 +13,6 @@
 @inject IJSRuntime JsRuntime
 @implements IAsyncDisposable
 
-
-
 @if (_listing == null)
 {
     <FluentGrid Style="margin: 1rem 3rem;">
@@ -212,6 +210,13 @@ else
     protected override async Task OnInitializedAsync()
     {
         _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/ViewListing.js");
+        
+        var shouldIncreaseViews = await JsRuntime.InvokeAsync<bool>("shouldUpdateView", ListingId.ToString());
+        if (shouldIncreaseViews)
+        {
+            
+        }
+        
         _listing = await ListingApiService.GetListingByIdAsync(ListingId);
         StateHasChanged();
     }
@@ -230,7 +235,7 @@ else
 
                 await _jsModule.InvokeVoidAsync("setupMap", "viewMap", _listing.Latitude, _listing.Longitude);
             
-                if (_listing.Services != null && _listing.Services.Any())
+                if (_listing.Services.Any())
                 {
                     await _jsModule.InvokeVoidAsync("addMarker", "viewMap", _listing.Services);
                 }
