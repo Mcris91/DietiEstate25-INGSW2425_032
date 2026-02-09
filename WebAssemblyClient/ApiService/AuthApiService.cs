@@ -54,4 +54,43 @@ public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
 
         return null;
     }
+
+    public async Task<string> SendForgotPasswordRequest(ForgotPasswordRequestDto forgotPasswordRequest)
+    {
+        var response = await httpClient.PostAsJsonAsync("forgot-password", forgotPasswordRequest);
+
+        if (response.IsSuccessStatusCode)
+            return "";
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+
+        return "";
+    }
+
+    public async Task<string> SendValidationCodeRequest(ValidatePasswordResetTokenRequestDto requestDto)
+    {
+        var response = await httpClient.PostAsJsonAsync("validate-reset-token", requestDto);
+
+        if (response.IsSuccessStatusCode)
+            return "";
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+
+        return "";
+    }
+    
+    public async Task<string> SendPasswordResetRequest(ResetPasswordRequestDto requestDto)
+    {
+        var response = await httpClient.PostAsJsonAsync("reset-password", requestDto);
+
+        if (response.IsSuccessStatusCode)
+            return "";
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+
+        return "";
+    }
 }
