@@ -91,15 +91,15 @@ public class AuthController(
         };
 
         var randomPassword = passwordService.GenerateRandomSecurePassword();
-        var administrator = new User()
+        var administrator = new User
         {
             Email = request.Email.ToLowerInvariant(),
             Password = passwordService.HashPassword(randomPassword),
             AgencyId = agency.Id,
-            Role = UserRole.SuperAdmin
+            Role = UserRole.SuperAdmin,
+            Agency = agency
         };
 
-        administrator.Agency = agency;        
         await userRepository.AddUserAsync(administrator);
         
         var userVerification = new UserVerification()
@@ -108,7 +108,7 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, randomPassword, administrator.Email);
+        var emailData = await emailService.PrepareAgencyWelcomeEmailAsync(agency.Name, administrator.Email, randomPassword);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
 
         return Ok();
@@ -190,7 +190,7 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Welcome, user.FirstName, user.Email);
+        var emailData = await emailService.PrepareWelcomeEmailAsync(user);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         
         return CreatedAtAction(
@@ -206,8 +206,11 @@ public class AuthController(
         if (await userRepository.GetUserByEmailAsync(request.Email) is not { } user) return Ok();
         
         var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
-        var emailData = await emailService.PrepareEmailAsync(EmailType.PasswordReset, user.FirstName, user.Email);
+        if (resetRequestToken is null) return Unauthorized();
+        
+        var emailData = await emailService.PreparePasswordResetEmailAsync(user, resetRequestToken.Token);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+
         return Ok();
     }
 
