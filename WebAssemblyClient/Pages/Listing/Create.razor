@@ -1,8 +1,10 @@
 ﻿@using AutoMapper
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using WebAssemblyClient.ApiService
 @using WebAssemblyClient.Extensions
 @inject HostAuthenticationStateProvider AuthStateProvider
-
+@inject NavigationManager Navigation
+@inject IToastService ToastService
 
 @inject ListingApiService ListingApiService
 @inject IMapper Mapper
@@ -265,6 +267,8 @@
             _listingRequestDto.AgentUserId = Guid.Parse(userId);
             _listingRequestDto.OwnerEmail = userEmail;
             await ListingApiService.CreateListingAsync(_listingRequestDto);
+            ToastService.ShowSuccess("Inserzione aggiunta con successo!");
+            Navigation.NavigateTo("/agent/dashboard");
         }
         else
         {
@@ -285,10 +289,15 @@
         if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address))
         {
             var coords = await _jsModule.InvokeAsync<float[]?>("searchAddress", _listingRequestDto.Address);
-            if (coords != null){
-                _listingRequestDto.Latitude = coords[0];
-                _listingRequestDto.Longitude = coords[1];
+            if (coords == null)
+            {
+                _listingRequestDto.Address = "";
+                return;
             }
+             
+            _listingRequestDto.Latitude = coords[0];
+            _listingRequestDto.Longitude = coords[1];
+            
         }
     }
 }

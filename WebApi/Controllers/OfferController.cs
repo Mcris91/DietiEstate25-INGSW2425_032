@@ -5,6 +5,7 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
+using DietiEstate.Infrastracture.Extensions;
 using DietiEstate.Infrastracture.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +35,7 @@ public class OfferController(
             return BadRequest("L'immobile è già stato venduto");
         
         if (await userRepository.GetUserByIdAsync(offer.CustomerId) is { Role: UserRole.Client })
-            if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId))
+            if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId, listing.Id))
                 return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
         if (offer.Value <= 0 || offer.Value > listing.Price) 
@@ -113,9 +114,38 @@ public class OfferController(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
-        //var adminSession = await redisSessionService.GetSessionAsync(Guid.Parse(HttpContext.Request.Cookies["session_id"]));
-        //if (adminSession is null)
-        //    return Unauthorized("Access denied");
+        
+        var userId = User.GetUserId();
+        
+        if (userId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.FindFirst("role")?.Value;
+        
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filterDto.AgentId = userId;
+                filterDto.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filterDto.AgentId = null;
+                filterDto.AgencyId = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filterDto.AgentId = null;
+                filterDto.AgencyId = null;
+                break;
+            default:
+                return Unauthorized();
+        }
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
@@ -168,10 +198,42 @@ public class OfferController(
             pageSize, pageNumber));
     }
 
-    [HttpGet("GetTotalOffers/{agentId:guid}")]
-    public async Task<ActionResult> GetTotalOffers(Guid agentId)
+    [HttpGet("GetTotalOffers")]
+    public async Task<ActionResult> GetTotalOffers()
     {
-        var offers = await offerRepository.GetTotalOffersAsync(agentId);
+        var agentId = User.GetUserId();
+        if (agentId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.FindFirst("role")?.Value;
+        
+        OfferFilterDto filters = new();
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filters.AgentId = agentId;
+                filters.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filters.AgentId = null;
+                filters.AgencyId  = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filters.AgentId = null;
+                filters.AgencyId = null;
+                break;
+            default:
+                return Unauthorized();
+        }
+        
+        var offers = await offerRepository.GetTotalOffersAsync(filters);
         return Ok(new OfferAgentCountersResponseDto()
         {
             TotalOffers = offers.Total,

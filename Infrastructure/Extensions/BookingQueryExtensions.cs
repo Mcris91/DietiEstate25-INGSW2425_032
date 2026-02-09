@@ -7,6 +7,8 @@ public static class BookingQueryExtensions
 {
     public static IQueryable<Booking> ApplyFilters(this IQueryable<Booking> query, BookingFilterDto filterDto)
     {
+        if(filterDto.AgencyId.HasValue)
+            query = query.Where(b => b.Listing.Agent.AgencyId == filterDto.AgencyId.Value);
         
         if(filterDto.ListingId.HasValue)
             query = query.Where(b => b.ListingId == filterDto.ListingId);

@@ -14,6 +14,7 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     {
         return await context.Booking
             .Include(b => b.Listing)
+            .ThenInclude((l => l.Agent))
             .Include(b => b.Client)
             .ApplyFilters(filterDto)
             .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
@@ -33,10 +34,11 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(Guid agentId, BookingFilterDto filterDto, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Booking?>> GetBookingByAgentIdAsync(BookingFilterDto filterDto)
     {
         return await context.Booking
             .Include(b => b.Listing)
+            .ThenInclude((l => l.Agent))
             .Include(b => b.Client)
             .ApplyFilters(filterDto)
             .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
@@ -75,10 +77,9 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
         await context.Database.CommitTransactionAsync();
     }
     
-    public async Task<(int Total, int Pending)> GetTotalBookingsAsync(Guid agentId)
+    public async Task<(int Total, int Pending)> GetTotalBookingsAsync(BookingFilterDto filters)
     {
-        var totalBookings = context.Booking
-            .Where(b => b.AgentId == agentId);
+        var totalBookings = context.Booking.ApplyFilters(filters);
         var pendingBookings = totalBookings.Where(b => b.Status == BookingStatus.Pending);
         var scheduledBookings = totalBookings.Where(b => b.Status == BookingStatus.Accepted && b.DateMeeting.ToLocalTime() >= DateTime.Now);
         return (await scheduledBookings.CountAsync(), await pendingBookings.CountAsync());

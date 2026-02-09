@@ -98,10 +98,9 @@ public class AuthController(
             AgencyId = agency.Id,
             Role = UserRole.SuperAdmin
         };
-        
-        agency.Administrator = administrator;
-        
-        await agencyRepository.AddAgencyAsync(agency);
+
+        administrator.Agency = agency;        
+        await userRepository.AddUserAsync(administrator);
         
         var userVerification = new UserVerification()
         {
@@ -182,6 +181,7 @@ public class AuthController(
         user.Id = Guid.NewGuid();
         user.Email = user.Email.ToLowerInvariant();
         user.Password = passwordService.HashPassword(request.Password);
+        user.Role = UserRole.Client;
         await userRepository.AddUserAsync(user);
         
         var userVerification = new UserVerification()

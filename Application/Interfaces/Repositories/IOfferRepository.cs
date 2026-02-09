@@ -17,9 +17,9 @@ public interface IOfferRepository
     
     Task<IEnumerable<Offer?>> GetOffersByAgentIdAsync(OfferFilterDto filters);
 
-    Task<bool> CheckExistingCustomerOffer(Guid userId);
+    Task<bool> CheckExistingCustomerOffer(Guid userId, Guid listingId);
 
     Task<IEnumerable<Offer?>> GetPendingOffersByListingIdAsync(Guid listingId);
     Task<IEnumerable<Offer?>> GetOfferHistoryAsync(Guid offerId);
-    Task<(int Total, int Pending)> GetTotalOffersAsync(Guid agentId);
+    Task<(int Total, int Pending)> GetTotalOffersAsync(OfferFilterDto filters);
 }

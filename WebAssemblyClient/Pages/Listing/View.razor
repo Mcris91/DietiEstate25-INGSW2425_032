@@ -7,8 +7,13 @@
 @inject ListingApiService ListingApiService
 @inject BookingApiService BookingApiService
 @inject OfferApiService OfferApiService
+@inject AuthApiService AuthApiService
 @inject IDialogService DialogService
 @inject IToastService ToastService
+@inject IJSRuntime JsRuntime
+@implements IAsyncDisposable
+
+
 
 @if (_listing == null)
 {
@@ -18,11 +23,7 @@
         </FluentGridItem>
         
         <FluentGridItem xs="12" md="5">
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
-                <FluentSkeleton Shape="SkeletonShape.Rect" Fill="true" Width="100%" Visible="true"/>
-                <FluentSkeleton Shape="SkeletonShape.Rect" Fill="true" Width="100%" Visible="true"/>
-                <FluentSkeleton Shape="SkeletonShape.Rect" Fill="true" Width="100%" Visible="true"/>
-            </FluentStack>
+            <FluentSkeleton Shape="SkeletonShape.Rect" Fill="true" Width="100%" Height="200px" Visible="true"/>
         </FluentGridItem>
         
         <FluentGridItem xs="12" md="7">
@@ -56,15 +57,8 @@ else
         <FluentGridItem xs="12" md="7">
             <img src="@_listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
         </FluentGridItem>
+        
         <FluentGridItem xs="12" md="5">
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
-                @foreach (var image in _listing.Images)
-                {
-                    <img src="@image.Url" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
-                }
-            </FluentStack>
-        </FluentGridItem>
-        <FluentGridItem xs="12" md="7">
             <FluentCard>
                 <FluentStack Orientation="Orientation.Vertical" Style="height: 100%; width: 100%">
                     <FluentLabel Typo="Typography.H4">Caratteristiche</FluentLabel>
@@ -90,6 +84,11 @@ else
                 </FluentStack>
             </FluentCard>
         </FluentGridItem>
+        
+        <FluentGridItem xs="12" md="7">
+            <div id="viewMap" style="height: 300px; width: 100% ;border-color: black; border-width: 3px; border-radius: 10px; z-index: 0;"></div>
+        </FluentGridItem>
+        
         <FluentGridItem xs="12" md="5">
             <FluentCard>
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
@@ -130,14 +129,18 @@ else
                                 </FluentStack>
                             </FluentStack>
                         </FluentCard>
-                        <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer)" Style="width: 100%"
-                                      OnClick="OpenMakeOfferDialog">
-                            Fai un'offerta
-                        </FluentButton>
-                        <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking)" Style="width: 100%"
-                                      OnClick="OpenMakeBookingDialog">
-                            Prenota un appuntamento
-                        </FluentButton>
+                        <AuthorizeView>
+                            <Authorized>
+                                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer || !context.User.IsInRole("Client"))" Style="width: 100%"
+                                              OnClick="OpenMakeOfferDialog">
+                                    Fai un'offerta
+                                </FluentButton>
+                                <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking || !context.User.IsInRole("Client"))" Style="width: 100%"
+                                              OnClick="OpenMakeBookingDialog">
+                                    Prenota un appuntamento
+                                </FluentButton>
+                            </Authorized>
+                        </AuthorizeView>
                     </FluentStack>
                 </FluentStack>
             </FluentCard>
@@ -203,17 +206,55 @@ else
     private bool _showAll;
     private bool _makeOffer;
     private bool _makeBooking;
+    private IJSObjectReference? _jsModule;
+    private bool _isInitialized = false;
     
     protected override async Task OnInitializedAsync()
     {
+        _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/ViewListing.js");
         _listing = await ListingApiService.GetListingByIdAsync(ListingId);
+        StateHasChanged();
     }
-    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_listing != null && !_isInitialized)
+        {
+            _isInitialized = true; 
+        
+            try 
+            {
+                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/ViewListing.js");
+            
+                await Task.Delay(100); 
+
+                await _jsModule.InvokeVoidAsync("setupMap", "viewMap", _listing.Latitude, _listing.Longitude);
+            
+                if (_listing.Services != null && _listing.Services.Any())
+                {
+                    await _jsModule.InvokeVoidAsync("addMarker", "viewMap", _listing.Services);
+                }
+            }
+            catch (Exception ex)
+            {
+                _isInitialized = false;
+                Console.WriteLine($"Map Error: {ex.Message}");
+            }
+        }
+    }
+
     private async Task OpenMakeOfferDialog()
     {
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return;
+        
+        if (userId == null)
+        {
+            OpenLoginDialogAsync();
+            return;
+        }
+            
+            
         OfferRequestDto offerRequest = new()
         {
             AgentId = _listing.Agent.Id,
@@ -288,6 +329,88 @@ else
             BookingRequestDto? _booking = bookingResult.Data as BookingRequestDto;
             await BookingApiService.PostBookingAsync(_booking);
             ToastService.ShowSuccess("Prenotazione inviata con successo!");
+        }
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            try 
+            {
+                await _jsModule.InvokeAsync<bool>("clearExistingMap", "viewMap");
+                await _jsModule.DisposeAsync();
+            } catch (JSDisconnectedException) 
+            {
+                
+            }
+        }
+    }
+    
+    private async Task OpenLoginDialogAsync()
+    {
+        LoginRequestDto loginUser = new() { Email = "", Password = "" };
+
+        DialogParameters loginParameters = new()
+        {
+            Title = "Accedi",
+            TitleTypo = Typography.H2,
+            PrimaryAction = "Accedi",
+            SecondaryAction = "Annulla",
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
+        DialogResult loginResult = await loginDialog.Result;
+
+        if (loginResult.Data is not null && !loginResult.Cancelled)
+        {
+            if (loginResult.Data is UserRequestDto)
+            {
+                await OpenRegisterDialogAsync();
+            }
+            else
+            {
+                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
+                
+                var response = await AuthApiService.Login(loginRequest);
+                
+                if (response != null)
+                {
+                    AuthStateProvider.NotifyAuthenticationStateChanged();
+                }
+            }
+        }
+    }
+
+    private async Task OpenRegisterDialogAsync()
+    {
+
+        UserRequestDto registerUser = new()
+        {
+            FirstName = "",
+            LastName = "",
+            Email = "",
+            Password = ""
+        };
+
+        DialogParameters registerParameters = new()
+        {
+            Title = "Registrati",
+            TitleTypo = Typography.H2,
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+        DialogResult registerResult = await registerDialog.Result;
+
+        if (registerResult.Data is not null && !registerResult.Cancelled)
+        {
+            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+            await AuthApiService.Register(registerRequest);
+            ToastService.ShowSuccess("Registrazione effettuata con successo!");
         }
     }
 }

@@ -60,7 +60,8 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingTags.Select(tag => new ListingTagDto
                 {
                     Id = tag.Id,
-                    Name = tag.Name
+                    Name = tag.Name,
+                    Text = tag.Text
                 })))
             .ForMember(listingDto => listingDto.Images, opt =>
                 opt.MapFrom(src => src.ListingImages.Select(image => new ListingImageResponseDto

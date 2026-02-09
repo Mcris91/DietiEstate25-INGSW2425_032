@@ -61,10 +61,10 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
             .ToListAsync();
     }
 
-    public async Task<bool> CheckExistingCustomerOffer(Guid userId)
+    public async Task<bool> CheckExistingCustomerOffer(Guid userId, Guid listingId)
     {
         return await context.Offer
-            .Where(o => o.CustomerId == userId)
+            .Where(o => o.CustomerId == userId && o.ListingId == listingId)
             .AnyAsync();
     }
 
@@ -82,10 +82,9 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
             .OrderBy(o => o.Date)
             .ToListAsync();
     }
-    public async Task<(int Total, int Pending)> GetTotalOffersAsync(Guid agentId)
+    public async Task<(int Total, int Pending)> GetTotalOffersAsync(OfferFilterDto filters)
     {
-        var totalOffers = context.Offer
-            .Where(o => o.AgentId == agentId);
+        var totalOffers = context.Offer.ApplyFilters(filters);
         var pendingOffers = totalOffers.Where(o => o.Status == OfferStatus.Pending);
         return (await totalOffers.CountAsync(), await pendingOffers.CountAsync());
     }

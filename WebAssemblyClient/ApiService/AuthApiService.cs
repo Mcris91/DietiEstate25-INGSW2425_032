@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using WebAssemblyClient.Data.Requests;
 using WebAssemblyClient.Data.Responses;
@@ -20,14 +21,20 @@ public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
     {
         var response = await httpClient.PostAsJsonAsync("login", loginRequest);
 
-        response.EnsureSuccessStatusCode();
-
-        return await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<LoginResponseDto>() : null;
     }
 
-    public async Task Register(UserRequestDto registerRequest)
+    public async Task<string?> Register(UserRequestDto registerRequest)
     {
-        await httpClient.PostAsJsonAsync("signup", registerRequest);
+        var response = await httpClient.PostAsJsonAsync("signup", registerRequest);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
 
     public async Task Logout()
@@ -35,9 +42,16 @@ public class AuthApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
         await httpClient.PostAsync("logout", null);
     }
 
-    public async Task RegisterAgency(RegisterAgencyDto registerAgencyRequest)
+    public async Task<string?> RegisterAgency(RegisterAgencyDto registerAgencyRequest)
     {
-        await httpClient.PostAsJsonAsync("register-agency", registerAgencyRequest);
+        var response = await httpClient.PostAsJsonAsync("register-agency", registerAgencyRequest);
 
+        if (response.IsSuccessStatusCode)
+            return "";
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+
+        return null;
     }
 }

@@ -46,9 +46,11 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
                 claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
                 claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName));
                 claims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName));
+                claims.Add(new Claim( "AgencyId", user.AgencyId.ToString() ?? ""));
                 break;
             case JwtTokenType.Access:
                 claims.AddRange(GetUserScopes(user).Select(scope => new Claim("scope", scope)));
+                claims.Add(new Claim( "AgencyId", user.AgencyId.ToString() ?? ""));
                 break;
             case JwtTokenType.Refresh:
                 break;

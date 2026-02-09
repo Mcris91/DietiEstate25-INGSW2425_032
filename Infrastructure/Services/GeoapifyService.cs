@@ -15,7 +15,7 @@ public class GeoapifyService(
 
     public async Task<List<Service>> GetNearbyServicesAsync(Guid listingId, double listingLat, double listingLon, int radiusMetri = 1000)
     {
-        var categories = "commercial.supermarket,education.school,public_transport,healthcare";
+        var categories = "leisure.park,education.school,public_transport";
         string lonStr = listingLon.ToString(CultureInfo.InvariantCulture);
         string latStr = listingLat.ToString(CultureInfo.InvariantCulture);
 
@@ -32,6 +32,14 @@ public class GeoapifyService(
         {
             var props = f.GetProperty("properties");
             var coords = f.GetProperty("geometry").GetProperty("coordinates");
+            var allCategories = props.GetProperty("categories").EnumerateArray()
+                .Select(c => c.GetString())
+                .ToList();
+
+            var serviceType = "";
+            if (allCategories.Any(c => c.Contains("park"))) serviceType = "Parchi";
+            else if (allCategories.Any(c => c.Contains("school"))) serviceType = "Scuole";
+            else if (allCategories.Any(c => c.Contains("public_transport") || c.Contains("bus") || c.Contains("subway"))) serviceType = "Trasporti pubblici";
 
             return new Service
             {
@@ -39,7 +47,7 @@ public class GeoapifyService(
                 ListingId = listingId,
                 Name = props.TryGetProperty("name", out var n) ? n.GetString() : "Servizio senza nome",
                 Address = props.TryGetProperty("street", out var s) ? s.GetString() : "Indirizzo non disponibile",
-                Type = props.GetProperty("categories")[0].GetString(),
+                Type = serviceType,
                 Distance = props.GetProperty("distance").GetDouble(),
                 Longitude = coords[0].GetDouble(),
                 Latitude = coords[1].GetDouble()

@@ -30,6 +30,7 @@ builder.Services.AddApiService<PropertyTypeApiService>(builder.Configuration["Ap
 builder.Services.AddApiService<OfferApiService>(builder.Configuration["ApiUrl"]!, "Offer");
 builder.Services.AddApiService<BookingApiService>(builder.Configuration["ApiUrl"]!, "Booking");
 builder.Services.AddApiService<AuthApiService>(builder.Configuration["ApiUrl"]!, "Auth");
+builder.Services.AddApiService<UserApiService>(builder.Configuration["ApiUrl"]!, "User");
 
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

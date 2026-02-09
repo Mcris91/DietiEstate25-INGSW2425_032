@@ -12,4 +12,18 @@ public static class ClaimsPrincipalExtensions
             ? Guid.Parse(userId)
             : Guid.Empty;
     }
+    
+    public static Guid GetAgencyId(this ClaimsPrincipal principal)
+    {
+        var agencyId = principal.FindFirst("AgencyId")?.Value;
+        return agencyId is not null
+            ? Guid.Parse(agencyId)
+            : Guid.Empty;
+    }
+    
+    public static string GetRole(this ClaimsPrincipal principal)
+    {
+        var role = principal.FindFirst("role")?.Value;
+        return role ?? string.Empty;
+    }
 }

@@ -71,7 +71,7 @@
                                         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
                                             @foreach (var tag in listing.Tags)
                                             {
-                                                <FluentBadge BackgroundColor="black" Circular="true">@tag.Name</FluentBadge>
+                                                <FluentBadge BackgroundColor="black" Circular="true">@tag.Text</FluentBadge>
                                             }
                                         </FluentStack>
                                         <FluentLabel Typo="Typography.H4">@listing.Name</FluentLabel>
@@ -133,10 +133,6 @@
     private double _lon = 12.4964;
     private readonly ListingFilterDto _filters = new();
     
-    protected override async Task OnInitializedAsync()
-    {
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -176,11 +172,11 @@
         if (!string.IsNullOrWhiteSpace(_searchAddress))
         {
             var location = await _jsModule.InvokeAsync<double[]?>("searchAddress", _searchAddress);
-            if (location != null)
-            {
-                _lat = location[0];
-                _lon = location[1];
-            }
+            if (location == null) return;
+            
+            _lat = location[0]; 
+            _lon = location[1];
+            
             _filters.Latitude = _lat;
             _filters.Longitude = _lon;            
             
@@ -195,6 +191,7 @@
         {
             try 
             {
+                await _jsModule.InvokeAsync<bool>("clearExistingMap", "map");
                 await _jsModule.DisposeAsync();
             } catch (JSDisconnectedException) 
             {

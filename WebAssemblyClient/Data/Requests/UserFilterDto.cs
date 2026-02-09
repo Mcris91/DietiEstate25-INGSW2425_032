@@ -1,11 +1,11 @@
-using DietiEstate.Core.Enums;
-using DietiEstate.Core.Entities.UserModels;
+﻿using WebAssemblyClient.Data.Common;
 
-namespace DietiEstate.Application.Dtos.Filters;
+namespace WebAssemblyClient.Data.Requests;
 
-public class UserFilterDto
+public class UserFilterDto : BaseFilterDto
 {
     public Guid? AgencyId { get; init;}
+    
     public string FirstName { get; init; } = string.Empty;
 
     public string LastName { get; init; } = string.Empty;

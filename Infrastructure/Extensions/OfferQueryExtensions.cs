@@ -7,6 +7,9 @@ public static class OfferQueryExtensions
 {
     public static IQueryable<Offer> ApplyFilters(this IQueryable<Offer> query, OfferFilterDto filters)
     {
+        if (filters.AgencyId.HasValue)
+            query = query.Where(o => o.Listing.Agent.AgencyId == filters.AgencyId.Value);
+        
         if (filters.AgentId.HasValue)
             query = query.Where(o => o.AgentId == filters.AgentId.Value);
         

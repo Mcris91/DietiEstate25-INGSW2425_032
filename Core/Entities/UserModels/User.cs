@@ -29,4 +29,6 @@ public class User
 
     [ForeignKey(nameof(Agency))] 
     public Guid? AgencyId { get; set; } = null;
+    
+    public virtual Agency? Agency { get; set; }
 }

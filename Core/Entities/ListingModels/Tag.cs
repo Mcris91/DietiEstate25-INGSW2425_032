@@ -12,5 +12,9 @@ public class Tag
     [MaxLength(50)]
     public string Name { get; set; } = string.Empty;
     
+    [Required]
+    [MaxLength(50)]
+    public string Text { get; set; } = string.Empty;
+    
     public virtual ICollection<Listing> Listings { get; set; } = [];
 }

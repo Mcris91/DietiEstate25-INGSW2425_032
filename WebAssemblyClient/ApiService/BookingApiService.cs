@@ -30,16 +30,13 @@ public class BookingApiService(HttpClient httpClient, JsonSerializerOptions json
             queryString += $"pageSize={pageSize.Value}";
         }
 
-        var uri = queryString;
+        var uri = $"GetByAgentId/{queryString}";
         return await GetAsync<PagedResponseDto<BookingResponseDto>>(uri);
     }
     
-    public async Task<BookingAgentCountersResponseDto> GetBookingsAgentCountersAsync(Guid? agentId)
+    public async Task<BookingAgentCountersResponseDto> GetBookingsAgentCountersAsync()
     {
-        if (agentId == null)
-            throw new ArgumentException("AgentId cannot be null.", nameof(agentId));
-        
-        var uri = $"GetTotalBookings/{agentId}";
+        var uri = "GetTotalBookings";
         return await GetAsync<BookingAgentCountersResponseDto>(uri);
     }
     

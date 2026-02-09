@@ -1,15 +1,106 @@
 ﻿@implements IDialogContentComponent<UserRequestDto>
-<FluentStack>
-    <FluentTextField @bind-Value="Content.FirstName" Style="width: 50%">Nome*</FluentTextField>
-    <FluentTextField @bind-Value="Content.LastName" Style="width: 50%">Cognome*</FluentTextField>
-</FluentStack>
-<FluentTextField Label="Email*" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
-<FluentTextField Label="Password*" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
-<FluentTextField Label="Conferma Password*" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
+<EditForm EditContext="_editContext">
+    <DataAnnotationsValidator />
+    
+    <FluentGrid Spacing="2">
+        <FluentGridItem xs="6">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                <FluentTextField @bind-Value="Content.FirstName"
+                                 Label="Nome"
+                                 Required>
+                </FluentTextField>
+                <FluentValidationMessage For="@(() => Content.FirstName)"/>
+            </FluentStack>
+        </FluentGridItem>
+
+        <FluentGridItem xs="6">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                <FluentTextField @bind-Value="Content.LastName"
+                                 Label="Cognome"
+                                 Required>
+                </FluentTextField>
+                <FluentValidationMessage For="@(() => Content.LastName)"/>
+            </FluentStack>
+        </FluentGridItem>
+        
+        <FluentGridItem xs="12">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                <FluentTextField @bind-Value="Content.Email"
+                                 Label="Email"
+                                 Required
+                                 TextFieldType="TextFieldType.Email"
+                                 Style="width: 100%">
+        
+                </FluentTextField> 
+                <FluentValidationMessage For="@(() => Content.Email)"/>
+            </FluentStack>
+        </FluentGridItem>
+        
+        <FluentGridItem xs="12">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                <FluentTextField @bind-Value="Content.Password"
+                                 Label="Password"
+                                 Required
+                                 TextFieldType="TextFieldType.Password"
+                                 Style="width: 100%">
+                </FluentTextField>
+                <FluentValidationMessage For="@(() => Content.Password)"/>
+            </FluentStack>
+        </FluentGridItem>
+        
+        <FluentGridItem xs="12">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="0">
+                <FluentTextField @bind-Value="_confirmPassword"
+                                 Label="Conferma Password*"
+                                 Required
+                                 TextFieldType="TextFieldType.Password"
+                                 Style="width: 100%">
+                </FluentTextField>
+            </FluentStack>
+        </FluentGridItem>
+    </FluentGrid>
+</EditForm>
+
+<FluentDialogFooter>
+    <FluentStack HorizontalAlignment="HorizontalAlignment.End">
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="@CloseAsync">
+            Registrati
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral"
+                      OnClick="@Discard">
+            Annulla
+        </FluentButton>
+    </FluentStack>
+</FluentDialogFooter>
 @code {
     [Parameter]
     public UserRequestDto Content { get; set; } = default!;
     
     [CascadingParameter]
     public FluentDialog? Dialog {get; set; }
+    private EditContext _editContext = default!;
+    private string _confirmPassword = String.Empty;
+
+    
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(Content);
+    }
+    
+    private async Task CloseAsync()
+    {
+        if (_editContext.Validate() && string.Equals(Content.Password, _confirmPassword))
+        {
+            await Dialog!.CloseAsync(Content);
+        }
+    }
+    
+    private async Task Discard()
+    {
+        if (Dialog != null)
+        {
+            await Dialog.CancelAsync();
+        }
+    }
 }
