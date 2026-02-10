@@ -87,6 +87,8 @@
     container_name: dieti-client
     ports:
       - "8080:80"
+    environment:
+      - API_BASE_URL=http://localhost:5000
     networks:
       - dieti-network
 
