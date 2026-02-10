@@ -2,6 +2,7 @@ using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.Common;
+using DietiEstate.Core.Entities.FavouritesModels;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,8 @@ public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> option
     public virtual DbSet<UserVerification> UserVerification { get; set; }
     
     public virtual DbSet<Booking>  Booking { get; set; }
+
+    public virtual DbSet<Favourite> Favourites { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

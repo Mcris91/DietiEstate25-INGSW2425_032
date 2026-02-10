@@ -36,6 +36,7 @@ public static class DependecyInjection
         services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
+        services.AddScoped<IFavouritesRepository, FavouritesRepository>();
         services.AddScoped<ITestRepository, TestRepository>();
         
         services.AddScoped<IJwtService, JwtService>();

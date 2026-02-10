@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Runtime.InteropServices.JavaScript;
-using DietiEstate.Core.Constants;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;

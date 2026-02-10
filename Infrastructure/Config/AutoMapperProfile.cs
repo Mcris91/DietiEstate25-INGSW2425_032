@@ -15,6 +15,9 @@ public class AutoMapperProfile : Profile
 {
     public AutoMapperProfile()
     {
+        // Favourite
+        CreateMap<Listing, UserFavouritesResponseDto>();
+        
         // User
         CreateMap<UserRequestDto, User>();
         CreateMap<User, UserResponseDto>();
