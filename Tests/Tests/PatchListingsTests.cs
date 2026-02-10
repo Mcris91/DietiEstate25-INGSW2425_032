@@ -4,7 +4,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Constants;
 using DietiEstate.Core.Entities.ListingModels;
-using DietiEstate.Infrastracture.Services;
+using DietiEstate.Infrastructure.Services;
 using DietiEstate.WebApi.Controllers;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;

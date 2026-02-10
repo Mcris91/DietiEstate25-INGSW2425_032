@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using MimeKit.Text;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class EmailService(ILogger<EmailService> logger) : IEmailService
 {

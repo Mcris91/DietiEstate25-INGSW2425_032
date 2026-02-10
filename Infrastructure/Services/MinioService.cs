@@ -1,10 +1,10 @@
 ﻿using DietiEstate.Application.Interfaces.Services;
-using DietiEstate.Infrastracture.Config;
+using DietiEstate.Infrastructure.Config;
 using Minio;
 using Minio.DataModel.Args;
 using SixLabors.ImageSharp;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class MinioService(IMinioClient minioClient, MinioConfiguration minioConfiguration) : IMinioService
 {

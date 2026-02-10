@@ -1,12 +1,12 @@
 using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.ListingModels;
-using DietiEstate.Infrastracture.Data;
-using DietiEstate.Infrastracture.Extensions;
+using DietiEstate.Infrastructure.Data;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 
-namespace DietiEstate.Infrastracture.Repositories;
+namespace DietiEstate.Infrastructure.Repositories;
 
 public class ListingRepository(DietiEstateDbContext context) : IListingRepository
 {

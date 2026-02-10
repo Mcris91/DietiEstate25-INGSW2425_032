@@ -1,10 +1,10 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
-using DietiEstate.Infrastracture.Config;
-using DietiEstate.Infrastracture.Data;
+using DietiEstate.Infrastructure.Config;
+using DietiEstate.Infrastructure.Data;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class UserSessionService(
     DietiEstateDbContext context,

@@ -2,11 +2,11 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Data;
+using DietiEstate.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using DietiEstate.Infrastracture.Extensions;
+using DietiEstate.Infrastructure.Extensions;
 
-namespace DietiEstate.Infrastracture.Repositories;
+namespace DietiEstate.Infrastructure.Repositories;
 
 public class BookingRepository(DietiEstateDbContext context) : IBookingRepository
 {

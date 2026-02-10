@@ -6,7 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.ListingModels;
-using DietiEstate.Infrastracture.Services;
+using DietiEstate.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;

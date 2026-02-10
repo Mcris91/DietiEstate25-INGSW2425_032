@@ -11,8 +11,4 @@
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="9.0.4" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="EmailTemplates\" />
-    </ItemGroup>
-
 </Project>

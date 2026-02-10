@@ -1,7 +1,7 @@
 using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.BookingModels;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class BookingQueryExtensions
 {

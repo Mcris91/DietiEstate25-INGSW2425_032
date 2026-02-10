@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DietiEstate.Application.Interfaces.Services;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class BCryptPasswordService : IPasswordService
 {

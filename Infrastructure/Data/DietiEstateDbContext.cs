@@ -6,7 +6,7 @@ using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using Microsoft.EntityFrameworkCore;
 
-namespace DietiEstate.Infrastracture.Data;
+namespace DietiEstate.Infrastructure.Data;
 
 public class  DietiEstateDbContext(DbContextOptions<DietiEstateDbContext> options) : DbContext(options)
 {

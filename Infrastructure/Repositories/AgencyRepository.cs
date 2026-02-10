@@ -1,8 +1,8 @@
 ﻿using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.AgencyModels;
-using DietiEstate.Infrastracture.Data;
+using DietiEstate.Infrastructure.Data;
 
-namespace DietiEstate.Infrastracture.Repositories;
+namespace DietiEstate.Infrastructure.Repositories;
 
 public class AgencyRepository(DietiEstateDbContext context) : IAgencyRepository
 {

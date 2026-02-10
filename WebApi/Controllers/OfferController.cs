@@ -5,8 +5,7 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Extensions;
-using DietiEstate.Infrastracture.Services;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;

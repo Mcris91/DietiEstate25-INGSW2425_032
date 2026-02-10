@@ -3,7 +3,7 @@ using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.ListingModels;
 using DietiEstate.Core.Enums;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class ExcelService : IExcelService
 {

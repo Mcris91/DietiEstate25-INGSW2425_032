@@ -1,4 +1,4 @@
-﻿namespace DietiEstate.Infrastracture.Config;
+﻿namespace DietiEstate.Infrastructure.Config;
 
 public class MinioConfiguration(string endpoint, 
     string accessKey, 

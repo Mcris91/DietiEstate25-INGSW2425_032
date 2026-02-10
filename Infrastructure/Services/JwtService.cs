@@ -5,10 +5,10 @@ using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Constants;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Config;
+using DietiEstate.Infrastructure.Config;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
 {

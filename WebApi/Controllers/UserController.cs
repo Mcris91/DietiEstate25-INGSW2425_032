@@ -6,7 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Extensions;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

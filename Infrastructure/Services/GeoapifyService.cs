@@ -1,11 +1,10 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using System.Text.Json;
-using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Core.Entities.ListingModels;
 using Microsoft.Extensions.Configuration;
-using System.Globalization;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class GeoapifyService(
     HttpClient httpClient,

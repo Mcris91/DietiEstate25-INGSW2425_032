@@ -2,11 +2,11 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Data;
-using DietiEstate.Infrastracture.Extensions;
+using DietiEstate.Infrastructure.Data;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
-namespace DietiEstate.Infrastracture.Repositories;
+namespace DietiEstate.Infrastructure.Repositories;
 
 public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
 {

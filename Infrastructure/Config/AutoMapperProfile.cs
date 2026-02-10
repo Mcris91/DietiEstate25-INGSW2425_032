@@ -9,7 +9,7 @@ using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using NetTopologySuite.Geometries;
 
-namespace DietiEstate.Infrastracture.Config;
+namespace DietiEstate.Infrastructure.Config;
 
 public class AutoMapperProfile : Profile
 {

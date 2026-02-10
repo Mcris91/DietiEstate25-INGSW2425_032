@@ -4,7 +4,7 @@ using DietiEstate.Core.Entities.AuthModels;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class PasswordResetService(
     IConnectionMultiplexer connection,

@@ -2,7 +2,7 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.ListingModels;
 using NetTopologySuite.Geometries;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class ListingQueryExtensions
 {
