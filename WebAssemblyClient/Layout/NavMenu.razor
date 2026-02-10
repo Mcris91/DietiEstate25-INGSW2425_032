@@ -78,6 +78,10 @@
             if (loginResult.Data is UserRequestDto)
             {
                 await OpenRegisterDialogAsync();
+            } 
+            else if (loginResult.Data is ForgotPasswordRequestDto)
+            {
+                await OpenForgotPasswordDialogAsync();
             }
             else
             {
@@ -133,6 +137,26 @@
                     break;
             }
         }
+    }
+
+
+    private async Task OpenForgotPasswordDialogAsync()
+    {
+        ForgotPasswordRequestDto passwordrequest = new()
+        {
+            Email = "",
+        };
+
+        DialogParameters parameters = new()
+        {
+            Title = "Password dimenticata",
+            TitleTypo = Typography.H2,
+            Width = "500px",
+            PreventScroll = true
+        };
+
+        IDialogReference resetDialog = await DialogService.ShowDialogAsync<ResetPasswordDialog>(passwordrequest, parameters);
+        DialogResult resetResult = await resetDialog.Result;
     }
     
     private async Task OpenRegisterAgencyDialogAsync()
