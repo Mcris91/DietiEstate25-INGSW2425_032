@@ -39,4 +39,19 @@
       <Folder Include="Templates\Pdf\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Templates\Email\base.html" />
+      <EmbeddedResource Include="Templates\Email\base.html" />
+      <None Remove="Templates\Email\forgot-password.html" />
+      <EmbeddedResource Include="Templates\Email\forgot-password.html" />
+      <None Remove="Templates\Email\new-appointment.html" />
+      <EmbeddedResource Include="Templates\Email\new-appointment.html" />
+      <None Remove="Templates\Email\new-offer.html" />
+      <EmbeddedResource Include="Templates\Email\new-offer.html" />
+      <None Remove="Templates\Email\welcome.html" />
+      <EmbeddedResource Include="Templates\Email\welcome.html" />
+      <None Remove="Templates\Email\welcome-agency.html" />
+      <EmbeddedResource Include="Templates\Email\welcome-agency.html" />
+    </ItemGroup>
+
 </Project>

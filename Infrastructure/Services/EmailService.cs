@@ -1,36 +1,34 @@
+using System.Reflection;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
-using DietiEstate.Core.Enums;
 using DietiEstate.Core.ValueObjects;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using MimeKit.Text;
 
 namespace DietiEstate.Infrastracture.Services;
 
-public class EmailService(
-    IConfiguration configuration,
-    ILogger<EmailService> logger) : IEmailService
+public class EmailService(ILogger<EmailService> logger) : IEmailService
 {
-    private readonly string _templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Template", "Email", "base.html");
+    private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
 
-    private string GetTemplateText()
+    private async Task<string> GetTemplateText(string fileName)
     {
-        using var streamReader = new StreamReader(_templatePath);
-        return streamReader.ReadToEnd();
+        var resourceName = $"DietiEstate.Infrastructure.Templates.Email.{fileName}";
+        await using var stream = _assembly.GetManifestResourceStream(resourceName);
+        if (stream == null) return string.Empty;
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync();
     }
 
     public async Task<EmailData> PrepareWelcomeEmailAsync(User toUser)
     {
         var emailData = new EmailData();
         
-        var bodyPath = Path.Combine(Directory.GetCurrentDirectory(), "Template", "Email", "welcome.html");
-        using var streamReader = new StreamReader(bodyPath);
-        var templateText = GetTemplateText();
-        var bodyText = await streamReader.ReadToEndAsync();
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("welcome.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
         templateText = templateText.Replace("{{email_body}}", bodyText);
@@ -47,10 +45,8 @@ public class EmailService(
     {
         var emailData = new EmailData();
         
-        var bodyPath = Path.Combine(Directory.GetCurrentDirectory(), "Template", "Email", "welcome-agency.html");
-        using var streamReader = new StreamReader(bodyPath);
-        var templateText = GetTemplateText();
-        var bodyText = await streamReader.ReadToEndAsync();
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("welcome-agency.html");
         bodyText = bodyText.Replace("{{nome_agenzia}}", agencyName);
         bodyText = bodyText.Replace("{{temp_password}}", randomPassword);
         templateText = templateText.Replace("{{email_body}}", bodyText);
@@ -67,10 +63,8 @@ public class EmailService(
     {
         var emailData = new EmailData();
         
-        var bodyPath = Path.Combine(Directory.GetCurrentDirectory(), "Template", "Email", "forgot-password.html");
-        using var streamReader = new StreamReader(bodyPath);
-        var templateText = GetTemplateText();
-        var bodyText = await streamReader.ReadToEndAsync();
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("forgot-password.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
         bodyText = bodyText.Replace("{{codice_verifica}}", token.ToString());
