@@ -5,10 +5,8 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
-using DietiEstate.Core.Entities.Worker;
 using DietiEstate.Core.Enums;
 using Google.Apis.Auth;
-using Google.Apis.Auth.OAuth2.Requests;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +20,6 @@ public class AuthController(
     IUserVerificationRepository userVerificationRepository,
     IPasswordResetService passwordResetService,
     IUserSessionService userSessionService,
-    IAgencyRepository agencyRepository,
     IPasswordService passwordService,
     IUserRepository userRepository,
     IEmailService emailService,

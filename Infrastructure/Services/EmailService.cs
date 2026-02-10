@@ -99,7 +99,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         message.From.Add(new MailboxAddress(smtpOptions.FromName, smtpOptions.FromEmail));
         message.To.Add(new MailboxAddress(emailData.ToName, emailData.ToEmail));
         message.Subject = emailData.Subject;
-        message.Body = new TextPart(TextFormat.Plain)
+        message.Body = new TextPart(TextFormat.Html)
         {
             Text = emailData.Body
         };
