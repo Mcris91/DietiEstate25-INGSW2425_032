@@ -48,16 +48,13 @@ public static class Program
     {
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowedOrigins",
-                policy => policy.WithOrigins(
-                        "https://localhost:7007",
-                        "http://localhost:5155",
-                        "https://localhost:7250",
-                        "https://localhost:5208"
-                    )
+            options.AddPolicy("AllowedOrigins", policy =>
+            {
+                policy.SetIsOriginAllowed(_ => true)
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowCredentials());
+                    .AllowCredentials();
+            });
         });
         
         builder.Services.AddStackExchangeRedisCache(options =>
@@ -233,8 +230,8 @@ public static class Program
         }
         
         app.UseHttpsRedirection();
-        app.UseCors("AllowedOrigins");
         app.UseRouting();
+        app.UseCors("AllowedOrigins");
         app.UseMiddleware<UserSessionAuthMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();

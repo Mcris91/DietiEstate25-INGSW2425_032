@@ -9,5 +9,10 @@ RUN dotnet publish -c Release -o /app/publish
 
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
+
 COPY --from=build /app/publish/wwwroot .
 COPY ["WebAssemblyClient/nginx.conf", "/etc/nginx/nginx.conf"]
+COPY ["WebAssemblyClient/entrypoint.sh", "/entrypoint.sh"]
+
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

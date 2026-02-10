@@ -1,7 +1,7 @@
 ﻿services:
   
   postgres:
-    image: postgres:15-alpine
+    image: postgis/postgis:15-3.4-alpine
     container_name: dieti-postgres
     environment:
       POSTGRES_USER: postgres
@@ -43,7 +43,7 @@
     image: dieti-api
     build:
       context: .
-      dockerfile: MyApi/Dockerfile
+      dockerfile: WebApi/Dockerfile
     container_name: dieti-api
     depends_on:
       - postgres
@@ -65,7 +65,7 @@
     image: dieti-worker
     build:
       context: .
-      dockerfile: MyWorker/Dockerfile
+      dockerfile: Worker/Dockerfile
     container_name: dieti-worker
     depends_on:
       - api
@@ -83,12 +83,12 @@
     image: dieti-client
     build:
       context: .
-      dockerfile: MyClient/Dockerfile
+      dockerfile: WebAssemblyClient/Dockerfile
     container_name: dieti-client
     ports:
       - "8080:80"
     environment:
-      - API_BASE_URL=http://localhost:5000
+      - API_BASE_URL=http://localhost:5000/api/v1/
     networks:
       - dieti-network
 
