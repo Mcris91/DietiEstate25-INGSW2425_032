@@ -9,12 +9,15 @@ using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using NetTopologySuite.Geometries;
 
-namespace DietiEstate.Infrastracture.Config;
+namespace DietiEstate.Infrastructure.Config;
 
 public class AutoMapperProfile : Profile
 {
     public AutoMapperProfile()
     {
+        // Favourite
+        CreateMap<Listing, UserFavouritesResponseDto>();
+        
         // User
         CreateMap<UserRequestDto, User>();
         CreateMap<User, UserResponseDto>();
@@ -60,7 +63,8 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.ListingTags.Select(tag => new ListingTagDto
                 {
                     Id = tag.Id,
-                    Name = tag.Name
+                    Name = tag.Name,
+                    Text = tag.Text
                 })))
             .ForMember(listingDto => listingDto.Images, opt =>
                 opt.MapFrom(src => src.ListingImages.Select(image => new ListingImageResponseDto

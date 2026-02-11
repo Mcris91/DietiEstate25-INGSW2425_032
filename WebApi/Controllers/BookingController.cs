@@ -5,6 +5,7 @@ using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Enums;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +24,7 @@ public class BookingController(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
+        
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 
@@ -60,22 +62,51 @@ public class BookingController(
         return  Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
     }
 
-    [HttpGet("GetByAgentId/{agentId:guid}")]
-
+    [HttpGet("GetByAgentId")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByAgentId(
-        Guid agentId,
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
         [FromQuery]  int? pageSize)
     {
+        var userId = User.GetUserId();
+        
+        if (userId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.FindFirst("role")?.Value;
+        
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filterDto.AgentId = userId;
+                filterDto.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filterDto.AgentId = null;
+                filterDto.AgencyId = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filterDto.AgentId = null;
+                filterDto.AgencyId = null;
+                break;
+            default:
+                return Unauthorized();
+        }
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
         
-        var bookings = await bookingRepository.GetBookingByAgentIdAsync(agentId, filterDto, pageNumber,pageSize);
-        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageNumber, pageSize));
+        var bookings = await bookingRepository.GetBookingByAgentIdAsync(filterDto);
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageSize, pageNumber));
     }
 
     [HttpGet("GetByClientId/{clientId:guid}")]
@@ -128,10 +159,42 @@ public class BookingController(
         return NoContent();
     }
     
-    [HttpGet("GetTotalBookings/{agentId:guid}")]
-    public async Task<ActionResult> GetTotalBookings(Guid agentId)
+    [HttpGet("GetTotalBookings")]
+    public async Task<ActionResult> GetTotalBookings()
     {
-        var bookings = await bookingRepository.GetTotalBookingsAsync(agentId);
+        var agentId = User.GetUserId();
+        if (agentId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.FindFirst("role")?.Value;
+        
+        BookingFilterDto filters = new();
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filters.AgentId = agentId;
+                filters.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filters.AgentId = null;
+                filters.AgencyId  = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filters.AgentId = null;
+                filters.AgencyId = null;
+                break;
+            default:
+                return Unauthorized();
+        }
+        
+        var bookings = await bookingRepository.GetTotalBookingsAsync(filters);
         return Ok(new BookingAgentCountersResponseDto()
         {
             ScheduledBookings = bookings.Total,

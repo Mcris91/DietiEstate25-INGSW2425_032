@@ -2,12 +2,15 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.ListingModels;
 using NetTopologySuite.Geometries;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class ListingQueryExtensions
 {
     public static IQueryable<Listing> ApplyFilters(this IQueryable<Listing> query, ListingFilterDto filters)
     {
+        if (filters.AgencyId.HasValue)
+            query = query.Where(l => l.Agent.AgencyId == filters.AgencyId.Value);
+        
         if (filters.AgentId.HasValue)
             query = query.Where(l => l.AgentUserId == filters.AgentId.Value);
         

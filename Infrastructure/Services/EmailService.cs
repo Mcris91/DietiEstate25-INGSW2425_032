@@ -1,68 +1,96 @@
+using System.Reflection;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
-using DietiEstate.Core.Enums;
 using DietiEstate.Core.ValueObjects;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using MimeKit.Text;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
-public class EmailService(
-    IConfiguration configuration,
-    ILogger<EmailService> logger) : IEmailService
+public class EmailService(ILogger<EmailService> logger) : IEmailService
 {
-    public async Task<EmailData> PrepareEmailAsync(EmailType type, string toName, string toEmail)
+    private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
+
+    private async Task<string> GetTemplateText(string fileName)
     {
-        string subject = "";
-        string body = "";
+        var resourceName = $"DietiEstate.Infrastructure.Templates.Email.{fileName}";
+        await using var stream = _assembly.GetManifestResourceStream(resourceName);
+        if (stream == null) return string.Empty;
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync();
+    }
 
-        switch (type)
-        {
-            case EmailType.Verification:
-                subject = "Benvenuto su DietiEstate!";
-                body = $@"La tua azienda è stata registrata con successo!
-                        La tua password è: {toName}";
-                break;
-            
-            case EmailType.Welcome:
-                subject = "Benvenuto su DietiEstate!";
-                body = $@"Ciao {toName},
-                      Il tuo account è stato creato con successo!";
-                break;
-
-            case EmailType.PasswordReset:
-                subject = "Recupero Password";
-                body = $"Ciao {toName}, ecco il tuo codice di ripristino...";
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type), "Tipo email non supportato.");
-        }
-        return new EmailData
-        {
-            ToEmail = toEmail,
-            ToName = toName,
-            Subject = subject,
-            Body = body
-        };
+    public async Task<EmailData> PrepareWelcomeEmailAsync(User toUser)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("welcome.html");
+        bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
+        bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = "Recupero password";
+        emailData.ToEmail = toUser.Email;
+        emailData.ToName = toUser.FirstName;
+        
+        return emailData;
+    }
+    
+    public async Task<EmailData> PrepareAgencyWelcomeEmailAsync(string agencyName, string toEmail, string randomPassword)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("welcome-agency.html");
+        bodyText = bodyText.Replace("{{nome_agenzia}}", agencyName);
+        bodyText = bodyText.Replace("{{temp_password}}", randomPassword);
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = "Recupero password";
+        emailData.ToEmail = toEmail;
+        emailData.ToName = agencyName;
+        
+        return emailData;
+    }
+    
+    public async Task<EmailData> PreparePasswordResetEmailAsync(User toUser, int token)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("forgot-password.html");
+        bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
+        bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
+        bodyText = bodyText.Replace("{{codice_verifica}}", token.ToString());
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = "Recupero password";
+        emailData.ToEmail = toUser.Email;
+        emailData.ToName = toUser.FirstName;
+        
+        return emailData;
     }
 
     public async Task SendEmailAsync(EmailData emailData)
     {
         var smtpOptions = new SmtpOptions
         {
-            Server = Environment.GetEnvironmentVariable("SMTP_SERVER"), 
-            Port = Environment.GetEnvironmentVariable("SMTP_PORT"),
-            Username = Environment.GetEnvironmentVariable("SMTP_USERNAME"),
-            Password = Environment.GetEnvironmentVariable("SMTP_PASSWORD"),
-            FromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL"),
-            FromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME")
+            Server = Environment.GetEnvironmentVariable("SMTP_SERVER") ?? string.Empty, 
+            Port = Environment.GetEnvironmentVariable("SMTP_PORT") ?? string.Empty,
+            Username = Environment.GetEnvironmentVariable("SMTP_USERNAME") ?? string.Empty,
+            Password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? string.Empty,
+            FromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") ?? string.Empty,
+            FromName = Environment.GetEnvironmentVariable("SMTP_FROM_NAME") ?? string.Empty
 
         };
-        if (smtpOptions == null)
+        if (smtpOptions.Server == "")
         {
             logger.LogError("SMTP options are not configured properly.");
             throw new InvalidOperationException("SMTP options are not configured.");
@@ -71,7 +99,7 @@ public class EmailService(
         message.From.Add(new MailboxAddress(smtpOptions.FromName, smtpOptions.FromEmail));
         message.To.Add(new MailboxAddress(emailData.ToName, emailData.ToEmail));
         message.Subject = emailData.Subject;
-        message.Body = new TextPart(TextFormat.Plain)
+        message.Body = new TextPart(TextFormat.Html)
         {
             Text = emailData.Body
         };

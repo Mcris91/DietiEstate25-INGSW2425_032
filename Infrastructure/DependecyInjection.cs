@@ -1,16 +1,15 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
-using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Config;
-using DietiEstate.Infrastracture.Data;
-using DietiEstate.Infrastracture.Repositories;
-using DietiEstate.Infrastracture.Services;
+using DietiEstate.Infrastructure.Config;
+using DietiEstate.Infrastructure.Data;
+using DietiEstate.Infrastructure.Repositories;
+using DietiEstate.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DietiEstate.Infrastracture;
+namespace DietiEstate.Infrastructure;
 
 public static class DependecyInjection
 {
@@ -37,6 +36,7 @@ public static class DependecyInjection
         services.AddScoped<IPropertyTypeRepository, PropertyTypeRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserVerificationRepository, UserVerificationRepository>();
+        services.AddScoped<IFavouritesRepository, FavouritesRepository>();
         services.AddScoped<ITestRepository, TestRepository>();
         
         services.AddScoped<IJwtService, JwtService>();

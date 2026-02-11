@@ -13,8 +13,6 @@ public class BookingFilterDto : BaseFilterDto
     public Guid? ListingId { get; init;}
     
     public Guid? ClientId { get; init;}
-    
-    public Guid? AgentId { get; init;}
 
     public string SortOrder { get; init; } = "desc";
     

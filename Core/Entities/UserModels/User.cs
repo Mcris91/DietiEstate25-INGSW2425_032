@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using DietiEstate.Core.Entities.AgencyModels;
+using DietiEstate.Core.Entities.FavouritesModels;
 
 namespace DietiEstate.Core.Entities.UserModels;
 
@@ -29,4 +30,8 @@ public class User
 
     [ForeignKey(nameof(Agency))] 
     public Guid? AgencyId { get; set; } = null;
+    
+    public virtual Agency? Agency { get; set; }
+    
+    public virtual ICollection<Favourite> Favourites { get; set; } = Array.Empty<Favourite>();
 }

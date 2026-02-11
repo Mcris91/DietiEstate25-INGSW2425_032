@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
@@ -11,5 +11,19 @@ public static class ClaimsPrincipalExtensions
         return userId is not null
             ? Guid.Parse(userId)
             : Guid.Empty;
+    }
+    
+    public static Guid GetAgencyId(this ClaimsPrincipal principal)
+    {
+        var agencyId = principal.FindFirst("AgencyId")?.Value;
+        return agencyId is not null
+            ? Guid.Parse(agencyId)
+            : Guid.Empty;
+    }
+    
+    public static string GetRole(this ClaimsPrincipal principal)
+    {
+        var role = principal.FindFirst("role")?.Value;
+        return role ?? string.Empty;
     }
 }

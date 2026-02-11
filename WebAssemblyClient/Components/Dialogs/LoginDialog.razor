@@ -11,17 +11,25 @@
 <FluentTextField Label="Email" @bind-Value="Content.Email" TextFieldType="TextFieldType.Email" Style="width: 100%"></FluentTextField>
 <FluentTextField Label="Password" @bind-Value="Content.Password" TextFieldType="TextFieldType.Password" Style="width: 100%"></FluentTextField>
 <div id="googleBtn" style="margin-top: 10px; margin-bottom: 10px;"></div>
+<FluentLabel Style="cursor: pointer; text-decoration: underline;" @onclick="OpenResetPasswordDialogAsync">
+    Hai dimenticato la password?
+</FluentLabel>
 <FluentLabel Style="cursor: pointer; text-decoration: underline;" @onclick="OpenRegisterDialogAsync">
     Non hai un account? Registrati subito!
 </FluentLabel>
 
 @code {
     [Parameter]
-    public LoginRequestDto Content { get; set; } = default!;
+    public LoginRequestDto Content { get; set; } = null!;
     
     [CascadingParameter]
     public FluentDialog? Dialog {get; set; }
 
+    private async Task OpenResetPasswordDialogAsync()
+    {
+        await Dialog.CloseAsync(new ForgotPasswordRequestDto());
+    }
+    
     private async Task OpenRegisterDialogAsync()
     {
         await Dialog.CloseAsync(new UserRequestDto());

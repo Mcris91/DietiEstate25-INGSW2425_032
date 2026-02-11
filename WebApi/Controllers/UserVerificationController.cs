@@ -42,18 +42,18 @@ public class UserVerificationController(
         return Ok();   
     }
 
-    [HttpPost("resend-email/{userId:guid}")]
-    public async Task<IActionResult> ResendEmail(Guid userId)
-    {
-        if (await userRepository.GetUserByIdAsync(userId) is not { } user)
-            return NotFound("User not found.");
-        var userVerification = new UserVerification()
-        {
-            UserId = userId,
-        };
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
-        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
-        await userVerificationRepository.AddVerificationAsync(userVerification);
-        return Ok();
-    }
+    // [HttpPost("resend-email/{userId:guid}")]
+    // public async Task<IActionResult> ResendEmail(Guid userId)
+    // {
+    //     if (await userRepository.GetUserByIdAsync(userId) is not { } user)
+    //         return NotFound("User not found.");
+    //     var userVerification = new UserVerification()
+    //     {
+    //         UserId = userId,
+    //     };
+    //     var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, user.FirstName, user.Email);
+    //     jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+    //     await userVerificationRepository.AddVerificationAsync(userVerification);
+    //     return Ok();
+    // }
 }

@@ -4,6 +4,8 @@ public class ListingFilterDto : BaseFilterDto
 {
     public string TypeCode { get; set; } = string.Empty;
     
+    public Guid? AgencyId { get; init; }
+    
     public Guid? AgentId { get; init; }
     
     public IList<string>? Tags { get; set; }

@@ -6,7 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Extensions;
+using DietiEstate.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,7 +47,7 @@ public class UserController(
         return Ok(mapper.Map<UserResponseDto>(user));
     }
     
-    [HttpPost]
+    [HttpPost("create-support-admin")]
     [Authorize(Roles = "SuperAdminOnly")]
     public async Task<ActionResult> CreateSupportAdminUser(UserRequestDto request)
     {
@@ -69,12 +69,13 @@ public class UserController(
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
     }
 
-    [HttpPost]
-    [Authorize(Roles = "SupportAdminOnly")]
-    public async Task<ActionResult> CreateAgentUser(UserRequestDto request)
+    [HttpPost("create-agent")]
+    //[Authorize(Roles = "SupportAdminOnly")]
+    public async Task<ActionResult> CreateAgentUser([FromBody] UserRequestDto request)
     {
-        if (request.Role != UserRole.EstateAgent)
-            return BadRequest(new {error = "Only agents can be created."});
+        var agencyId = User.GetAgencyId();
+        if (agencyId == Guid.Empty)
+            return Unauthorized();
         
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest(new {error = "Email already exists."});
@@ -82,10 +83,22 @@ public class UserController(
         var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (passwordValidation != "")
             return BadRequest(new {error = passwordValidation});
+
+        UserRole newEmployeeRole;
+        
+        if (User.GetRole() == "SuperAdmin")
+            newEmployeeRole = UserRole.SupportAdmin;
+        
+        else if (User.GetRole() == "SupportAdmin")
+            newEmployeeRole = UserRole.EstateAgent;
+
+        else return Unauthorized();
         
         var user = mapper.Map<User>(request);
         user.Email = user.Email.ToLowerInvariant();
         user.Password = passwordService.HashPassword(request.Password);
+        user.Role = newEmployeeRole;
+        user.AgencyId = agencyId;
         await userRepository.AddUserAsync(user);
 
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
@@ -128,4 +141,5 @@ public class UserController(
         await userRepository.UpdateUserAsync(user);
         return Ok();
     }
+    
 }

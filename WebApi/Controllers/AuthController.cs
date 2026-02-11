@@ -5,10 +5,8 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
-using DietiEstate.Core.Entities.Worker;
 using DietiEstate.Core.Enums;
 using Google.Apis.Auth;
-using Google.Apis.Auth.OAuth2.Requests;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +20,6 @@ public class AuthController(
     IUserVerificationRepository userVerificationRepository,
     IPasswordResetService passwordResetService,
     IUserSessionService userSessionService,
-    IAgencyRepository agencyRepository,
     IPasswordService passwordService,
     IUserRepository userRepository,
     IEmailService emailService,
@@ -91,17 +88,16 @@ public class AuthController(
         };
 
         var randomPassword = passwordService.GenerateRandomSecurePassword();
-        var administrator = new User()
+        var administrator = new User
         {
             Email = request.Email.ToLowerInvariant(),
             Password = passwordService.HashPassword(randomPassword),
             AgencyId = agency.Id,
-            Role = UserRole.SuperAdmin
+            Role = UserRole.SuperAdmin,
+            Agency = agency
         };
-        
-        agency.Administrator = administrator;
-        
-        await agencyRepository.AddAgencyAsync(agency);
+
+        await userRepository.AddUserAsync(administrator);
         
         var userVerification = new UserVerification()
         {
@@ -109,7 +105,7 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Verification, randomPassword, administrator.Email);
+        var emailData = await emailService.PrepareAgencyWelcomeEmailAsync(agency.Name, administrator.Email, randomPassword);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
 
         return Ok();
@@ -182,6 +178,7 @@ public class AuthController(
         user.Id = Guid.NewGuid();
         user.Email = user.Email.ToLowerInvariant();
         user.Password = passwordService.HashPassword(request.Password);
+        user.Role = UserRole.Client;
         await userRepository.AddUserAsync(user);
         
         var userVerification = new UserVerification()
@@ -190,7 +187,7 @@ public class AuthController(
         };
         await userVerificationRepository.AddVerificationAsync(userVerification);
 
-        var emailData = await emailService.PrepareEmailAsync(EmailType.Welcome, user.FirstName, user.Email);
+        var emailData = await emailService.PrepareWelcomeEmailAsync(user);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         
         return CreatedAtAction(
@@ -206,8 +203,11 @@ public class AuthController(
         if (await userRepository.GetUserByEmailAsync(request.Email) is not { } user) return Ok();
         
         var resetRequestToken = await passwordResetService.CreatePasswordResetRequestAsync(request.Email);
-        var emailData = await emailService.PrepareEmailAsync(EmailType.PasswordReset, user.FirstName, user.Email);
+        if (resetRequestToken is null) return Unauthorized();
+        
+        var emailData = await emailService.PreparePasswordResetEmailAsync(user, resetRequestToken.Token);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+
         return Ok();
     }
 

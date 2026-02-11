@@ -5,10 +5,10 @@ using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Constants;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Enums;
-using DietiEstate.Infrastracture.Config;
+using DietiEstate.Infrastructure.Config;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
 {
@@ -46,9 +46,11 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
                 claims.Add(new Claim(JwtRegisteredClaimNames.Email, user.Email));
                 claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName));
                 claims.Add(new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName));
+                claims.Add(new Claim( "AgencyId", user.AgencyId.ToString() ?? ""));
                 break;
             case JwtTokenType.Access:
                 claims.AddRange(GetUserScopes(user).Select(scope => new Claim("scope", scope)));
+                claims.Add(new Claim( "AgencyId", user.AgencyId.ToString() ?? ""));
                 break;
             case JwtTokenType.Refresh:
                 break;

@@ -1,12 +1,15 @@
 using DietiEstate.Application.Dtos.Filters;
+using DietiEstate.Core.Entities.AgencyModels;
 using DietiEstate.Core.Entities.UserModels;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class UserQueryExtensions
 {
     public static IQueryable<User> ApplyFilters(this IQueryable<User> query, UserFilterDto filters)
     {
+        if (filters.AgencyId.HasValue)
+            query = query.Where(u => u.AgencyId == filters.AgencyId);  
         if (!string.IsNullOrEmpty(filters.FirstName))
             query = query.Where(u =>
                 u.FirstName.Contains(filters.FirstName, StringComparison.CurrentCultureIgnoreCase));

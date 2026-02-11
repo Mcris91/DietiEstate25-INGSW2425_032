@@ -4,3 +4,7 @@
     if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
 }
+
+window.setCookie = (name, value) => {
+    
+}

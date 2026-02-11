@@ -2,7 +2,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.UserModels;
 
-namespace DietiEstate.Infrastracture.Services;
+namespace DietiEstate.Infrastructure.Services;
 
 public class UserService(
     IUserRepository userRepository,

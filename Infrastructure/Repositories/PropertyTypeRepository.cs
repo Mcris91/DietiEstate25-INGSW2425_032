@@ -1,9 +1,9 @@
 using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.ListingModels;
-using DietiEstate.Infrastracture.Data;
+using DietiEstate.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace DietiEstate.Infrastracture.Repositories;
+namespace DietiEstate.Infrastructure.Repositories;
 
 public class PropertyTypeRepository(DietiEstateDbContext context) : IPropertyTypeRepository
 {

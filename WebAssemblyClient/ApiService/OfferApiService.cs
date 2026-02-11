@@ -80,11 +80,8 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
         return await GetAsync<PagedResponseDto<OfferResponseDto>>(uri);
     }
 
-    public async Task<OfferAgentCountersResponseDto> GetOffersAgentCountersAsync(Guid? agentId)
+    public async Task<OfferAgentCountersResponseDto> GetOffersAgentCountersAsync()
     {
-        if (agentId == null)
-            throw new ArgumentException("AgentId cannot be null.", nameof(agentId));
-        
-        return await GetAsync<OfferAgentCountersResponseDto>($"GetTotalOffers/{agentId}");
+        return await GetAsync<OfferAgentCountersResponseDto>("GetTotalOffers/");
     }
 }

@@ -1,34 +1,101 @@
 ﻿services:
-  webapi:
-    image: webapi
-    build:
-      context: .
-      dockerfile: WebApi/Dockerfile
+  
+  postgres:
+    image: postgis/postgis:15-3.4-alpine
+    container_name: dieti-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password_segreta_db
+      POSTGRES_DB: dietiestatedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - dieti-network
 
-  webclient:
-    image: webclient
-    build:
-      context: .
-      dockerfile: WebClient/Dockerfile
-      
   redis:
-    image: redis:latest
-    container_name: INGSW_Sessions
+    image: redis:alpine
+    container_name: dieti-redis
     ports:
       - "6379:6379"
-  
+    networks:
+      - dieti-network
+
   minio:
     image: minio/minio
-    container_name: INGSW_Images
+    container_name: dieti-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
     ports:
       - "9000:9000"
       - "9001:9001"
+    env_file:
+      - .env
+    networks:
+      - dieti-network
+
+  api:
+    image: dieti-api
+    build:
+      context: .
+      dockerfile: WebApi/Dockerfile
+    container_name: dieti-api
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    env_file:
+      - .env
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTION_STRING=Host=postgres;Port=5432;Database=dietiestatedb;Username=postgres;Password=password_segreta_db;SSL Mode=Disable
+      - REDIS_CONNECTION_STRING=redis:6379
+      - MINIO_ENDPOINT=minio:9000
+    ports:
+      - "5000:8080"
+    networks:
+      - dieti-network
+
+  worker:
+    image: dieti-worker
+    build:
+      context: .
+      dockerfile: Worker/Dockerfile
+    container_name: dieti-worker
+    depends_on:
+      - api
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTION_STRING=Host=postgres;Port=5432;Database=dietiestatedb;Username=postgres;Password=password_segreta_db;SSL Mode=Disable
+      - REDIS_CONNECTION_STRING=redis:6379
+      - MINIO_ENDPOINT=minio:9000
+    networks:
+      - dieti-network
+
+  client:
+    image: dieti-client
+    build:
+      context: .
+      dockerfile: WebAssemblyClient/Dockerfile
+    container_name: dieti-client
+    ports:
+      - "8080:80"
+    environment:
+      - API_BASE_URL=http://localhost:5000/api/v1/
+    networks:
+      - dieti-network
 
 volumes:
+  postgres_data:
   minio_data:
+
+networks:
+  dieti-network:
+    driver: bridge

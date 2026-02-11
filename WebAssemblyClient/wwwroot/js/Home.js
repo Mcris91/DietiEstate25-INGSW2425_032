@@ -1,7 +1,17 @@
 ﻿let map;
 let markerGroup;
 let marker;
-function clearExistingMap(elementId) {
+
+var redMarkerIcon = L.icon({
+    iconUrl: 'assets/icons/red-marker.png',
+    iconSize: [38, 95],
+    iconAnchor: [22, 94],
+    popupAnchor: [-3, -76],
+    shadowUrl: 'assets/icons/red-marker-shadow.png',
+    shadowSize: [68, 95],
+    shadowAnchor: [22, 94]
+});
+export function clearExistingMap(elementId) {
     const container = document.getElementById(elementId);
     if (!container) return false;
     if (map) {
@@ -34,7 +44,7 @@ export function setupMap(elementId, lat, lon) {
         attribution: '© OpenStreetMap'
     }).addTo(map);
     markerGroup = L.layerGroup().addTo(map);
-    marker = L.marker([lat, lon]).addTo(map);
+    marker = L.marker([lat, lon], {icon: redMarkerIcon}).addTo(map);
 }
 
 export async function searchAddress (address) {

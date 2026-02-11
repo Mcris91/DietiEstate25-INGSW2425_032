@@ -5,6 +5,7 @@ namespace DietiEstate.Application.Dtos.Filters;
 
 public class UserFilterDto
 {
+    public Guid? AgencyId { get; init;}
     public string FirstName { get; init; } = string.Empty;
 
     public string LastName { get; init; } = string.Empty;

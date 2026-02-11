@@ -1,12 +1,15 @@
 ﻿using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Core.Entities.OfferModels;
 
-namespace DietiEstate.Infrastracture.Extensions;
+namespace DietiEstate.Infrastructure.Extensions;
 
 public static class OfferQueryExtensions
 {
     public static IQueryable<Offer> ApplyFilters(this IQueryable<Offer> query, OfferFilterDto filters)
     {
+        if (filters.AgencyId.HasValue)
+            query = query.Where(o => o.Listing.Agent.AgencyId == filters.AgencyId.Value);
+        
         if (filters.AgentId.HasValue)
             query = query.Where(o => o.AgentId == filters.AgentId.Value);
         

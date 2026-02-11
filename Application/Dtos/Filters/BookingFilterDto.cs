@@ -17,7 +17,9 @@ public class BookingFilterDto
     
     public Guid? ClientId { get; init;}
     
-    public Guid? AgentId { get; init;}
+    public Guid? AgentId { get; set;}
+    
+    public Guid? AgencyId { get; set; }
 
     public string SortOrder { get; init; } = "desc";
     

@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>DietiEstate.Infrastracture</RootNamespace>
+        <RootNamespace>DietiEstate.Infrastructure</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,7 +36,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Templates\Pdf\" />
+      <Folder Include="Data\Migrations\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Templates\Email\**\*.html" />
     </ItemGroup>
 
 </Project>

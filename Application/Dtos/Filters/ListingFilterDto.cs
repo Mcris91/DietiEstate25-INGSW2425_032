@@ -6,6 +6,8 @@ public class ListingFilterDto
     
     public Guid? AgentId { get; init; }
     
+    public Guid? AgencyId { get; init; }
+    
     public IReadOnlyList<string>? Tags { get; init; }
 
     public decimal? MinPrice { get; init; }

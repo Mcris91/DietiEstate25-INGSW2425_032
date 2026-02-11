@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
-namespace DietiEstate.Infrastracture.Data.Seeders;
+namespace DietiEstate.Infrastructure.Data.Seeders;
 
 public class DatabaseSeeder(
     IMapper mapper,

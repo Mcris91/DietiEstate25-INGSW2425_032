@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DietiEstate.Infrastracture.Config;
+namespace DietiEstate.Infrastructure.Config;
 
 public class JwtConfiguration(
     string secretKey, 
