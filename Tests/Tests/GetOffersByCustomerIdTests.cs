@@ -35,13 +35,35 @@ public class GetOffersByCustomerIdTests
     }
     
     [Fact]
-    public async Task TC1_BothPageNumberAndPageSizeNull_ReturnsBadRequest()
+    public async Task TC1_BothPageNumberAndPageSizeNull_ReturnsOkWithoutPagination()
     {
         // Arrange
         var customerId = Guid.NewGuid();
         var filterDto = new OfferFilterDto();
         int? pageNumber = null;
         int? pageSize = null;
+
+        var mockOffers = new List<Offer>
+        {
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId },
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId },
+            new Offer { Id = Guid.NewGuid(), CustomerId = customerId }
+        }.AsEnumerable();
+
+        var mockOfferDtos = new List<OfferResponseDto>
+        {
+            new OfferResponseDto { Id = mockOffers.First().Id },
+            new OfferResponseDto { Id = mockOffers.Skip(1).First().Id },
+            new OfferResponseDto { Id = mockOffers.Last().Id }
+        };
+
+        _mockOfferRepository
+            .Setup(r => r.GetOffersByCustomerIdAsync(customerId, filterDto))
+            .ReturnsAsync(mockOffers);
+
+        _mockMapper
+            .Setup(m => m.Map<OfferResponseDto>(It.IsAny<Offer>()))
+            .Returns((Offer offer) => mockOfferDtos.First(dto => dto.Id == offer.Id));
 
         // Act
         var result = await _controller.GetOffersByCustomerId(
@@ -52,12 +74,15 @@ public class GetOffersByCustomerIdTests
         );
 
         // Assert
-        var badRequestResult = result.Result as BadRequestObjectResult;
-        badRequestResult.Should().NotBeNull();
-        badRequestResult.Value.Should().BeEquivalentTo(new 
-        { 
-            error = "Both pageNumber and pageSize must be provided for pagination." 
-        });
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull();
+    
+        var pagedResponse = okResult.Value as PagedResponseDto<OfferResponseDto>;
+        pagedResponse.Should().NotBeNull();
+        pagedResponse.Items.Should().HaveCount(3);
+    
+        // Quando non c'è paginazione, potrebbe restituire tutti gli elementi
+        // Verifica che il risultato contenga gli elementi attesi
     }
     
     [Theory]
