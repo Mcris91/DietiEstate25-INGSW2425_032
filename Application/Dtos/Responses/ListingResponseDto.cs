@@ -22,9 +22,9 @@ public class ListingResponseDto
     
     public required string Address { get; init; }
     
-    public required float Latitude { get; init;}
+    public required double Latitude { get; init;}
  
-    public required float Longitude { get; init; }
+    public required double Longitude { get; init; }
     
     public required string City { get; init; }
     
@@ -34,7 +34,7 @@ public class ListingResponseDto
     
     public bool Elevator { get; set; }
 
-    public required ListingTypeDto Type { get; init; }
+    public required string Type { get; init; }
     
     public UserResponseDto Agent { get; init; }
 
