@@ -55,4 +55,9 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         var response = await httpClient.GetAsync(uri);
         return await response.Content.ReadAsByteArrayAsync();
     }
+
+    public async Task UpdateListingAsync(Guid listingId, ListingRequestDto listing)
+    {
+        await httpClient.PatchAsJsonAsync($"{listingId}", listing);
+    }
 }

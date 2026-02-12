@@ -25,4 +25,6 @@ public class Service
     
     [ForeignKey(nameof(Listing))]
     public Guid ListingId { get; set; }
+    
+    public virtual Listing Listing { get; set; } = null!;
 }

@@ -6,6 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.Common;
 using DietiEstate.Core.Entities.ListingModels;
+using DietiEstate.Infrastructure.Extensions;
 using DietiEstate.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
@@ -24,7 +25,7 @@ public class ListingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
-    [Authorize(Policy = "ReadListing")]
+    [AllowAnonymous]
     public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListings(
         [FromQuery] ListingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -36,6 +37,61 @@ public class ListingController(
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
         var listings = await listingRepository.GetListingsAsync(filterDto, pageNumber, pageSize);
+        foreach (var listing in listings)
+        {
+            if (!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
+        }
+        return Ok(new PagedResponseDto<ListingResponseDto>(
+            listings.ToList().Select(mapper.Map<ListingResponseDto>), 
+            pageSize, pageNumber));
+    }
+    
+    [HttpGet]
+    [Authorize(Policy = "ReadListing")]
+    public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgent(
+        [FromQuery] ListingFilterDto filterDto,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize)
+    {
+        
+        var userId = User.GetUserId();
+        
+        if (userId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.GetRole();
+        
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filterDto.AgentId = userId;
+                filterDto.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filterDto.AgentId = null;
+                filterDto.AgencyId = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filterDto.AgentId = null;
+                filterDto.AgencyId = null;
+                break;
+        }
+        
+        if (pageNumber.HasValue ^ pageSize.HasValue) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
+        if (pageNumber <= 0 || pageSize <= 0) 
+            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
+
+        var listings = await listingRepository.GetDetailedListingsAsync(filterDto, pageNumber, pageSize);
+        
         foreach (var listing in listings)
         {
             if (!string.IsNullOrEmpty(listing.FeaturedImage))
@@ -93,6 +149,7 @@ public class ListingController(
     public async Task<IActionResult> PostListing([FromBody] ListingRequestDto request)
     {
         var listing = mapper.Map<Listing>(request);
+        listing.AgentUserId = User.GetUserId();
 
         if (request.FeaturedImage.Length > 0)
         {
@@ -135,19 +192,64 @@ public class ListingController(
     }
 
     [HttpPatch("{listingId:guid}")]
-    [Authorize(Roles = "SupportAdminOnly")]
-    public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] JsonPatchDocument<ListingRequestDto> patchDocument)
+    //[Authorize(Roles = "SupportAdminOnly")]
+    public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] ListingRequestDto listingDto)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
             return NotFound();
         
-        var listingToPatch = mapper.Map<ListingRequestDto>(listing);
-        patchDocument.ApplyTo(listingToPatch, ModelState);
-        if (!TryValidateModel(listingToPatch))
+        if (!TryValidateModel(listingDto))
             return BadRequest(ModelState);
+
+        if (listing.AgentUserId != User.GetUserId())
+            return Unauthorized();
+
+        var oldListingAddress = listing.Address;
+        var oldImageUrl = listing.FeaturedImage;
         
-        mapper.Map(listingToPatch, listing);
-        await listingRepository.UpdateListingAsync(listing);
+        mapper.Map(listingDto, listing);
+        listing.Id = listingId;
+        listing.AgentUserId = User.GetUserId();
+        
+        
+        if (listingDto.FeaturedImage.Length > 0)
+        {
+            try
+            {
+                using var featuredImageStream = new MemoryStream(listingDto.FeaturedImage);
+                listing.FeaturedImage = await minioService.UploadImageAsync(featuredImageStream, listing.Id, listing.Id);
+            }
+            catch (Exception)
+            {
+                return BadRequest("L'immagine di copertina non è stata caricata");
+
+            }
+        }
+        else
+        {
+            listing.FeaturedImage = oldImageUrl;
+        }
+        
+        if (!string.Equals(oldListingAddress, listing.Address))
+        {
+            listing.ListingServices.Clear();
+            
+            var newServices = await geoapifyService.GetNearbyServicesAsync(listingId, listingDto.Latitude, listingDto.Longitude);
+            
+            foreach (var service in newServices)
+            {
+                service.Id = Guid.Empty;
+                listing.ListingServices.Add(service);
+            }    
+            
+            listing.ListingTags.Clear();
+            var tags = listing.ListingServices.Select(s => s.Type).Distinct().ToList();
+            
+            await listingRepository.UpdateListingAsync(listing, tags);
+        }
+        else
+            await listingRepository.UpdateListingAsync(listing, null);
+        
         return NoContent();
     }
 

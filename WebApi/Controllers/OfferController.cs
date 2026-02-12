@@ -87,7 +87,7 @@ public class OfferController(
                 await offerRepository.UpdateOfferAsync(o);
             }
             listing.Available = false;
-            await listingRepository.UpdateListingAsync(listing);
+            await listingRepository.UpdateListingAsync(listing, null);
         }
         return Ok();
     }

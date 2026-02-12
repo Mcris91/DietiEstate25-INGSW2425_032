@@ -272,7 +272,11 @@
         }
         else
         {
-        //await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
+          _listingRequestDto.AgentUserId = Guid.Parse(userId);
+          _listingRequestDto.OwnerEmail = userEmail;
+          await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
+          ToastService.ShowSuccess("Inserzione modificata con successo!");
+          Navigation.NavigateTo("/agent/dashboard");
         }
     }
 

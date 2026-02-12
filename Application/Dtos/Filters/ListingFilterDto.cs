@@ -4,9 +4,9 @@ public class ListingFilterDto
 {
     public string TypeCode { get; init; } = string.Empty;
     
-    public Guid? AgentId { get; init; }
+    public Guid? AgentId { get; set; }
     
-    public Guid? AgencyId { get; init; }
+    public Guid? AgencyId { get; set; }
     
     public IReadOnlyList<string>? Tags { get; init; }
 

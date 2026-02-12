@@ -43,8 +43,4 @@ public class ListingRequestDto
     public string TypeCode { get; init; } = string.Empty;
     
     public List<ListingImageRequestDto> Images { get; init; } = [];
-
-    public List<ListingServiceDto> Services { get; init; } = [];
-
-    public List<ListingTagDto> Tags { get; init; } = [];
 }

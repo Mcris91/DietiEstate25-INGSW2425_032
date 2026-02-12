@@ -17,6 +17,22 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             //.Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
             //.Include(l => l.ListingImages)
+            //.Include(l => l.ListingOffers)
+            //.Include(l => l.ListingBookings)
+            //.Include(l => l.Agent)
+            .ApplyFilters(filters)
+            .ApplyNumericFilters(filters)
+            .ApplySorting(filters.SortBy, filters.SortOrder, new Point(filters.Longitude.Value, filters.Latitude.Value) { SRID = 4326 })
+            .ToListAsync();
+    }
+    
+    public async Task<IEnumerable<Listing>> GetDetailedListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
+    {
+        return await context.Listing
+            .Include(l => l.Type)
+            .Include(l => l.ListingServices)
+            .Include(l => l.ListingTags)
+            //.Include(l => l.ListingImages)
             .Include(l => l.ListingOffers)
             .Include(l => l.ListingBookings)
             .Include(l => l.Agent)
@@ -49,10 +65,17 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
         await context.Database.CommitTransactionAsync();
     }
     
-    public async Task UpdateListingAsync(Listing listing)
+    public async Task UpdateListingAsync(Listing listing, List<string>? tags)
     {
+        if (tags != null)
+        {
+            listing.ListingTags = await context.Tag
+                .Where(t => tags.Contains(t.Name))
+                .ToListAsync();
+        }
+        
         await context.Database.BeginTransactionAsync();
-        context.Listing.Update(listing);
+        //context.Listing.Update(listing);
         await context.SaveChangesAsync();
         await context.Database.CommitTransactionAsync();
     }
