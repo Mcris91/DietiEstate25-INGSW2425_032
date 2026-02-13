@@ -63,6 +63,12 @@ public class OfferController(
     [HttpPut("AcceptOrRejectOffer/{offerId:guid}/{accept:bool}")]
     public async Task<IActionResult> AcceptOrRejectOffer(Guid offerId, bool accept)
     {
+        // offerId - CE1: esiste valido, CE2: non esiste non valido, CE3: null non valido
+        // accept - CE4: true valido, CE5 false valido // accept non può essere null
+        
+        // Test1 - CE1, CE4
+        // Test2 - CE2, CE5
+        
         var offer = await offerRepository.GetOfferByIdAsync(offerId);
         if (offer is null) return NotFound();
 
