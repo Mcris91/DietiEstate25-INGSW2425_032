@@ -3,7 +3,7 @@ using Xunit;
 
 namespace DietiEstate.Tests.Tests;
 
-public class GetOffersByAgentId
+public class GetOffersByAgentIdTests
 {
     
     // Test1 - CE1, CE3, CE6
@@ -66,10 +66,10 @@ public class GetOffersByAgentId
     }
 
     // Metodo sotto test per gestire le casistiche
-    private object Execute(OfferFilterDto filterDto, int pageNumber, int pageSize)
+    private object Execute(OfferFilterDto filter, int pageNumber, int pageSize)
     {
-        if (filterDto == null)
-            throw new ArgumentNullException(nameof(filterDto));
+        if (filter == null)
+            throw new ArgumentNullException(nameof(filter));
         
         if (pageNumber <= 0)
             throw new ArgumentException("Page number must be greater than 0", nameof(pageNumber));

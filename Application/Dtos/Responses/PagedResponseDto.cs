@@ -31,4 +31,5 @@ public record PagedResponseDto<T>
         TotalPages = (int)Math.Ceiling((double)listQuery.Count / PageSize.Value);
         NextPageNumber = PageNumber >= TotalPages ? null : PageNumber + 1;
     }
+    
 }
