@@ -1,9 +1,10 @@
-﻿@page "/View/{ListingId:guid}"
+﻿@page "/View/{ListingId:guid}/{IsFavourite:bool}"
 @using System.Globalization
 @using WebAssemblyClient.ApiService
 @using WebAssemblyClient.Components.Dialogs
 @using WebAssemblyClient.Extensions
 @inject HostAuthenticationStateProvider AuthStateProvider
+@inject FavouritesApiService FavouritesApiService
 @inject ListingApiService ListingApiService
 @inject BookingApiService BookingApiService
 @inject OfferApiService OfferApiService
@@ -53,7 +54,56 @@ else
 {
     <FluentGrid Style="margin: 1rem 3rem;">
         <FluentGridItem xs="12" md="7">
-            <img src="@_listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
+            <div style="position: relative; width: 100%;">
+                <img src="@GetCurrentImageUrl()" 
+                     alt="ListingImage" 
+                     style="object-fit: cover; aspect-ratio: 16/9; width: 100%">
+                
+                <AuthorizeView>
+                    <Authorized>
+                        <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
+                            @if (!IsFavourite)
+                            {
+                                <FluentIcon Value="@(new Icons.Regular.Size24.Heart())" 
+                                            Color="Color.Neutral"
+                                            OnClick="@(() => AddToFavourites(ListingId, true))"
+                                            Style="cursor: pointer;" />
+                            }
+                            else
+                            {
+                                <FluentIcon Value="@(new Icons.Filled.Size24.Heart())" 
+                                            Color="Color.Error"
+                                            OnClick="@(() => AddToFavourites(ListingId, false))"
+                                            Style="cursor: pointer;" />
+                            }
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+                
+                @if (GetAllImages().Count > 1)
+                {
+                    <div style="position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; transform: translateY(-50%); padding: 0 10px;">
+                        <FluentButton Appearance="Appearance.Stealth" 
+                                      OnClick="PrevImage" 
+                                      Style="border-radius: 50%; min-width: 40px; height: 40px;">
+                            <FluentIcon Value="@(new Icons.Regular.Size24.ChevronLeft())" />
+                        </FluentButton>
+
+                        <FluentButton Appearance="Appearance.Stealth" 
+                                      OnClick="NextImage" 
+                                      Style="border-radius: 50%; min-width: 40px; height: 40px;">
+                            <FluentIcon Value="@(new Icons.Regular.Size24.ChevronRight())" />
+                        </FluentButton>
+                    </div>
+
+                    <div style="position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: center; gap: 8px;">
+                        @for (int i = 0; i < GetAllImages().Count; i++)
+                        {
+                            <div style="width: 10px; height: 10px; border-radius: 50%;background: @(_currentImage == i ? "red" : "grey");"></div>
+                        }
+                    </div>
+                }
+            </div>
         </FluentGridItem>
         
         <FluentGridItem xs="12" md="5">
@@ -199,13 +249,15 @@ else
 }
 @code {
     [Parameter] public Guid ListingId { get; set; }
+    [Parameter] public bool IsFavourite { get; set; }
 
     ListingResponseDto? _listing;
     private bool _showAll;
     private bool _makeOffer;
     private bool _makeBooking;
     private IJSObjectReference? _jsModule;
-    private bool _isInitialized = false;
+    private bool _isInitialized;
+    private int _currentImage;
     
     protected override async Task OnInitializedAsync()
     {
@@ -420,5 +472,50 @@ else
             await AuthApiService.Register(registerRequest);
             ToastService.ShowSuccess("Registrazione effettuata con successo!");
         }
+    }
+    
+   
+    private List<string> GetAllImages()
+    {
+        var images = new List<string> { _listing.FeaturedImage };
+        if (_listing.Images != null)
+        {
+            images.AddRange(_listing.Images.Select(img => img.Url));
+        }
+        return images;
+    }
+
+    private string GetCurrentImageUrl()
+    {
+        var allImages = GetAllImages();
+        if (_currentImage >= allImages.Count) _currentImage = 0;
+        return allImages[_currentImage];
+    }
+
+    private void NextImage()
+    {
+        var count = GetAllImages().Count;
+        _currentImage = (_currentImage + 1) % count;
+    }
+
+    private void PrevImage()
+    {
+        var count = GetAllImages().Count;
+        _currentImage = (_currentImage - 1 + count) % count;
+    }
+    
+    private async Task AddToFavourites(Guid listingId, bool favourite)
+    {
+        if (favourite)
+        {
+            await FavouritesApiService.CreateFavouriteAsync(listingId);
+            IsFavourite = true;
+        }
+        else
+        {
+            await FavouritesApiService.RemoveFavouriteAsync(listingId);
+            IsFavourite = false;
+        }
+
     }
 }

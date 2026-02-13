@@ -36,7 +36,7 @@ public class ListingController(
         if (pageNumber <= 0 || pageSize <= 0) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
-        var listings = await listingRepository.GetListingsAsync(filterDto, pageNumber, pageSize);
+        var listings = await listingRepository.GetListingsAsync(filterDto);
         foreach (var listing in listings)
         {
             if (!string.IsNullOrEmpty(listing.FeaturedImage))
@@ -90,7 +90,7 @@ public class ListingController(
         if (pageNumber <= 0 || pageSize <= 0) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
-        var listings = await listingRepository.GetDetailedListingsAsync(filterDto, pageNumber, pageSize);
+        var listings = await listingRepository.GetDetailedListingsAsync(filterDto);
         
         foreach (var listing in listings)
         {
@@ -174,7 +174,7 @@ public class ListingController(
                 return Unauthorized();
         }
         
-        var listings = await listingRepository.GetListingsAsync( filters, null, null);
+        var listings = await listingRepository.GetDetailedListingsAsync(filters);
 
         var forRentType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("RENT");
         var forSaleType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("SALE");
@@ -252,11 +252,14 @@ public class ListingController(
             return Unauthorized();
 
         var oldListingAddress = listing.Address;
-        var oldImageUrl = listing.FeaturedImage;
+        var oldFeatuerdImageUrl = listing.FeaturedImage;
+        
         
         mapper.Map(listingDto, listing);
         listing.Id = listingId;
         listing.AgentUserId = User.GetUserId();
+
+        listing.ListingImages = listing.ListingImages.Where(i => listingDto.Images.Select(image => image.Id).Contains(i.Id)).ToList();
         
         
         if (listingDto.FeaturedImage.Length > 0)
@@ -269,12 +272,32 @@ public class ListingController(
             catch (Exception)
             {
                 return BadRequest("L'immagine di copertina non è stata caricata");
-
             }
         }
         else
         {
-            listing.FeaturedImage = oldImageUrl;
+            listing.FeaturedImage = oldFeatuerdImageUrl;
+        }
+        
+        foreach (var image in listingDto.Images)
+        {
+            Console.WriteLine($"Url dell'immagine:{image.PreviewUrl}");
+            if (image.Image.Length > 0)
+            {
+                using var imageStream = new MemoryStream(image.Image);
+                var newImage = new Image();
+                try
+                {
+                    newImage.Url = await minioService.UploadImageAsync(imageStream, listing.Id, Guid.NewGuid());
+                }
+                catch (Exception)
+                {
+                    return BadRequest("L'immagine non è stata caricata");
+                }
+                listing.ListingImages.Add(newImage);
+            }
+            
+            
         }
         
         if (!string.Equals(oldListingAddress, listing.Address))
@@ -327,7 +350,7 @@ public class ListingController(
     [HttpGet("GetReport/{agentId:guid}")]
     public async Task<IActionResult> GetReport(Guid agentId)
     {
-        IList<Listing> listings = (IList<Listing>)await listingRepository.GetListingsAsync(new ListingFilterDto(){AgentId = agentId}, 0, 1000);
+        IList<Listing> listings = (IList<Listing>)await listingRepository.GetListingsAsync(new ListingFilterDto(){AgentId = agentId});
         var report = await excelService.GetReportForAgent(listings);
         
         return File(report, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report.xlsx"); 

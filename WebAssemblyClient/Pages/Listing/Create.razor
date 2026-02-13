@@ -103,8 +103,8 @@
                     
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
                         <FluentTextArea Name="Description" Label="Descrizione" 
-                                      @bind-Value="_listingRequestDto.Description" Required
-                                      Style="width: 100%;" Rows="5"/>
+                                        @bind-Value="_listingRequestDto.Description" Required
+                                        Style="width: 100%;" Rows="5"/>
                         <FluentValidationMessage For="@(() => _listingRequestDto.Description)"/>
                     </FluentStack>
                     
@@ -115,47 +115,85 @@
     
     <FluentGridItem xs="12" sm="12" md="4">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
-          
             <FluentCard>
-                <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="24">
+                    
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
                         <FluentLabel Typo="Typography.H4">Immagini</FluentLabel>
                         <FluentLabel Typo="Typography.Body">Carica le immagini dell'immobile</FluentLabel>
                     </FluentStack>
                     
                     <FluentInputFile @ref="_coverFileUpload"
                                      Mode="InputFileMode.Stream"
-                                     AnchorId="cover-file-upload"                 
+                                     AnchorId="cover-upload"
                                      DragDropZoneVisible="false"
                                      MaximumFileCount="1"
-                                     MaximumFileSize="@(10*1024*1024)"
+                                     MaximumFileSize="@(5*1024*1024)"
                                      Accept="image/*"
-                                     OnFileUploaded="@OnCoverFileUploaded"
                                      OnCompleted="@OnCoverFileUploadComplete"/>
                     @if (!_isCoverUploaded)
                     {
-                        <FluentStack Orientation="Orientation.Vertical">
-                            <FluentLabel Typo="Typography.Body">Scegli un'immagine di copertina: </FluentLabel>
-                            <FluentButton Id="cover-file-upload" IconStart="@(new Icons.Regular.Size20.ArrowUpload())">Carica</FluentButton>
-                        </FluentStack>
-                      
-                        <FluentProgress Min="0" Max="100" Visible="@(_coverUploadProgressPercent > 0)" Value="@_coverUploadProgressPercent" />
-                        @if (_coverUploadProgressPercent > 0)
-                        {
-                            <FluentLabel Alignment="HorizontalAlignment.Center">
-                                @_coverUploadProgressTitle
-                            </FluentLabel>
-                        }
+                        <FluentInputFile @ref="_coverFileUpload"
+                                         Mode="InputFileMode.Stream"
+                                         AnchorId="cover-upload"
+                                         DragDropZoneVisible="false"
+                                         MaximumFileCount="1"
+                                         MaximumFileSize="@(5*1024*1024)"
+                                         Accept="image/*"
+                                         OnCompleted="@OnCoverFileUploadComplete"/>
+    
+                        <FluentButton Id="cover-upload" 
+                                      Appearance="Appearance.Accent"
+                                      IconStart="@(new Icons.Regular.Size20.Image())">
+                            Scegli immagine di copertina
+                        </FluentButton>
                     }
                     else
                     {
-                        <FluentStack Orientation="Orientation.Vertical">
-                            <FluentLabel Typo="Typography.Body">Immagine di copertina caricata:</FluentLabel>
-                            <img id="cover-file-upload" src="@_coverFile" alt="Cover Image" width="100%" height="auto" style="cursor: pointer;" role="button" tabindex="0"/>
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                            <img Id="cover-upload"
+                                 src="@_coverFile" 
+                                 style="width: 100%; border-radius: 8px; cursor: pointer" 
+                                 alt="Immagine di copertina"/>
+
+                            <FluentDivider/>
+                            
+                            <FluentInputFile Mode="InputFileMode.Stream"
+                                             AnchorId="gallery-upload"
+                                             Multiple="true"
+                                             MaximumFileCount="10"
+                                             MaximumFileSize="@(5*1024*1024)"
+                                             DragDropZoneVisible="false"
+                                             Accept="image/*"
+                                             OnCompleted="@OnGalleryFilesUploaded"/>
+                            
+                            <FluentButton Id="gallery-upload" 
+                                          IconStart="@(new Icons.Regular.Size20.ImageMultiple())">
+                                Aggiungi altre immagini
+                            </FluentButton>
+                            
+                            @if (_listingRequestDto.Images.Any())
+                            {
+                                <FluentGrid>
+                                    @foreach (var img in _listingRequestDto.Images)
+                                    {
+                                        <FluentGridItem md="3">
+                                            <div style="position: relative;">
+                                                <img src="@img.PreviewUrl" 
+                                                     style="width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px" 
+                                                     alt=""/>
+                                                <FluentButton Appearance="Appearance.Lightweight"
+                                                              IconEnd="@(new Icons.Regular.Size16.Dismiss())"
+                                                              Style="position: absolute; top: 4px; right: 4px"
+                                                              OnClick="@(() => RemoveGalleryImage(img))"/>
+                                            </div>
+                                        </FluentGridItem>
+                                    }
+                                </FluentGrid>
+                            }
                         </FluentStack>
                     }
                 </FluentStack>
-              
             </FluentCard>
             
             <FluentCard>
@@ -164,19 +202,18 @@
             
             <FluentCard>
                 <FluentButton Appearance="Appearance.Accent" Style="width: 100%;"
-                            OnClick="@SaveListingAsync">Salva</FluentButton>
+                              OnClick="@SaveListingAsync">Salva</FluentButton>
             </FluentCard>
         </FluentStack>
     </FluentGridItem>
 </FluentGrid>
+
 
 @code {
     [Parameter]
     public Guid ListingId { get; set; }
 
     private FluentInputFile? _coverFileUpload;
-    private int? _coverUploadProgressPercent;
-    private string? _coverUploadProgressTitle;
     private bool _isCoverUploaded;
     private string _coverFile;
     private FluentInputFile? _galleryFileUpload;
@@ -185,6 +222,31 @@
 
 
     private ListingRequestDto _listingRequestDto = new();
+
+    private async Task OnGalleryFilesUploaded(IEnumerable<FluentInputFileEventArgs> files)
+    {
+        foreach (var file in files)
+        {
+            using var memoryStream = new MemoryStream();
+            await file.Stream!.CopyToAsync(memoryStream);
+            var bytes = memoryStream.ToArray();
+
+            var base64 = Convert.ToBase64String(bytes);
+            _listingRequestDto.Images.Add(
+                new ListingImageRequestDto
+            {
+            Image = bytes.ToArray(), 
+            PreviewUrl =  $"data:{file.ContentType};base64,{base64}"
+            });
+
+        }
+        StateHasChanged();
+    }
+
+    private void RemoveGalleryImage(ListingImageRequestDto img)
+    {
+        _listingRequestDto.Images.Remove(img);
+    }
 
     private readonly List<Option<string>> _energyClasses =
     [
@@ -233,22 +295,19 @@
 
         StateHasChanged();
     }
-
-    private async Task OnCoverFileUploaded(FluentInputFileEventArgs file)
+    
+    private async Task OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
     {
-        var ms = new MemoryStream();
-        await file.Stream!.CopyToAsync(ms);
+        var file = files.FirstOrDefault();
+        if (file?.Stream == null) return;
+    
+        using var ms = new MemoryStream();
+        await file.Stream.CopyToAsync(ms);
         var bytes = ms.ToArray();
 
         _coverFile = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
         _listingRequestDto.FeaturedImage = bytes;
         _isCoverUploaded = true;
-    }
-
-    void OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
-    {
-        _coverUploadProgressPercent = _coverFileUpload!.ProgressPercent;
-        _coverUploadProgressTitle = _coverFileUpload!.ProgressTitle;
     }
 
     private async Task SaveListingAsync()

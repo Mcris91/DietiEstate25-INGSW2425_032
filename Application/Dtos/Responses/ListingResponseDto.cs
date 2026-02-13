@@ -34,7 +34,7 @@ public class ListingResponseDto
     
     public bool Elevator { get; set; }
 
-    public required string Type { get; init; }
+    public required ListingTypeDto Type { get; init; }
     
     public UserResponseDto Agent { get; init; }
 

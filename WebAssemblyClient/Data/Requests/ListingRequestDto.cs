@@ -61,7 +61,7 @@ public class ListingRequestDto
     [Required(ErrorMessage = "Seleziona la tipologia dell'immobile")]
     public string TypeCode { get; set; } = string.Empty;
     
-    //public List<ListingImageRequestDto> Images { get; set; } = [];
+    public List<ListingImageRequestDto> Images { get; set; } = [];
 
     public List<ListingServiceDto> Services { get; set; } = [];
 

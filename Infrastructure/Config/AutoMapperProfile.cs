@@ -44,7 +44,8 @@ public class AutoMapperProfile : Profile
         
         // Listing
         CreateMap<ListingRequestDto, Listing>().ForMember(listing => listing.Location, opt => 
-            opt.MapFrom(src => new Point(src.Longitude, src.Latitude) { SRID = 4326 }));
+            opt.MapFrom(src => new Point(src.Longitude, src.Latitude) { SRID = 4326 }))
+            .ForMember(dest => dest.ListingImages, opt => opt.Ignore());
         CreateMap<Listing, ListingResponseDto>()
             .ForMember(listingDto => listingDto.Latitude, opt => 
                 opt.MapFrom(src => src.Location.Y))

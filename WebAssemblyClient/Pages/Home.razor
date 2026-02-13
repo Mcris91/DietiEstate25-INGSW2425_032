@@ -65,7 +65,7 @@
                     {
                         @foreach (var listing in _listings.Items)
                         {
-                            <FluentCard @onclick="@(() => Navigator.NavigateTo($"View/{listing.Id}"))" Style="cursor: pointer">
+                            <FluentCard @onclick="@(() => Navigator.NavigateTo($"View/{listing.Id}/{_favouriteListings.Contains(listing.Id)}"))" Style="cursor: pointer">
                                 <FluentStack Orientation="Orientation.Vertical">
                                     <img src="@listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
                                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">

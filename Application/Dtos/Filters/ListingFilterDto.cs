@@ -22,9 +22,9 @@ public class ListingFilterDto
 
     public decimal? MaxSize { get; init; }
 
-    public double? Latitude { get; set; }
+    public double? Latitude { get; set; } = 41.9028;
 
-    public double? Longitude { get; set; } 
+    public double? Longitude { get; set; } = 12.4964;
 
     public string EnergyClass { get; init; } = string.Empty;
 

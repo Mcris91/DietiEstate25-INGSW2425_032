@@ -267,7 +267,7 @@
 
   private async Task<PagedResponseDto<ListingResponseDto>> GetListingData(int? pageNumber, int? pageSize)
   {
-    return await ListingApiService.GetListingsAsync(_filters, pageNumber, pageSize);
+    return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
   }
 
   private void OnListingRowClick(ListingResponseDto listing)

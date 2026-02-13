@@ -5,7 +5,7 @@ namespace DietiEstate.Core.Entities.Common;
 public class Image
 {
     [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
 
     [Required]
     [Url]

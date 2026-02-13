@@ -10,7 +10,7 @@ namespace DietiEstate.Infrastructure.Repositories;
 
 public class ListingRepository(DietiEstateDbContext context) : IListingRepository
 {
-    public async Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters)
     {
         return await context.Listing
             .Include(l => l.Type)
@@ -29,7 +29,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             .Where(l => listingIdsList.Contains(l.Id))
             .ToListAsync();
     }
-    public async Task<IEnumerable<Listing>> GetDetailedListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
+    public async Task<IEnumerable<Listing>> GetDetailedListingsAsync(ListingFilterDto filters)
     {
         return await context.Listing
             .Include(l => l.Type)

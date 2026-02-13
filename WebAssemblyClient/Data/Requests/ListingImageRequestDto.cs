@@ -2,6 +2,8 @@
 
 public class ListingImageRequestDto
 {
-    public required byte[] Image { get; set; } = [];
-
+    public Guid? Id { get; set; }
+    public byte[] Image { get; set; } = [];
+    
+    public string PreviewUrl { get; set; } = string.Empty;
 }
