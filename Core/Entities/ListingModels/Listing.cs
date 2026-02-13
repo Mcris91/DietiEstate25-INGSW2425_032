@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Entities.Common;
+using DietiEstate.Core.Entities.FavouritesModels;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using NetTopologySuite.Geometries;
@@ -89,4 +90,6 @@ public class Listing
 
 
     public virtual ICollection<Booking> ListingBookings { get; set; } = [];
+    
+    public virtual ICollection<Favourite> ListingFavourites { get; set; } = [];
 }

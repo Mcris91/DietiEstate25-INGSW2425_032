@@ -48,6 +48,8 @@ public class BookingRepository(DietiEstateDbContext context) : IBookingRepositor
     public async Task<IEnumerable<Booking?>> GetBookingByClientIdAsync(Guid clientId, BookingFilterDto filterDto, int? pageNumber, int? pageSize)
     {
         return await context.Booking
+            .Where(b => b.ClientId == clientId)
+            .Include(b => b.Listing)
             .ApplyFilters(filterDto)
             .ApplySorting(filterDto.SortBy, filterDto.SortOrder)
             .ToListAsync();

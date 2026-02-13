@@ -46,23 +46,24 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
     }
     
     public async Task<PagedResponseDto<OfferResponseDto>> GetOffersByCustomerIdAsync(
-        Guid customerId,
         OfferFilterDto filterDto,
         int? pageNumber,
         int? pageSize)
     {
-        var query = new Dictionary<string, string?>
+        var queryString = filterDto.ToQueryString();
+        if (pageNumber.HasValue)
         {
-            ["ListingName"] = filterDto.ListingName,
-            ["Value"] = filterDto.Value.ToString(),
-            ["Date"] = filterDto.Date.ToString(),
-            ["Status"] = filterDto.Status.ToString(),
-            ["SortBy"] = filterDto.SortBy,
-            ["SortOrder"] = filterDto.SortOrder,
-            ["pageNumber"] = pageNumber.ToString(),
-            ["pageSize"] = pageSize.ToString(),
-        };
-        var uri = QueryHelpers.AddQueryString($"api/v1/Offer/GetByCustomerId/{customerId}", query);
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageNumber={pageNumber.Value}";
+        }
+
+        if (pageSize.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageSize={pageSize.Value}";
+        }
+
+        var uri = $"GetByCustomerId/{queryString}";
         return await GetAsync<PagedResponseDto<OfferResponseDto>>(uri);
     }
     

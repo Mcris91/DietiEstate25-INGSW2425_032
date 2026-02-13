@@ -31,6 +31,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
 
 builder.Services.AddApiService<ListingApiService>(apiBaseUrl, "Listing");
 builder.Services.AddApiService<PropertyTypeApiService>(apiBaseUrl, "PropertyType");
+builder.Services.AddApiService<FavouritesApiService>(apiBaseUrl, "Favourites");
 builder.Services.AddApiService<OfferApiService>(apiBaseUrl, "Offer");
 builder.Services.AddApiService<BookingApiService>(apiBaseUrl, "Booking");
 builder.Services.AddApiService<AuthApiService>(apiBaseUrl, "Auth");

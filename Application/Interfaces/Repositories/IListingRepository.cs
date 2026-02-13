@@ -9,6 +9,7 @@ public interface IListingRepository
     
     Task<IEnumerable<Listing>> GetListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize);
 
+    Task<IEnumerable<Listing>> GetRecentListingsAsync(List<Guid> listingIdsList);    
     Task<Listing?> GetListingByIdAsync(Guid listingId);
 
     Task AddListingAsync(Listing listing, List<string> tags);

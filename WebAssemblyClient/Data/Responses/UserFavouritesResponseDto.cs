@@ -1,8 +1,8 @@
-namespace DietiEstate.Application.Dtos.Responses;
+﻿namespace WebAssemblyClient.Data.Responses;
 
 public class UserFavouritesResponseDto
 {
-    public required Guid ListingId { get; set; }
+    public Guid ListingId { get; set; }
     
     public required string ListingName { get; set; }
     

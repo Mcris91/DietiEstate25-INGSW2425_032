@@ -16,7 +16,23 @@ public class AutoMapperProfile : Profile
     public AutoMapperProfile()
     {
         // Favourite
-        CreateMap<Listing, UserFavouritesResponseDto>();
+        CreateMap<Listing, UserFavouritesResponseDto>()
+            .ForMember(favouriteDto => favouriteDto.ListingId, opt =>
+                opt.MapFrom(src => src.Id))
+            .ForMember(favouriteDto => favouriteDto.ListingName, opt =>
+                opt.MapFrom(src => src.Name))
+            .ForMember(favouriteDto => favouriteDto.ListingAddress, opt =>
+                opt.MapFrom(src => src.Address))
+            .ForMember(favouriteDto => favouriteDto.ListingPrice, opt =>
+                opt.MapFrom(src => src.Price))
+            .ForMember(favouriteDto => favouriteDto.ListingFeaturedImage, opt =>
+                opt.MapFrom(src => src.FeaturedImage))
+            .ForMember(favouriteDto => favouriteDto.ListingEnergyClass, opt =>
+                opt.MapFrom(src => src.EnergyClass))
+            .ForMember(favouriteDto => favouriteDto.ListingDimensions, opt =>
+                opt.MapFrom(src => src.Dimensions))
+            .ForMember(favouriteDto => favouriteDto.ListingTags, opt =>
+                opt.MapFrom(src => src.ListingTags.Select(t => t.Text)));
         
         // User
         CreateMap<UserRequestDto, User>();
@@ -85,6 +101,8 @@ public class AutoMapperProfile : Profile
                 opt.MapFrom(src => src.Customer.LastName))
             .ForMember(offerDto => offerDto.CustomerEmail, opt => 
                 opt.MapFrom(src => src.Customer.Email))
+            .ForMember(offerDto => offerDto.AgentEmail, opt => 
+                opt.MapFrom(src => src.Listing.OwnerEmail))
             .ForMember(offerDto => offerDto.ListingName, opt => 
                 opt.MapFrom(src => src.Listing.Name))
             .ForMember(offerDto => offerDto.ListingPrice, opt => 
@@ -97,11 +115,13 @@ public class AutoMapperProfile : Profile
         CreateMap<Booking, BookingResponseDto>()
             .ForMember(bookingDto => bookingDto.CustomerName, opt => 
                 opt.MapFrom(src => src.Client.FirstName))
-            .ForMember(offerDto => offerDto.CustomerLastName, opt => 
+            .ForMember(bookingDto => bookingDto.CustomerLastName, opt => 
                 opt.MapFrom(src => src.Client.LastName))
-            .ForMember(offerDto => offerDto.CustomerEmail, opt => 
+            .ForMember(bookingDto => bookingDto.CustomerEmail, opt => 
                 opt.MapFrom(src => src.Client.Email))
-            .ForMember(offerDto => offerDto.ListingName, opt => 
+            .ForMember(bookingDto => bookingDto.AgentEmail, opt => 
+                opt.MapFrom(src => src.Listing.OwnerEmail))
+            .ForMember(bookingDto => bookingDto.ListingName, opt => 
                 opt.MapFrom(src => src.Listing.Name));
     }
 }

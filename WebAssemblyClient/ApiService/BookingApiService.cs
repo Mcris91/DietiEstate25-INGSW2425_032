@@ -29,8 +29,28 @@ public class BookingApiService(HttpClient httpClient, JsonSerializerOptions json
             queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
             queryString += $"pageSize={pageSize.Value}";
         }
-
         var uri = $"GetByAgentId/{queryString}";
+        return await GetAsync<PagedResponseDto<BookingResponseDto>>(uri);
+    }
+    
+    public async Task<PagedResponseDto<BookingResponseDto>> GetBookingsByClientIdAsync(
+        BookingFilterDto filterDto,
+        int? pageNumber,
+        int? pageSize)
+    {
+        var queryString = filterDto.ToQueryString();
+        if (pageNumber.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageNumber={pageNumber.Value}";
+        }
+
+        if (pageSize.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageSize={pageSize.Value}";
+        }
+        var uri = $"GetByClientId/{queryString}";
         return await GetAsync<PagedResponseDto<BookingResponseDto>>(uri);
     }
     

@@ -3,6 +3,7 @@
 @using WebAssemblyClient.ApiService
 @using WebAssemblyClient.Components.Dialogs
 @inject ListingApiService ListingApiService
+@inject FavouritesApiService FavouritesApiService
 @inject NavigationManager Navigator
 @inject IJSRuntime JsRuntime
 @inject IDialogService DialogService
@@ -71,8 +72,28 @@
                                         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
                                             @foreach (var tag in listing.Tags)
                                             {
-                                                <FluentBadge BackgroundColor="black" Circular="true">@tag.Text</FluentBadge>
+                                                <FluentBadge Circular="true">@tag.Text</FluentBadge>
                                             }
+                                            <AuthorizeView>
+                                                <Authorized>
+                                                    <span @onclick:stopPropagation="true">
+                                                        @if (!_favouriteListings.Contains(listing.Id))
+                                                        {
+                                                            <FluentIcon Value="@(new Icons.Regular.Size24.Heart())" 
+                                                                        Color="Color.Neutral"
+                                                                        OnClick="@(() => AddToFavourites(listing.Id, true))"
+                                                                        Style="cursor: pointer;" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <FluentIcon Value="@(new Icons.Filled.Size24.Heart())" 
+                                                                        Color="Color.Error"
+                                                                        OnClick="@(() => AddToFavourites(listing.Id, false))"
+                                                                        Style="cursor: pointer;" />
+                                                        }
+                                                    </span>
+                                                </Authorized>
+                                            </AuthorizeView>
                                         </FluentStack>
                                         <FluentLabel Typo="Typography.H4">@listing.Name</FluentLabel>
                                         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
@@ -105,7 +126,6 @@
                     }
                 </FluentStack>
             </div>
-            
             <FluentStack Orientation="Orientation.Horizontal">
             @if (_listings != null)
             {
@@ -132,6 +152,7 @@
     private double _lat = 41.9028;
     private double _lon = 12.4964;
     private readonly ListingFilterDto _filters = new();
+    private IList<Guid> _favouriteListings = [];
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -146,9 +167,10 @@
                 _lon = location[1];
             }
             _filters.Latitude = _lat;
-            _filters.Longitude = _lon;            
-            
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, PageSize);
+            _filters.Longitude = _lon;
+
+            _favouriteListings = await FavouritesApiService.GetFavouritesIdList();
+            _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
             StateHasChanged();
             
             await _jsModule.InvokeVoidAsync("setupMap", "map", _lat, _lon);
@@ -180,7 +202,7 @@
             _filters.Latitude = _lat;
             _filters.Longitude = _lon;            
             
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,1, PageSize);
+            _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
             StateHasChanged();
         }
     }
@@ -215,7 +237,7 @@
         if (filterResult.Data is not null && !filterResult.Cancelled)
         {
             ListingFilterDto? filter = filterResult.Data as ListingFilterDto;
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(filter,1, PageSize);
+            _listings = await ListingApiService.GetListingsAsync(filter,1, PageSize);
             await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
              
             if (_listings != null)
@@ -231,7 +253,7 @@
     {
         if (_listings != null && _listings.PageNumber != pageIndex)
         {
-            _listings = await ListingApiService.GetListingsByAgentIdAsync(_filters,pageIndex, PageSize);
+            _listings = await ListingApiService.GetListingsAsync(_filters,pageIndex, PageSize);
             if (_listings != null)
                 await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
 
@@ -245,4 +267,18 @@
 
     private Appearance PageButtonAppearance(int pageIndex)
         => _listings.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
+
+    private async Task AddToFavourites(Guid listingId, bool favourite)
+    {
+        if (favourite)
+        {
+            _favouriteListings.Add(listingId);
+            await FavouritesApiService.CreateFavouriteAsync(listingId);
+        }
+        else
+        {
+            _favouriteListings.Remove(listingId);
+            await FavouritesApiService.RemoveFavouriteAsync(listingId);
+        }
+    }
 }

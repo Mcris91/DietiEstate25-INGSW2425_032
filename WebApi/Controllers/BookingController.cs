@@ -109,14 +109,15 @@ public class BookingController(
         return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select(mapper.Map<BookingResponseDto>), pageSize, pageNumber));
     }
 
-    [HttpGet("GetByClientId/{clientId:guid}")]
-
+    [HttpGet("GetByClientId")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByClientId(
-        Guid clientId,
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
         [FromQuery]  int? pageSize)
     {
+        var clientId = User.GetUserId();
+        if (clientId == Guid.Empty)
+            return Unauthorized();
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
@@ -124,7 +125,7 @@ public class BookingController(
             return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
         
         var bookings = await bookingRepository.GetBookingByClientIdAsync(clientId, filterDto, pageNumber,pageSize);
-        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select( mapper.Map<BookingResponseDto>), pageNumber, pageSize));
+        return Ok(new PagedResponseDto<BookingResponseDto>(bookings.ToList().Select( mapper.Map<BookingResponseDto>), pageSize, pageNumber));
     }
 
     [HttpPost]

@@ -14,18 +14,21 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
     {
         return await context.Listing
             .Include(l => l.Type)
-            //.Include(l => l.ListingServices)
             .Include(l => l.ListingTags)
-            //.Include(l => l.ListingImages)
-            //.Include(l => l.ListingOffers)
-            //.Include(l => l.ListingBookings)
-            //.Include(l => l.Agent)
             .ApplyFilters(filters)
             .ApplyNumericFilters(filters)
             .ApplySorting(filters.SortBy, filters.SortOrder, new Point(filters.Longitude.Value, filters.Latitude.Value) { SRID = 4326 })
             .ToListAsync();
     }
-    
+
+    public async Task<IEnumerable<Listing>> GetRecentListingsAsync(List<Guid> listingIdsList)
+    {
+        return await context.Listing
+            .Include(l => l.Type)
+            .Include(l => l.ListingTags)
+            .Where(l => listingIdsList.Contains(l.Id))
+            .ToListAsync();
+    }
     public async Task<IEnumerable<Listing>> GetDetailedListingsAsync(ListingFilterDto filters, int? pageNumber, int? pageSize)
     {
         return await context.Listing

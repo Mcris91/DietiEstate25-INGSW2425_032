@@ -18,9 +18,10 @@ public class FavouritesRepository(
         return await context.Favourites
             .Where(f => f.UserId == userId)
             .Include(f => f.Listing)
+            .ThenInclude(l => l.ListingTags)
             .ToListAsync();
     }
-
+    
     public async Task CreateFavouriteAsync(Favourite favourite)
     {
         await context.Database.BeginTransactionAsync();

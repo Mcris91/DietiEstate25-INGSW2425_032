@@ -17,8 +17,13 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         var uri = $"{listingId}";
         return await GetAsync<ListingResponseDto>(uri);
     }
+
+    public async Task IncrementListingViews(Guid listingId)
+    {
+        await httpClient.PatchAsync($"IncrementViews/{listingId}", null);
+    }
     
-    public async Task<PagedResponseDto<ListingResponseDto>> GetListingsByAgentIdAsync(
+    public async Task<PagedResponseDto<ListingResponseDto>> GetListingsAsync(
         ListingFilterDto filterDto,
         int? pageNumber,
         int? pageSize)
@@ -39,13 +44,56 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         var uri = queryString;
         return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
     }
-
-    public async Task<ListingAgentCountersResponseDto> GetListingAgentCountersAsync(Guid? agentId)
+    
+    public async Task<PagedResponseDto<ListingResponseDto>> GetListingsByAgentIdAsync(
+        ListingFilterDto filterDto,
+        int? pageNumber,
+        int? pageSize)
     {
-        if (agentId == null)
-            throw new ArgumentException("AgentId cannot be null.", nameof(agentId));
+        var queryString = filterDto.ToQueryString();
+        if (pageNumber.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageNumber={pageNumber.Value}";
+        }
+
+        if (pageSize.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageSize={pageSize.Value}";
+        }
         
-        var uri = $"GetAgentCounters/{agentId}";
+        var uri = $"Dashboard/{queryString}";
+        return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
+    }
+    
+    
+    public async Task<PagedResponseDto<ListingResponseDto>> GetGetRecentListingsAsync(IList<Guid> listingIds,
+        int? pageNumber,
+        int? pageSize)
+    {
+        var queryString = string.Join("&", listingIds.Select(id => $"listingIdsList={id}"));
+        if (pageNumber.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageNumber={pageNumber.Value}";
+        }
+
+        if (pageSize.HasValue)
+        {
+            queryString += string.IsNullOrEmpty(queryString) ? "?" : "&";
+            queryString += $"pageSize={pageSize.Value}";
+        }
+        
+        var uri = $"RecentListings?{queryString}";
+        return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
+    }
+    
+
+    public async Task<ListingAgentCountersResponseDto> GetListingAgentCountersAsync()
+    {
+
+        var uri = "GetAgentCounters";
         return await GetAsync<ListingAgentCountersResponseDto>(uri);
     }
 

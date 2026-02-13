@@ -8,14 +8,16 @@
 @inject IToastService ToastService
 
 <FluentDesignTheme Mode="@Mode" CustomColor="#EF4444" StorageName="theme"/>
+<FluentAnchor Href="/" Appearance="Appearance.Outline">Home</FluentAnchor>
+
 <AuthorizeView>
     <Authorized>
         @if (context.User.IsInRole("EstateAgent") || context.User.IsInRole("SystemAdmin") || context.User.IsInRole("SuperAdmin") || context.User.IsInRole("SupportAdmin"))
         {
-            <FluentAnchor Href="/agent/dashboard" Appearance="Appearance.Stealth">Dashboard</FluentAnchor>
-            <FluentAnchor Href="/agent/calendar" Appearance="Appearance.Outline">Calendario</FluentAnchor>
-            <FluentAnchor Href="/agent/offers" Appearance="Appearance.Outline">Offerte</FluentAnchor>
-            <FluentAnchor Href="/agent/listings" Appearance="Appearance.Outline">Inserzioni</FluentAnchor>
+            <FluentAnchor Href="/agent/dashboard" Appearance="Appearance.Outline">Dashboard</FluentAnchor>
+        }else if (context.User.IsInRole("Client"))
+        {
+            <FluentAnchor Href="/client/activities" Appearance="Appearance.Outline">Le mie attività</FluentAnchor>
         }
 
         <FluentProfileMenu Image=""

@@ -210,11 +210,14 @@ else
     protected override async Task OnInitializedAsync()
     {
         _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/ViewListing.js");
+
+        var user = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
         
-        var shouldIncreaseViews = await JsRuntime.InvokeAsync<bool>("shouldUpdateView", ListingId.ToString());
+        var shouldIncreaseViews = await JsRuntime.InvokeAsync<bool>("shouldUpdateView", userId, ListingId.ToString());
         if (shouldIncreaseViews)
         {
-            
+            await ListingApiService.IncrementListingViews(ListingId);
         }
         
         _listing = await ListingApiService.GetListingByIdAsync(ListingId);

@@ -6,6 +6,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DietiEstate.WebApi.Controllers;
@@ -158,13 +159,16 @@ public class OfferController(
     }
     
     //customer
-    [HttpGet("GetByCustomerId/{customerId:guid}")]
+    [HttpGet("GetByCustomerId")]
     public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOffersByCustomerId(
-        Guid customerId,
         [FromQuery] OfferFilterDto filterDto,
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
+        var customerId = User.GetUserId();
+        if (customerId == Guid.Empty)
+            return Unauthorized();
+        
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 

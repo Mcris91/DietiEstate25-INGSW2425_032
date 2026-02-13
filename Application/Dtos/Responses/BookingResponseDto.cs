@@ -12,6 +12,8 @@ public class BookingResponseDto
     
     public string CustomerEmail { get; init; } = string.Empty;
     
+    public string AgentEmail { get; init; } = string.Empty;
+    
     public string ListingName { get; init; } = string.Empty;
     
     public DateTime DateCreation { get; init; }

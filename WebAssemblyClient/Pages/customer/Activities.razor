@@ -1,0 +1,377 @@
+﻿@page "/client/activities"
+@using System.Globalization
+@using WebAssemblyClient.ApiService
+@using WebAssemblyClient.Data.Common
+@using WebAssemblyClient.Extensions
+@inject OfferApiService OfferApiService
+@inject BookingApiService BookingApiService
+@inject ListingApiService ListingApiService
+@inject FavouritesApiService FavouritesApiService
+@inject NavigationManager Navigator
+@inject IJSRuntime JsRuntime
+@inject HostAuthenticationStateProvider AuthStateProvider
+<FluentGrid Spacing="2" Style="margin: 1rem 3rem;">
+    <FluentGridItem xs="12">
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentLabel Typo="Typography.H2">Recenti</FluentLabel>
+            <FluentStack Orientation="Orientation.Horizontal">
+                @if (_recentListings == null)
+                {
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                } 
+                else if (!_recentListings.Items.Any())
+                {
+                    <FluentMessageBar Intent="@MessageIntent.Info" AllowDismiss="false">
+                        Non hai ancora visualizzato alcun immobile
+                    </FluentMessageBar>
+                }
+                else
+                {
+                    <FluentGrid>
+                    @foreach (var listing in _recentListings.Items)
+                    {
+                        <FluentGridItem xs="6" md="4">
+                            <FluentCard @onclick="@(() => Navigator.NavigateTo($"View/{listing.Id}"))" Style="cursor: pointer">
+                                <FluentStack Orientation="Orientation.Vertical">
+                                    <img src="@listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
+                                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
+                                            @foreach (var tag in listing.Tags)
+                                            {
+                                                <FluentBadge Circular="true">@tag.Text</FluentBadge>
+                                            }
+                                            <AuthorizeView>
+                                                <Authorized>
+                                                    <span @onclick:stopPropagation="true">
+                                                        @if (!_favouriteListingIds.Contains(listing.Id))
+                                                        {
+                                                            <FluentIcon Value="@(new Icons.Regular.Size24.Heart())" 
+                                                                        Color="Color.Neutral"
+                                                                        OnClick="@(() => AddToFavourites(listing.Id, true))"
+                                                                        Style="cursor: pointer;" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <FluentIcon Value="@(new Icons.Filled.Size24.Heart())" 
+                                                                        Color="Color.Error"
+                                                                        OnClick="@(() => AddToFavourites(listing.Id, false))"
+                                                                        Style="cursor: pointer;" />
+                                                        }
+                                                    </span>
+                                                </Authorized>
+                                            </AuthorizeView>
+                                        </FluentStack>
+                                        <FluentLabel Typo="Typography.H4">@listing.Name</FluentLabel>
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                            <FluentLabel Typo="Typography.Body">@listing.Address</FluentLabel>
+                                            <FluentBadge BackgroundColor="black" Circular="true">@listing.Price.ToString("C", new CultureInfo("it-IT"))</FluentBadge>
+                                        </FluentStack>
+                                    </FluentStack>
+
+                                    <FluentDivider Style="width: 100%; color: black"></FluentDivider>
+
+                                    <FluentStack Orientation="Orientation.Horizontal">
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.ArrowMaximize())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.Dimensions Mq</FluentLabel>
+                                        </FluentStack>
+
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.Flash())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.EnergyClass </FluentLabel>
+                                        </FluentStack>
+
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                            <FluentIcon Value="@(new Icons.Regular.Size24.Door())" Color="Color.Neutral"/>
+                                            <FluentLabel> @listing.Rooms stanze</FluentLabel>
+                                        </FluentStack>
+                                    </FluentStack>
+                                </FluentStack>
+                            </FluentCard>
+                        </FluentGridItem>
+                    }
+                    </FluentGrid>
+                }
+            </FluentStack>
+            @if (_recentListings != null)
+            {
+                @for (var pageIndex = 1; pageIndex <= _recentListings.TotalPages; pageIndex++)
+                {
+                    var capturedIndex = pageIndex;
+                    <FluentButton @onclick="@(() => GoToRecentPageAsync(capturedIndex))"
+                                  Appearance="@RecentPageButtonAppearance(capturedIndex)">
+                        @(capturedIndex)
+                    </FluentButton>
+                }
+            }
+        </FluentStack>
+    </FluentGridItem>
+    <FluentGridItem xs="12">
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentLabel Typo="Typography.H2">Preferiti</FluentLabel>
+            <FluentStack Orientation="Orientation.Horizontal">
+                @if (_favouriteListings == null)
+                {
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                    <FluentCard>
+                        <FluentSkeleton Shape="SkeletonShape.Rect" Width="100%" Height="300px"></FluentSkeleton>
+                    </FluentCard>
+                } 
+                else if (!_favouriteListings.Items.Any())
+                {
+                    <FluentMessageBar Intent="@MessageIntent.Info" AllowDismiss="false">
+                        Non hai ancora aggiunto nessun immobile tra i preferiti.
+                    </FluentMessageBar>
+                }
+                else
+                {
+                    <FluentGrid>
+                        @foreach (var listing in _favouriteListings.Items)
+                        {
+                            <FluentGridItem xs="6" md="4">
+                                <FluentCard @onclick="@(() => Navigator.NavigateTo($"View/{listing.ListingId}"))" Style="cursor: pointer">
+                                    <FluentStack Orientation="Orientation.Vertical">
+                                        <img src="@listing.ListingFeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
+                                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
+                                                @foreach (var tagName in listing.ListingTags)
+                                                {
+                                                    <FluentBadge Circular="true">@tagName</FluentBadge>
+                                                }
+                                                <span @onclick:stopPropagation="true">
+                                                    <FluentIcon Value="@(new Icons.Filled.Size24.Heart())"
+                                                                Color="Color.Error"
+                                                                OnClick="@(() => AddToFavourites(listing.ListingId, false))"
+                                                                Style="cursor: pointer;"/>
+                                                </span>
+                                            </FluentStack>
+                                            <FluentLabel Typo="Typography.H4">@listing.ListingName</FluentLabel>
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                                <FluentLabel Typo="Typography.Body">@listing.ListingAddress</FluentLabel>
+                                                <FluentBadge BackgroundColor="black" Circular="true">@listing.ListingPrice.ToString("C", new CultureInfo("it-IT"))</FluentBadge>
+                                            </FluentStack>
+                                        </FluentStack>
+
+                                        <FluentDivider Style="width: 100%; color: black"></FluentDivider>
+
+                                        <FluentStack Orientation="Orientation.Horizontal">
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                                <FluentIcon Value="@(new Icons.Regular.Size24.ArrowMaximize())" Color="Color.Neutral"/>
+                                                <FluentLabel> @listing.ListingDimensions Mq</FluentLabel>
+                                            </FluentStack>
+
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                                <FluentIcon Value="@(new Icons.Regular.Size24.Flash())" Color="Color.Neutral"/>
+                                                <FluentLabel> @listing.ListingEnergyClass </FluentLabel>
+                                            </FluentStack>
+
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="0">
+                                                <FluentIcon Value="@(new Icons.Regular.Size24.Door())" Color="Color.Neutral"/>
+                                                <FluentLabel> @listing.ListingRooms stanze</FluentLabel>
+                                            </FluentStack>
+                                        </FluentStack>
+                                    </FluentStack>
+                                </FluentCard>
+                            </FluentGridItem>
+                        }
+                    </FluentGrid>
+                }
+            </FluentStack>
+            @if (_favouriteListings != null)
+            {
+                @for (var pageIndex = 1; pageIndex <= _favouriteListings.TotalPages; pageIndex++)
+                {
+                    var capturedIndex = pageIndex;
+                    <FluentButton @onclick="@(() => GoToFavouritePageAsync(capturedIndex))"
+                                  Appearance="@FavouritePageButtonAppearance(capturedIndex)">
+                        @(capturedIndex)
+                    </FluentButton>
+                }
+            }
+        </FluentStack>
+    </FluentGridItem>
+    <FluentGridItem xs="12" md="6">
+        <FluentCard>
+            <FluentLabel Typo="Typography.H3">Offerte</FluentLabel>
+            <PagedDataGrid TItem="OfferResponseDto"
+                           DataProvider="GetOfferData"
+                           PageSize="10"
+                           OnRowClick="OnOfferRowClick">
+                <GridColumns>
+                    <PropertyColumn Title="Agente" Property="@((OfferResponseDto o) => o.AgentEmail)"/>
+                    <PropertyColumn Title="Immobile" Property="@((OfferResponseDto o) => o.ListingName)"/>
+                    <PropertyColumn Title="Data" Property="@((OfferResponseDto o) => o.Date.ToString("dd/MM/yyyy"))"/>
+                    <PropertyColumn Title="Valore" Property="@((OfferResponseDto o) => o.Value.ToString("C", new CultureInfo("it-IT")))"/>
+                    <TemplateColumn Title="Stato" TGridItem="OfferResponseDto">
+                        <FluentBadge Appearance=@(context.Status == OfferStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@(context.Status.ToString())</FluentBadge>
+                    </TemplateColumn>
+                </GridColumns>
+            </PagedDataGrid>
+        </FluentCard>
+    </FluentGridItem>
+    <FluentGridItem xs="12" md="6">
+        <FluentCard>
+            <FluentLabel Typo="Typography.H3">Prenotazioni</FluentLabel>
+            <PagedDataGrid TItem="BookingResponseDto"
+                           DataProvider="GetBookingData"
+                           PageSize="10"
+                           OnRowClick="OnBookingrRowClick">
+                <GridColumns>
+                    <PropertyColumn Title="Agente" Property="@((BookingResponseDto b) => b.AgentEmail)"/>
+                    <PropertyColumn Title="Immobile" Property="@((BookingResponseDto b) => b.ListingName)"/>
+                    <PropertyColumn Title="Data" Property="@((BookingResponseDto b) => b.DateMeeting.ToString("dd/MM/yyyy hh:mm"))"/>
+                    <TemplateColumn Title="Stato" TGridItem="BookingResponseDto">
+                        <FluentBadge Appearance=@(context.Status == BookingStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@(context.Status.ToString())</FluentBadge>
+                    </TemplateColumn>
+                </GridColumns>
+            </PagedDataGrid>
+        </FluentCard>
+    </FluentGridItem>
+</FluentGrid>
+@code {
+    private PagedResponseDto<UserFavouritesResponseDto>? _favouriteListings;
+    private PagedResponseDto<ListingResponseDto>? _recentListings;
+    private IList<Guid> _viewedListings = [];
+    private IList<Guid> _favouriteListingIds = [];
+
+
+    OfferFilterDto _offerFilters = new();
+    BookingFilterDto _bookingFilters = new();
+    
+    private const int PageSize = 3;
+
+    private bool _isDetailsCardLoading;
+    private Dictionary<string, string>? _detailsCardTopSection;
+    private Dictionary<string, string>? _detailsCardBottomSection;
+    private object? _loadedItem;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        _favouriteListingIds = await FavouritesApiService.GetFavouritesIdList();
+        await LoadViewedListingsAsync(userId);
+        
+        _favouriteListings = await FavouritesApiService.GetFavouritesAsync(1, PageSize);
+        _recentListings = await ListingApiService.GetGetRecentListingsAsync(_viewedListings, 1, PageSize);
+        StateHasChanged();    
+    }
+
+
+    private async Task<PagedResponseDto<OfferResponseDto>> GetOfferData(int? pageNumber, int? pageSize)
+    {
+        return await OfferApiService.GetOffersByCustomerIdAsync(_offerFilters, pageNumber, pageSize);
+    }
+  
+    private void OnOfferRowClick(OfferResponseDto offer)
+    {
+        _isDetailsCardLoading = true;
+        _detailsCardTopSection = new Dictionary<string, string>()
+        {
+            { "Agente", offer.AgentEmail },
+            { "Immobile", offer.ListingName },
+            { "Data", offer.Date.ToString("dd/MM/yyyy") },
+            { "Valore", offer.Value.ToString("C", new CultureInfo("it-IT")) },
+            { "Stato", offer.Status.ToString() }
+        };
+
+        _detailsCardBottomSection = new Dictionary<string, string>();
+        _loadedItem = offer;
+        _isDetailsCardLoading = false;
+    }
+  
+    private async Task<PagedResponseDto<BookingResponseDto>> GetBookingData(int? pageNumber, int? pageSize)
+    {
+        return await BookingApiService.GetBookingsByClientIdAsync(_bookingFilters, pageNumber, pageSize);
+    }
+  
+    private void OnBookingrRowClick(BookingResponseDto booking)
+    {
+        _isDetailsCardLoading = true;
+        _detailsCardTopSection = new Dictionary<string, string>()
+        {
+            { "Agente", booking.AgentEmail },
+            { "Immobile", booking.ListingName },
+            { "Data", booking.DateMeeting.ToString("dd/MM/yyyy hh:mm") },
+            { "Stato", booking.Status.ToString() }
+        };
+
+        _detailsCardBottomSection = new Dictionary<string, string>();
+        _loadedItem = booking;
+        _isDetailsCardLoading = false;
+    }
+    
+    private async Task GoToFavouritePageAsync(int pageIndex)
+    {
+        if (_favouriteListings != null && _favouriteListings.PageNumber != pageIndex)
+        {
+            _favouriteListings = await FavouritesApiService.GetFavouritesAsync(pageIndex, PageSize);
+            StateHasChanged();
+        }
+    }
+    
+    private Appearance FavouritePageButtonAppearance(int pageIndex)
+        => _favouriteListings.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
+    
+    
+    
+    private async Task LoadViewedListingsAsync(string currentUserId)
+    {
+        var allPairs = await JsRuntime.InvokeAsync<List<string>>("getViewedListings");
+
+        _viewedListings = allPairs
+            .Where(p => p.StartsWith($"{currentUserId}_"))
+            .Select(p => {
+                var parts = p.Split('_');
+                return parts.Length > 1 && Guid.TryParse(parts[1], out var guid) ? guid : Guid.Empty;
+            })
+            .Where(g => g != Guid.Empty)
+            .ToList();
+    }
+    
+    private async Task GoToRecentPageAsync(int pageIndex)
+    {
+        if (_recentListings != null && _recentListings.PageNumber != pageIndex)
+        {
+            var user = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        
+            await LoadViewedListingsAsync(userId);
+            
+            _recentListings = await ListingApiService.GetGetRecentListingsAsync(_viewedListings, pageIndex, PageSize);
+            StateHasChanged();
+        }
+    }
+    
+    private Appearance RecentPageButtonAppearance(int pageIndex)
+        => _recentListings.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
+    
+    private async Task AddToFavourites(Guid listingId, bool favourite)
+    {
+        if (favourite)
+        {
+            _favouriteListingIds.Add(listingId);
+            await FavouritesApiService.CreateFavouriteAsync(listingId);
+        }
+        else
+        {
+            _favouriteListingIds.Remove(listingId);
+            await FavouritesApiService.RemoveFavouriteAsync(listingId);
+        }
+        _favouriteListings = await FavouritesApiService.GetFavouritesAsync(1, PageSize);
+        StateHasChanged();
+    }
+}

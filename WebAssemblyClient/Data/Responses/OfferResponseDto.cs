@@ -14,6 +14,8 @@ public class OfferResponseDto
     public string CustomerName { get; init; } = string.Empty;
     public string CustomerLastName { get; init; } = string.Empty;
     public string CustomerEmail { get; init; } = string.Empty;
+    
+    public string AgentEmail { get; init; } = string.Empty;
     public string ListingName { get; init; } = string.Empty;
     public float ListingPrice { get; init; }
     

@@ -47,7 +47,7 @@ public class ListingController(
             pageSize, pageNumber));
     }
     
-    [HttpGet]
+    [HttpGet("Dashboard")]
     [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgent(
         [FromQuery] ListingFilterDto filterDto,
@@ -101,9 +101,25 @@ public class ListingController(
             listings.ToList().Select(mapper.Map<ListingResponseDto>), 
             pageSize, pageNumber));
     }
-    
+
+    [HttpGet("RecentListings")]
+    public async Task<IActionResult> GetRecentListings([FromQuery] List<Guid> listingIdsList,
+        [FromQuery] int? pageNumber,
+        [FromQuery] int? pageSize)
+    {
+        var listings = await listingRepository.GetRecentListingsAsync(listingIdsList);
+        foreach (var listing in listings)
+        {
+            if (!string.IsNullOrEmpty(listing.FeaturedImage))
+                listing.FeaturedImage = await minioService.GeneratePresignedUrl(listing.FeaturedImage);
+        }
+        return Ok(new PagedResponseDto<ListingResponseDto>(
+            listings.ToList().Select(mapper.Map<ListingResponseDto>), 
+            pageSize, pageNumber));
+    }
+
     [HttpGet("{listingId:guid}")]
-    [Authorize(Policy = "ReadListing")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetListingById(Guid listingId) 
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is { } listing)
@@ -122,12 +138,43 @@ public class ListingController(
         return NotFound();
     }
 
-    [HttpGet("GetAgentCounters/{agentId:guid}")]
+    [HttpGet("GetAgentCounters")]
     [Authorize(Policy = "ReadListing")]
-    public async Task<IActionResult> GetAgentCounters(Guid agentId)
+    public async Task<IActionResult> GetAgentCounters()
     {
-        var listings = await listingRepository.GetListingsAsync(
-            new ListingFilterDto() { AgentId = agentId }, null, null);
+        var agentId = User.GetUserId();
+        if (agentId == Guid.Empty)
+            return Unauthorized();
+        
+        var userRole = User.FindFirst("role")?.Value;
+        
+        ListingFilterDto filters = new();
+        switch (userRole)
+        {
+            case "EstateAgent":
+                filters.AgentId = agentId;
+                filters.AgencyId = null;
+                break;
+            case "SuperAdmin":
+            case "SupportAdmin":
+            {
+                var agencyId = User.GetAgencyId();
+                if (agencyId == Guid.Empty)
+                    return Unauthorized();
+                
+                filters.AgentId = null;
+                filters.AgencyId  = agencyId;
+                break;
+            }
+            case "SystemAdmin":
+                filters.AgentId = null;
+                filters.AgencyId = null;
+                break;
+            default:
+                return Unauthorized();
+        }
+        
+        var listings = await listingRepository.GetListingsAsync( filters, null, null);
 
         var forRentType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("RENT");
         var forSaleType = await propertyTypeRepository.GetPropertyTypeByCodeAsync("SALE");
@@ -140,7 +187,7 @@ public class ListingController(
         return Ok(new ListingAgentCountersResponseDto()
         {
             ForRentCount = listingsEnumerable.Count(l => l.TypeId == forRentType.Id),
-            ForSaleCount = listingsEnumerable.Count(l => l.TypeId == forSaleType.Id),
+            ForSaleCount = listingsEnumerable.Count(l => l.TypeId == forSaleType.Id)
         });
     }
 
@@ -250,6 +297,20 @@ public class ListingController(
         else
             await listingRepository.UpdateListingAsync(listing, null);
         
+        return NoContent();
+    }
+
+    [HttpPatch("IncrementViews/{listingId:guid}")]
+    public async Task<IActionResult> IncrementListingViews(Guid listingId)
+    {
+        if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
+            return NotFound();
+        
+        if (User.GetRole() != "Client" && !string.IsNullOrEmpty(User.GetRole()))
+            return Unauthorized();
+
+        listing.Views++;
+        await listingRepository.UpdateListingAsync(listing, null);
         return NoContent();
     }
 

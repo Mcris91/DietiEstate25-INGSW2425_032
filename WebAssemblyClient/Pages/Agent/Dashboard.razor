@@ -28,7 +28,7 @@
           <DashboardInfoCard Title="Inserzioni"
                              LeftInfo="Vendita" RightInfo="Affitto"
                              LeftNumber="@(_listingCounters?.ForSaleCount ?? 0)" 
-                             RightNumber="@(_listingCounters?.ForSaleCount ?? 0)"/>
+                             RightNumber="@(_listingCounters?.ForRentCount ?? 0)"/>
         </FluentGridItem>
         <FluentGridItem xs="12" sm="4" md="4">
           <DashboardInfoCard Title="Offerte"
@@ -255,27 +255,19 @@
       if (userRole == "SuperAdmin")
       {
         var agencyId = user.User.FindFirst("AgencyId")?.Value;
-        _filters = new ListingFilterDto { AgencyId = Guid.Parse(agencyId) }; 
         _employeeFilters = new UserFilterDto { AgencyId = Guid.Parse(agencyId) };
         await _employeeGrid.LoadData(1, 10);
       }
-
-      if (userRole == "EstateAgent")
-      {
-        _filters = new ListingFilterDto { AgentId = Guid.Parse(userId) }; 
-      }
       
-      //_listingCounters = await ListingApiService.GetListingAgentCountersAsync(_filters.AgentId);
+      _listingCounters = await ListingApiService.GetListingAgentCountersAsync();
       _offersCounters = await OfferApiService.GetOffersAgentCountersAsync();
       _bookingCounters = await BookingApiService.GetBookingsAgentCountersAsync();
-
-      await _listingGrid.LoadData(1, 10);
       StateHasChanged();
   }
 
   private async Task<PagedResponseDto<ListingResponseDto>> GetListingData(int? pageNumber, int? pageSize)
   {
-    return await ListingApiService.GetListingsByAgentIdAsync(_filters, pageNumber, pageSize);
+    return await ListingApiService.GetListingsAsync(_filters, pageNumber, pageSize);
   }
 
   private void OnListingRowClick(ListingResponseDto listing)
