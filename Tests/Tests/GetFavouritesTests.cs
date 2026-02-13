@@ -1,17 +1,15 @@
+using System.Net;
 using System.Net.Http.Headers;
 using DietiEstate.Tests;
+using DietiEstate.WebApi;
 using Xunit;
 
 namespace DietiEstate.Tests.Tests;
 
-public class GetFavouritesTests
+public class GetFavouritesTests(CustomWebApplicationFactory<Program> factory)
+    : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    private readonly CustomWebApplicationFactory _factory;
-
-    public GetFavouritesTests(CustomWebApplicationFactory factory)
-    {
-        _factory = factory;
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     // Test1 - CE1, CE4
     [Fact]
@@ -20,17 +18,12 @@ public class GetFavouritesTests
         // Arrange
         int? pageNumber = 1;
         int? pageSize = 10;
-        var client = _factory.CreateClient();
-        
-        // Aggiungi token di autenticazione
-        client.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Bearer", "your-test-token-here");
 
         // Act
-        var response = await client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
+        var response = await _client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
 
         // Assert
-        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // Test2 - CE1, CE5
@@ -40,16 +33,12 @@ public class GetFavouritesTests
         // Arrange
         int? pageNumber = 1;
         int? pageSize = 0;
-        var client = _factory.CreateClient();
-        
-        client.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Bearer", "your-test-token-here");
 
         // Act
-        var response = await client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
+        var response = await _client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
 
         // Assert
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     // Test3 - CE2, CE4
@@ -59,15 +48,11 @@ public class GetFavouritesTests
         // Arrange
         int? pageNumber = 0;
         int? pageSize = 10;
-        var client = _factory.CreateClient();
-        
-        client.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Bearer", "your-test-token-here");
 
         // Act
-        var response = await client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
+        var response = await _client.GetAsync($"/api/favourites?pageNumber={pageNumber}&pageSize={pageSize}");
 
         // Assert
-        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
