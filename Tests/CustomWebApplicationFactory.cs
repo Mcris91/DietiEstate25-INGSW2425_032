@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace DietiEstate.Tests;
 
-public abstract class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
+public class CustomWebApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
