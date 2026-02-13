@@ -1,5 +1,5 @@
 using System.Net;
-using DietiEstate.Core.Entities.OfferModels;
+using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Infrastructure.Data;
 using DietiEstate.WebApi;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,29 +7,29 @@ using Xunit;
 
 namespace DietiEstate.Tests.Tests;
 
-public class AcceptOrRejectOfferTests(CustomWebApplicationFactory<Program> factory)
+public class AcceptOrRejectBookingTests(CustomWebApplicationFactory<Program> factory)
     : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
-    public async Task AcceptOrRejectOffer_WithValidData_ReturnsOk()
+    public async Task AcceptOrRejectBooking_WithValidData_ReturnsOk()
     {
-        var offerId = Guid.NewGuid();
+        var bookingId = Guid.NewGuid();
         
         using (var scope = factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<DietiEstateDbContext>();
-            dbContext.Offer.Add(new Offer 
+            dbContext.Booking.Add(new Booking 
             {
-                Id = offerId
+                Id = bookingId
             });
             await dbContext.SaveChangesAsync();
         }
         
         var accept = true;
 
-        var url = $"/api/offers/AcceptOrRejectOffer/{offerId}/{accept}";
+        var url = $"/api/v1/booking/AcceptOrRejectBooking/{bookingId}/{accept}";
 
         var emptyBody = new StringContent(""); 
     
@@ -39,12 +39,12 @@ public class AcceptOrRejectOfferTests(CustomWebApplicationFactory<Program> facto
     }
     
     [Fact]
-    public async Task AcceptOrRejectOffer_WithValidData_Returns404NotFound()
+    public async Task AcceptOrRejectBooking_WithValidData_Returns404NotFound()
     {
-        var offerId = Guid.NewGuid();
+        var bookingId = Guid.NewGuid();
         var accept = true;
 
-        var url = $"/api/offers/AcceptOrRejectOffer/{offerId}/{accept}";
+        var url = $"/api/v1/booking/AcceptOrRejectBooking/{bookingId}/{accept}";
 
         var emptyBody = new StringContent(""); 
     
