@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using WebAssemblyClient.Data.Requests;
 using WebAssemblyClient.Data.Responses;
@@ -29,8 +30,16 @@ public class UserApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
         return await GetAsync<PagedResponseDto<UserResponseDto>>(uri);
     }
     
-    public async Task AddEmployee(UserRequestDto employee)
+    public async Task<string?> AddEmployee(UserRequestDto employee)
     {
-        await httpClient.PostAsJsonAsync("create-agent", employee);
+        var response = await httpClient.PostAsJsonAsync("create-agent", employee);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
 }

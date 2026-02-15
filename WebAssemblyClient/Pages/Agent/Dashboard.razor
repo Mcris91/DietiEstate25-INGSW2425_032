@@ -168,10 +168,16 @@
                       Elimina
                     </FluentButton>
                   </FluentGridItem>
-                  <FluentGridItem xs="12">
+                  <FluentGridItem xs="6">
                     <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()" 
                                   OnClick="@(() => { Navigation.NavigateTo($"View/{listing.Id}/True"); })">
                       Visualizza
+                    </FluentButton>
+                  </FluentGridItem>
+                  <FluentGridItem xs="6">
+                    <FluentButton Style="width: 100%;" Disabled="@(!listing.Available || !currentUser.User.IsInRole("EstateAgent"))" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Add()"
+                                  OnClick="@(() => OpenMakeExternalOfferDialog(listing))">
+                      Aggiungi offerta
                     </FluentButton>
                   </FluentGridItem>
                 </FluentGrid>
@@ -490,8 +496,22 @@
       {
         if (registerResult.Data is not UserRequestDto registerRequest) return;
         
-        await UserApiService.AddEmployee(registerRequest);
-        ToastService.ShowSuccess("Agente registrato con successo!");
+        var response = await UserApiService.AddEmployee(registerRequest);
+        switch (response)
+        {
+          case "":
+            ToastService.ShowSuccess("Agente registrato con successo!");
+            _detailsCardTopSection = null;
+            _detailsCardBottomSection = null;
+            await _employeeGrid.LoadData(1,10);
+            break;
+          case null:
+            ToastService.ShowError("Si è verificato un errore imprevisto");
+            break;
+          default:
+            ToastService.ShowWarning(response);
+            break;
+        }
       }
     }
     
@@ -533,6 +553,58 @@
           {
             case "":
               ToastService.ShowSuccess("Contro offerta inviata con successo!");
+              _detailsCardTopSection = null;
+              _detailsCardBottomSection = null;
+              await _offerGrid.LoadData(1,10);
+              break;
+            case null:
+              ToastService.ShowError("Si è verificato un errore imprevisto");
+              break;
+            default:
+              ToastService.ShowWarning(response);
+              break;
+          }
+        }
+      }
+    }
+    
+    private async Task OpenMakeExternalOfferDialog(ListingResponseDto listing)
+    {
+      {
+        OfferRequestDto offerRequest = new()
+        {
+          AgentId = listing.Agent.Id,
+          ListingId = listing.Id,
+          CustomerId = listing.Agent.Id,
+          Value = 0
+        };
+
+        DialogParameters offerParameters = new()
+        {
+          Title = "Aggiungi un'offerta esterna",
+          TitleTypo = Typography.H2,
+          PrimaryAction = "Invia",
+          SecondaryAction = "Annulla",
+          Width = "500px",
+          PreventScroll = true 
+        };
+        offerParameters.Add("Name", listing.Name);
+        offerParameters.Add("Address", listing.Address);
+        offerParameters.Add("Price", listing.Price);
+
+        var offerDialog = await DialogService.ShowDialogAsync<MakeOfferDialog>(offerRequest, offerParameters);
+        var offerResult = await offerDialog.Result;
+
+        if (offerResult.Data is not null && !offerResult.Cancelled)
+        {
+          if (offerResult.Data is not OfferRequestDto offer) return;
+          
+          var response = await OfferApiService.PostOfferAsync(offer);
+              
+          switch (response)
+          {
+            case "":
+              ToastService.ShowSuccess("Offerta registrata con successo!");
               _detailsCardTopSection = null;
               _detailsCardBottomSection = null;
               await _offerGrid.LoadData(1,10);
