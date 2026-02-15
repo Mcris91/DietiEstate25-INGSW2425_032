@@ -3,9 +3,11 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.BookingModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastructure.Extensions;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,9 @@ namespace DietiEstate.WebApi.Controllers;
 public class BookingController(
     IBookingRepository bookingRepository,
     IListingRepository listingRepository,
+    IUserRepository userRepository,
+    IEmailService emailService,
+    IBackgroundJobClient jobClient,
     IMapper mapper) : Controller
 {
     [HttpGet]
@@ -118,6 +123,10 @@ public class BookingController(
         booking.DateMeeting = booking.DateMeeting.ToUniversalTime();
         booking.DateCreation = booking.DateCreation.ToUniversalTime();
         await bookingRepository.AddBookingAsync(booking);
+        var user = await userRepository.GetUserByIdAsync(booking.AgentId);
+        var listing = await listingRepository.GetListingByIdAsync(booking.ListingId);
+        var emailData = await emailService.PrepareNewBookingEmailAsync(user, listing.Name);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return CreatedAtAction(nameof(GetBookingById), new { bookingId = booking.Id }, mapper.Map<BookingResponseDto>(booking));
     }
 
@@ -132,11 +141,19 @@ public class BookingController(
     }
 
     [HttpDelete("{bookingId:guid}")]
-
     public async Task<IActionResult> DeleteBooking(Guid bookingId)
     {
         if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
             return NotFound();
+        
+        if (booking.ClientId != User.GetUserId() && booking.AgentId != User.GetUserId()) 
+            return Unauthorized();
+
+        if (booking.Status == BookingStatus.Accepted)
+            return BadRequest("La prenotazione è già stata accettata dal nostro agente");
+        
+        if (booking.Status == BookingStatus.Rejected)
+            return BadRequest("La prenotazione è già stata rifiutata dal nostro agente");
         
         await bookingRepository.DeleteBookingAsync(booking);
         return NoContent();

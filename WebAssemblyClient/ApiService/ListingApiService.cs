@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using WebAssemblyClient.Data.Requests;
@@ -89,7 +90,6 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         return await GetAsync<PagedResponseDto<ListingResponseDto>>(uri);
     }
     
-
     public async Task<ListingAgentCountersResponseDto> GetListingAgentCountersAsync()
     {
 
@@ -107,5 +107,18 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
     public async Task UpdateListingAsync(Guid listingId, ListingRequestDto listing)
     {
         await httpClient.PatchAsJsonAsync($"{listingId}", listing);
+    }
+
+    public async Task<string?> DeleteListingAsync(Guid listingId)
+    {
+        var response = await httpClient.DeleteAsync($"{listingId}");
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
 }

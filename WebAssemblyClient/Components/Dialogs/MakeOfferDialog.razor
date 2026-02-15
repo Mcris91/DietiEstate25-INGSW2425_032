@@ -10,12 +10,23 @@
         <FluentGridItem xs="6">
             <FluentLabel>@Name</FluentLabel>
         </FluentGridItem>
-        <FluentGridItem xs="6">
-            <FluentLabel Weight="FontWeight.Bold">Indirizzo</FluentLabel>
-        </FluentGridItem>
-        <FluentGridItem xs="6">
-            <FluentLabel>@Address</FluentLabel>
-        </FluentGridItem>
+        @if(Address != null){
+            <FluentGridItem xs="6">
+                <FluentLabel Weight="FontWeight.Bold">Indirizzo</FluentLabel>
+            </FluentGridItem>
+            <FluentGridItem xs="6">
+                <FluentLabel>@Address</FluentLabel>
+            </FluentGridItem>
+        }
+        @if (FirstOffer != null)
+        {
+            <FluentGridItem xs="6">
+                <FluentLabel Weight="FontWeight.Bold">Offerta precedente</FluentLabel>
+            </FluentGridItem>
+            <FluentGridItem xs="6">
+                <FluentLabel>@FirstOffer.Value.ToString("C", new CultureInfo("it-IT"))</FluentLabel>
+            </FluentGridItem>
+        }
         <FluentGridItem xs="6">
             <FluentLabel Weight="FontWeight.Bold">Valore</FluentLabel>
         </FluentGridItem>
@@ -42,6 +53,10 @@
         {
             <FluentLabel Color="Color.Error">L'offerta non può superare il valore dell'immobile</FluentLabel>
         }
+        @if (_isUnderPrice)
+        {
+            <FluentLabel Color="Color.Error">Il valore della contro offerta deve essere superiore a quella dell'offerta originale</FluentLabel>
+        }
     </EditForm>
 </FluentStack>
 
@@ -59,10 +74,12 @@
     [Parameter] public OfferRequestDto Content { get; set; }
     
     private string Name => Dialog.Instance.Parameters.Get<string>("Name");
-    private string Address => Dialog.Instance.Parameters.Get<string>("Address");
+    private string? Address => Dialog.Instance.Parameters.TryGet<string?>("Address");
+    private decimal? FirstOffer => Dialog.Instance.Parameters.TryGet<decimal?>("FirstOffer");
     private decimal Price => Dialog.Instance.Parameters.Get<decimal>("Price");
     private EditContext _editContext = default!;
     private bool _isOverPrice;
+    private bool _isUnderPrice;
     
     [CascadingParameter]
     public FluentDialog? Dialog {get; set; }
@@ -75,11 +92,15 @@
     private void OnValueChanged()
     {
         _isOverPrice = Content.Value > Price;
+
+        if (FirstOffer != null)
+            _isUnderPrice = Content.Value < FirstOffer;
     }
+    
     
     private async Task CloseAsync()
     {
-        if (_editContext.Validate() && !_isOverPrice)
+        if (_editContext.Validate() && !_isOverPrice && !_isUnderPrice)
         {
             await Dialog!.CloseAsync(Content);
         }

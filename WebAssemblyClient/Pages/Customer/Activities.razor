@@ -10,6 +10,9 @@
 @inject NavigationManager Navigator
 @inject IJSRuntime JsRuntime
 @inject HostAuthenticationStateProvider AuthStateProvider
+@inject IDialogService DialogService
+@inject IToastService ToastService
+
 <FluentGrid Spacing="2" Style="margin: 1rem 3rem;">
     <FluentGridItem xs="12">
         <FluentStack Orientation="Orientation.Vertical">
@@ -211,8 +214,10 @@
     <FluentGridItem xs="12" md="6">
         <FluentCard>
             <FluentLabel Typo="Typography.H3">Offerte</FluentLabel>
-            <PagedDataGrid TItem="OfferResponseDto"
+            <PagedDataGrid @ref="_offerGrid"
+                           TItem="OfferResponseDto"
                            DataProvider="GetOfferData"
+                           OnRowClick="OnOfferRowClick"
                            PageSize="10">
                 <GridColumns>
                     <PropertyColumn Title="Agente" Property="@((OfferResponseDto o) => o.AgentEmail)"/>
@@ -220,27 +225,83 @@
                     <PropertyColumn Title="Data" Property="@((OfferResponseDto o) => o.Date.ToString("dd/MM/yyyy"))"/>
                     <PropertyColumn Title="Valore" Property="@((OfferResponseDto o) => o.Value.ToString("C", new CultureInfo("it-IT")))"/>
                     <TemplateColumn Title="Stato" TGridItem="OfferResponseDto">
-                        <FluentBadge Appearance=@(context.Status == OfferStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@(context.Status.ToString())</FluentBadge>
+                        <FluentBadge Appearance=@(context.Status == OfferStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@GetOfferStatus(context)</FluentBadge>
                     </TemplateColumn>
                 </GridColumns>
             </PagedDataGrid>
+            @if (_loadedOffer != null)
+            {
+                <FluentDivider/>
+                <DetailsCard IsLoading="_isDetailsOfferCardLoading"
+                             TopSection="_detailsOfferCardTopSection"
+                             BottomSection="_detailsOfferCardBottomSection">
+                    <Actions>
+                    @if (_loadedOffer.Status == OfferStatus.Pending)
+                    {
+                        if (_loadedOffer.Id == _loadedOffer.FirstOfferId)
+                        {
+                            <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
+                                          OnClick="@(() => DeleteOffer(_loadedOffer.Id))">
+                                Ritira offerta
+                            </FluentButton>
+                        }
+                        else
+                        {
+                            <FluentGrid Spacing="1" Style="width: 100%;">
+                                <FluentGridItem xs="6">
+                                    <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
+                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, true))">
+                                        Accetta
+                                    </FluentButton>
+                                </FluentGridItem>
+                                <FluentGridItem xs="6">
+                                    <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
+                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, false))">
+                                        Rifiuta
+                                    </FluentButton>
+                                </FluentGridItem>
+                            </FluentGrid>
+                        }
+                    }
+                    </Actions>
+                </DetailsCard>
+            }
         </FluentCard>
     </FluentGridItem>
     <FluentGridItem xs="12" md="6">
         <FluentCard>
             <FluentLabel Typo="Typography.H3">Prenotazioni</FluentLabel>
-            <PagedDataGrid TItem="BookingResponseDto"
+            <PagedDataGrid @ref="_bookingGrid"
+                           TItem="BookingResponseDto"
                            DataProvider="GetBookingData"
+                           OnRowClick="OnBookingRowClick"
                            PageSize="10">
                 <GridColumns>
                     <PropertyColumn Title="Agente" Property="@((BookingResponseDto b) => b.AgentEmail)"/>
                     <PropertyColumn Title="Immobile" Property="@((BookingResponseDto b) => b.ListingName)"/>
                     <PropertyColumn Title="Data" Property="@((BookingResponseDto b) => b.DateMeeting.ToString("dd/MM/yyyy hh:mm"))"/>
                     <TemplateColumn Title="Stato" TGridItem="BookingResponseDto">
-                        <FluentBadge Appearance=@(context.Status == BookingStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@(context.Status.ToString())</FluentBadge>
+                        <FluentBadge Appearance=@(context.Status == BookingStatus.Pending ? Appearance.Neutral : Appearance.Accent) Circular="true">@GetBookingStatus(context.Status) </FluentBadge>
                     </TemplateColumn>
                 </GridColumns>
             </PagedDataGrid>
+        @if (_loadedBooking != null)
+        {
+            <FluentDivider/>
+            <DetailsCard IsLoading="_isDetailsBookingCardLoading"
+                         TopSection="_detailsBookingCardTopSection"
+                         BottomSection="_detailsBookingCardBottomSection">
+                <Actions>
+                @if (_loadedBooking.Status == BookingStatus.Pending)
+                {
+                    <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
+                                      OnClick="@(() => DeleteBooking(_loadedBooking.Id))">
+                            Annulla prenotazione
+                    </FluentButton>
+                }
+                </Actions>
+            </DetailsCard>
+        }
         </FluentCard>
     </FluentGridItem>
 </FluentGrid>
@@ -249,7 +310,19 @@
     private PagedResponseDto<ListingResponseDto>? _recentListings;
     private IList<Guid> _viewedListings = [];
     private IList<Guid> _favouriteListingIds = [];
+    
+    private PagedDataGrid<OfferResponseDto>? _offerGrid;
+    private PagedDataGrid<BookingResponseDto>? _bookingGrid;
 
+    private bool _isDetailsOfferCardLoading;
+    private Dictionary<string, string>? _detailsOfferCardTopSection;
+    private Dictionary<string, string>? _detailsOfferCardBottomSection;
+    private OfferResponseDto? _loadedOffer;
+    
+    private bool _isDetailsBookingCardLoading;
+    private Dictionary<string, string>? _detailsBookingCardTopSection;
+    private Dictionary<string, string>? _detailsBookingCardBottomSection;
+    private BookingResponseDto? _loadedBooking;
 
     OfferFilterDto _offerFilters = new();
     BookingFilterDto _bookingFilters = new();
@@ -274,10 +347,79 @@
         return await OfferApiService.GetOffersByCustomerIdAsync(_offerFilters, pageNumber, pageSize);
     }
     
+    private void OnOfferRowClick(OfferResponseDto offer)
+    {
+        if (offer.Id == _loadedOffer?.Id)
+        {
+            _detailsOfferCardBottomSection = null;
+            _detailsOfferCardTopSection = null;
+            _loadedOffer = null;
+            return;
+        }
+        _isDetailsOfferCardLoading = true;
+        _detailsOfferCardTopSection = new Dictionary<string, string>()
+        {
+            { "Agente", offer.AgentEmail },
+            { "Immobile", offer.ListingName },
+            { "Data", offer.Date.ToString("dd/MM/yyyy") },
+            { "Valore", offer.Value.ToString("C", new CultureInfo("it-IT")) },
+            { "Stato", GetOfferStatus(offer) }
+        };
+
+        _detailsOfferCardBottomSection = new Dictionary<string, string>();
+        _loadedOffer = offer;
+        _isDetailsOfferCardLoading = false;
+    }
+    
+    private async Task HandleOfferAction(Guid offerId, bool accept)
+    {
+        var response = await OfferApiService.AcceptOrRejectCounterOfferAsync(offerId, accept);
+        switch (response)
+        {
+            case "":
+                ToastService.ShowSuccess(accept ? "Contro offerta accettata" : "Contro offerta rifiutata");
+                _detailsOfferCardTopSection = null;
+                _detailsOfferCardBottomSection = null;
+                await _offerGrid.LoadData(1,10);
+                break;
+            case null:
+                ToastService.ShowError("Si è verificato un errore imprevisto");
+                break;
+            default:
+                ToastService.ShowWarning(response);
+                break;
+        }
+        StateHasChanged();
+    }
+    
   
     private async Task<PagedResponseDto<BookingResponseDto>> GetBookingData(int? pageNumber, int? pageSize)
     {
         return await BookingApiService.GetBookingsByClientIdAsync(_bookingFilters, pageNumber, pageSize);
+    }
+    
+    private void OnBookingRowClick(BookingResponseDto booking)
+    {
+        if (booking.Id == _loadedBooking?.Id)
+        {
+            _detailsBookingCardBottomSection = null;
+            _detailsBookingCardTopSection = null;
+            _loadedBooking = null;
+            return;
+        }
+        
+        _isDetailsBookingCardLoading = true;
+        _detailsBookingCardTopSection = new Dictionary<string, string>()
+        {
+            { "Contatto", booking.AgentEmail },
+            { "Immobile", booking.ListingName },
+            { "Data", booking.DateMeeting.ToString("dd/MM/yyyy hh:mm") },
+            { "Stato", GetBookingStatus(booking.Status) }
+        };
+
+        _detailsBookingCardBottomSection = new Dictionary<string, string>();
+        _loadedBooking = booking;
+        _isDetailsBookingCardLoading = false;
     }
     
     private async Task GoToFavouritePageAsync(int pageIndex)
@@ -337,5 +479,84 @@
         }
         _favouriteListings = await FavouritesApiService.GetFavouritesAsync(1, PageSize);
         StateHasChanged();
+    }
+
+    private async Task DeleteOffer(Guid offerId)
+    {
+        var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler ritirare l'offerta?", title: "Conferma", primaryText:"Si");
+        var confirmDialogResult = await confirmDialog.Result;
+        if (!confirmDialogResult.Cancelled)
+        {
+            var response = await OfferApiService.DeleteOfferAsync(offerId);
+
+            switch (response)
+            {
+                case "":
+                    ToastService.ShowSuccess("Offerta ritirata");
+                    _detailsOfferCardTopSection = null;
+                    _detailsOfferCardBottomSection = null;
+                    await _offerGrid.LoadData(1,10);
+                    break;
+                case null:
+                    ToastService.ShowError("Si è verificato un errore imprevisto");
+                    break;
+                default:
+                    ToastService.ShowWarning(response);
+                    break;
+            }
+            StateHasChanged();
+        }
+    }
+    
+    private async Task DeleteBooking(Guid bookingId)
+    {
+        var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler annullare la prenotazione?", title: "Conferma", primaryText:"Si");
+        var confirmDialogResult = await confirmDialog.Result;
+        if (!confirmDialogResult.Cancelled)
+        {
+            var response = await BookingApiService.DeleteBookingAsync(bookingId);
+        
+            switch (response)
+            {
+                case "":
+                    ToastService.ShowSuccess("Prenotazione annullata");
+                    _detailsBookingCardTopSection = null;
+                    _detailsBookingCardBottomSection = null;
+                    await _bookingGrid.LoadData(1, 10);
+                    break;
+                case null:
+                    ToastService.ShowError("Si è verificato un errore imprevisto");
+                    break;
+                default:
+                    ToastService.ShowWarning(response);
+                    break;
+            }
+            StateHasChanged();
+        }
+    }
+    
+    private string GetOfferStatus(OfferResponseDto offer)
+    {
+        if (offer.Id != offer.FirstOfferId)
+            return "Contro offerta";
+
+        return offer.Status switch
+        {
+            OfferStatus.Pending => "In attesa",
+            OfferStatus.Accepted => "Accettata",
+            OfferStatus.Rejected => "Rifiutata",
+            _ => offer.Status.ToString()
+        };
+    }
+
+    private string GetBookingStatus(BookingStatus status)
+    {
+        return status switch
+        {
+            BookingStatus.Pending => "In attesa",
+            BookingStatus.Accepted => "Accettata",
+            BookingStatus.Rejected => "Rifiutata",
+            _ => status.ToString()
+        };
     }
 }

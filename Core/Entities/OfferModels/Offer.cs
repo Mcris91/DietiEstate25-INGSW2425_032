@@ -41,4 +41,6 @@ public class Offer
     [Required]
     
     public virtual User Customer { get; set; }
+    
+    public virtual Offer? FirstOffer { get; set; }
 }

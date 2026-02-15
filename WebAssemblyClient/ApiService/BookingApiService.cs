@@ -69,8 +69,29 @@ public class BookingApiService(HttpClient httpClient, JsonSerializerOptions json
         return await GetAsync<BookingAgentCountersResponseDto>(uri);
     }
     
-    public async Task AcceptOrRejectBookingAsync(Guid bookingId, bool accept)
+    public async Task<string?> AcceptOrRejectBookingAsync(Guid bookingId, bool accept)
     {
-        await httpClient.PutAsync($"AcceptOrRejectBooking/{bookingId}/{accept}", null);
+        var response = await httpClient.PutAsync($"AcceptOrRejectBooking/{bookingId}/{accept}", null);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+                
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+                
+        return null;
+    }
+    
+    public async Task<string?> DeleteBookingAsync(Guid bookingId)
+    {
+        var response = await httpClient.DeleteAsync($"{bookingId}");
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
 }

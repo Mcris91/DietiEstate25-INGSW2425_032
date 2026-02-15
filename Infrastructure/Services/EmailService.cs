@@ -78,6 +78,44 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         return emailData;
     }
 
+    public async Task<EmailData> PrepareNewOfferEmailAsync(User toUser, string listingName)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("new-offer.html");
+        bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
+        bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
+        bodyText = bodyText.Replace("{{nome_immobile}}", listingName);
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = "Recupero password";
+        emailData.ToEmail = toUser.Email;
+        emailData.ToName = toUser.FirstName;
+        
+        return emailData;
+    }
+    
+    public async Task<EmailData> PrepareNewBookingEmailAsync(User toUser, string listingName)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("new-appointment.html");
+        bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
+        bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
+        bodyText = bodyText.Replace("{{nome_immobile}}", listingName);
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = "Recupero password";
+        emailData.ToEmail = toUser.Email;
+        emailData.ToName = toUser.FirstName;
+        
+        return emailData;
+    }
+
     public async Task SendEmailAsync(EmailData emailData)
     {
         var smtpOptions = new SmtpOptions

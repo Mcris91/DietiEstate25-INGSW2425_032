@@ -306,11 +306,18 @@ public class ListingController(
     }
 
     [HttpDelete("{listingId:guid}")]
-    [Authorize(Roles = "SupportAdminOnly")]
+    //[Authorize(Roles = "SupportAdminOnly")]
     public async Task<IActionResult> DeleteListing(Guid listingId)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
             return NotFound();
+        
+        if (listing.AgentUserId != User.GetUserId())
+            return Unauthorized();
+
+        if (!listing.Available)
+            return BadRequest("L'immobile è già stato venduto");
+        
         await listingRepository.DeleteListingAsync(listing);
         return NoContent();
     }

@@ -123,8 +123,8 @@
 
         if (registerResult.Data is not null && !registerResult.Cancelled)
         {
-            var registerRequest = registerResult.Data as UserRequestDto;
-            var response = await AuthApiService.Register(registerRequest);
+            if (registerResult.Data is not UserRequestDto registerRequest) return;
+                var response = await AuthApiService.Register(registerRequest);
 
             switch (response)
             {

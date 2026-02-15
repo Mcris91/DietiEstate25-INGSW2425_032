@@ -22,14 +22,43 @@ public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSe
         return null;
     }
     
-    public async Task AcceptOrRejectOfferAsync(Guid offerId, bool accept)
+    public async Task<string?> AcceptOrRejectOfferAsync(Guid offerId, bool accept)
     {
-        await httpClient.PutAsync($"AcceptOrRejectOffer/{offerId}/{accept}", null);
+        var response = await httpClient.PutAsync($"AcceptOrRejectOffer/{offerId}/{accept}", null);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
     
-    public async Task DeleteOfferAsync(Guid offerId, Guid customerId)
+    public async Task<string?> AcceptOrRejectCounterOfferAsync(Guid offerId, bool accept)
     {
-        await httpClient.DeleteAsync($"api/v1/Offer/{offerId}/{customerId}");
+        var response = await httpClient.PutAsync($"AcceptOrRejectCounterOffer/{offerId}/{accept}", null);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
+    }
+    
+    public async Task<string?> DeleteOfferAsync(Guid offerId)
+    {
+        var response = await httpClient.DeleteAsync($"{offerId}");
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
     
     public async Task<PagedResponseDto<OfferResponseDto>> GetOffersByAgentIdAsync(

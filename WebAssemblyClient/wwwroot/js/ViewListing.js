@@ -4,12 +4,12 @@ let viewMarker;
 
 var redMarkerIcon = L.icon({
     iconUrl: 'assets/icons/red-marker.png',
-    iconSize: [38, 95],
-    iconAnchor: [22, 94],
-    popupAnchor: [-3, -76],
+    iconSize: [38, 65],
+    iconAnchor: [22, 64],
+    popupAnchor: [-3, -46],
     shadowUrl: 'assets/icons/red-marker-shadow.png',
-    shadowSize: [68, 95],
-    shadowAnchor: [22, 94]
+    shadowSize: [68, 65],
+    shadowAnchor: [22, 64]
 });
 
 export function clearExistingMap(elementId) {

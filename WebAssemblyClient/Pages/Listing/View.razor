@@ -183,18 +183,14 @@ else
                                 </FluentStack>
                             </FluentStack>
                         </FluentCard>
-                        <AuthorizeView>
-                            <Authorized>
-                                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer || !context.User.IsInRole("Client"))" Style="width: 100%"
-                                              OnClick="@OpenMakeOfferDialog">
-                                    Fai un'offerta
-                                </FluentButton>
-                                <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking || !context.User.IsInRole("Client"))" Style="width: 100%"
-                                              OnClick="@OpenMakeBookingDialog">
-                                    Prenota un appuntamento
-                                </FluentButton>
-                            </Authorized>
-                        </AuthorizeView>
+                            <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer)" Style="width: 100%"
+                                          OnClick="@OpenMakeOfferDialog">
+                                Fai un'offerta
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking)" Style="width: 100%"
+                                          OnClick="@OpenMakeBookingDialog">
+                                Prenota un appuntamento
+                            </FluentButton>
                     </FluentStack>
                 </FluentStack>
             </FluentCard>
@@ -270,7 +266,16 @@ else
 
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var userRole = user.User.FindFirst("role")?.Value;
+
+        if (!string.IsNullOrEmpty(userRole) && !string.Equals(userRole, "EstateAgent") && !string.Equals(userRole, "Client"))
+        {
+            _makeOffer = true;
+            _makeBooking = true;
+        }
+            
         
+      
         var shouldIncreaseViews = await JsRuntime.InvokeAsync<bool>("shouldUpdateView", userId, ListingId.ToString());
         if (shouldIncreaseViews)
         {
@@ -318,8 +323,7 @@ else
             await OpenLoginDialogAsync();
             return;
         }
-
-
+        
         if (_listing != null)
         {
             OfferRequestDto offerRequest = new()
@@ -379,8 +383,13 @@ else
         
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return;
 
+        if (userId == null)
+        {
+            await OpenLoginDialogAsync();
+            return;
+        }
+        
         if (_listing != null)
         {
             BookingRequestDto bookingRequest = new()
@@ -476,9 +485,9 @@ else
                 var response = await AuthApiService.Login(loginRequest);
                 
                 if (response != null)
-                {
                     AuthStateProvider.NotifyAuthenticationStateChanged();
-                }
+                else 
+                    ToastService.ShowError("Credenziali non corrette!");
             }
         }
     }
@@ -509,8 +518,20 @@ else
         {
             if (registerResult.Data is not UserRequestDto registerRequest) return;
             
-            await AuthApiService.Register(registerRequest);
-            ToastService.ShowSuccess("Registrazione effettuata con successo!");
+            var response = await AuthApiService.Register(registerRequest);
+
+            switch (response)
+            {
+                case "":
+                    ToastService.ShowSuccess("Account registrato con successo!");
+                    break;
+                case null:
+                    ToastService.ShowError("Si è verificato un errore imprevisto");
+                    break;
+                default:
+                    ToastService.ShowWarning(response);
+                    break;
+            }
         }
     }
     

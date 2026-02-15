@@ -125,6 +125,10 @@
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
                         <FluentLabel Typo="Typography.H4">Immagini</FluentLabel>
                         <FluentLabel Typo="Typography.Body">Carica le immagini dell'immobile</FluentLabel>
+                        @if (_imageIsMissing)
+                        {
+                            <FluentLabel Color="Color.Error">Inserisci la foto di copertina</FluentLabel>
+                        }
                     </FluentStack>
                     
                     <FluentInputFile @ref="_coverFileUpload"
@@ -223,6 +227,7 @@
     private FluentInputFile? _galleryFileUpload;
     private IJSObjectReference? _jsModule; 
     private EditContext _editContext = default!;
+    private bool _imageIsMissing;
 
 
     private ListingRequestDto _listingRequestDto = new();
@@ -315,8 +320,10 @@
     }
 
     private async Task SaveListingAsync()
-    { 
-        if (!_editContext.Validate()) return;
+    {
+        _imageIsMissing = !_isCoverUploaded;
+
+        if (!_editContext.Validate() || _imageIsMissing) return;
         
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

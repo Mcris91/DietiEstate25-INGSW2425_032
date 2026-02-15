@@ -46,6 +46,7 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
         return await context.Offer
             .Where(o => o.CustomerId == customerId)
             .Include(o => o.Listing)
+            .Include(o => o.FirstOffer)
             .ApplyFilters(filters)
             .ApplySorting(filters.SortBy, filters.SortOrder)
             .ToListAsync();

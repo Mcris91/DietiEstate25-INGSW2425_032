@@ -56,6 +56,10 @@
                                  TextFieldType="TextFieldType.Password"
                                  Style="width: 100%">
                 </FluentTextField>
+                @if (_differentPassword)
+                {
+                    <FluentLabel Color="Color.Error">Le password sono diverse</FluentLabel>
+                }
             </FluentStack>
         </FluentGridItem>
     </FluentGrid>
@@ -81,6 +85,7 @@
     public FluentDialog? Dialog {get; set; }
     private EditContext _editContext = default!;
     private string _confirmPassword = String.Empty;
+    private bool _differentPassword;
 
     
     protected override void OnInitialized()
@@ -90,7 +95,8 @@
     
     private async Task CloseAsync()
     {
-        if (_editContext.Validate() && string.Equals(Content.Password, _confirmPassword))
+        _differentPassword = !string.Equals(Content.Password, _confirmPassword);
+        if (_editContext.Validate() && !_differentPassword)
         {
             await Dialog!.CloseAsync(Content);
         }

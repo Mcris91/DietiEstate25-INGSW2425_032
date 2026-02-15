@@ -3,9 +3,11 @@ using DietiEstate.Application.Dtos.Filters;
 using DietiEstate.Application.Dtos.Requests;
 using DietiEstate.Application.Dtos.Responses;
 using DietiEstate.Application.Interfaces.Repositories;
+using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastructure.Extensions;
+using Hangfire;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +20,8 @@ public class OfferController(
     IOfferRepository offerRepository,
     IListingRepository listingRepository,
     IUserRepository userRepository,
+    IEmailService emailService,
+    IBackgroundJobClient jobClient,
     //RedisSessionService redisSessionService,
     IMapper mapper) : Controller
 {
@@ -34,7 +38,7 @@ public class OfferController(
         if (listing is { Available: false }) 
             return BadRequest("L'immobile è già stato venduto");
         
-        if (await userRepository.GetUserByIdAsync(offer.CustomerId) is { Role: UserRole.Client })
+        if (string.Equals(User.GetRole(),"Client"))
             if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId, listing.Id))
                 return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
@@ -42,11 +46,27 @@ public class OfferController(
             return BadRequest("Valore dell'offerta non valido");
 
         if (offer.FirstOfferId == Guid.Empty)
+        {
             offer.FirstOfferId = offer.Id;
+        }
+        else
+        {
+            var firstOffer = await offerRepository.GetOfferByIdAsync(offer.FirstOfferId);
+            
+            if (firstOffer is null)
+                return BadRequest("Nessuna offerta trovata");
+            
+            if (firstOffer.Id != firstOffer.FirstOfferId && string.Equals(User.GetRole(), "EstateAgent"))
+                return BadRequest("Non puoi inserire più contro offerte per la stessa offerta");
 
-        offer.Date = offer.Date.UtcDateTime;
+            firstOffer.Status = OfferStatus.Rejected;
+        }
         
+        offer.Date = offer.Date.UtcDateTime;
         await offerRepository.AddOfferAsync(offer);
+        var user = await userRepository.GetUserByIdAsync(offer.AgentId);
+        var emailData = await emailService.PrepareNewBookingEmailAsync(user, listing.Name);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return CreatedAtAction(nameof(GetOfferById), new { offerId = offer.Id }, mapper.Map<OfferResponseDto>(offer));
     }
 
@@ -72,6 +92,9 @@ public class OfferController(
         var offer = await offerRepository.GetOfferByIdAsync(offerId);
         if (offer is null) return NotFound();
 
+        if (offer.Id != offer.FirstOfferId)
+            return BadRequest("Non puoi accettare o rifiutare una contro offerta");
+        
         if (offer.Status != OfferStatus.Pending)
             return Unauthorized();
         
@@ -99,15 +122,56 @@ public class OfferController(
         return Ok();
     }
 
+    
+    //client
+    [HttpPut("AcceptOrRejectCounterOffer/{counterOfferId:guid}/{accept:bool}")]
+    public async Task<IActionResult> AcceptOrRejectCounterOffer(Guid counterOfferId, bool accept)
+    {
+        var offer = await offerRepository.GetOfferByIdAsync(counterOfferId);
+        if (offer is null) return NotFound();
+
+        if (offer.Status != OfferStatus.Pending || offer.CustomerId != User.GetUserId())
+            return Unauthorized();
+        
+        offer.Status = accept ? OfferStatus.Accepted : OfferStatus.Rejected;
+        
+        var listing = await listingRepository.GetListingByIdAsync(offer.ListingId);
+        if (listing is null) return NotFound();
+        
+        if (!listing.Available)
+            return Unauthorized();
+        
+        // Da inserire in una transaction
+        await offerRepository.UpdateOfferAsync(offer);
+        if (accept)
+        {
+            var offers = await offerRepository.GetPendingOffersByListingIdAsync(offer.ListingId);
+            foreach (var o in offers)
+            {
+                o.Status = OfferStatus.Rejected;
+                await offerRepository.UpdateOfferAsync(o);
+            }
+            listing.Available = false;
+            await listingRepository.UpdateListingAsync(listing, null);
+        }
+        return Ok();
+    }
+    
     //sia customer che agent
-    [HttpDelete("{offerId:guid}/{customerId:guid}")]
-    public async Task<IActionResult> DeleteOffer(Guid offerId, Guid customerId)
+    [HttpDelete("{offerId:guid}")]
+    public async Task<IActionResult> DeleteOffer(Guid offerId)
     {
         if (await offerRepository.GetOfferByIdAsync(offerId) is not { } offer) 
             return NotFound();
         
-        if (offer.CustomerId != customerId && offer.AgentId != customerId) 
+        if (offer.CustomerId != User.GetUserId() && offer.AgentId != User.GetUserId()) 
             return Unauthorized();
+        
+        if (offer.Status == OfferStatus.Accepted)
+            return BadRequest("L'offerta è già stata accettata dal nostro agente");
+        
+        if (offer.Status == OfferStatus.Rejected)
+            return BadRequest("L'offerta è già stata rifiutata dal nostro agente");
         
         await offerRepository.DeleteOfferAsync(offer);
         return NoContent();
