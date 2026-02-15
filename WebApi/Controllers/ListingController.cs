@@ -48,7 +48,7 @@ public class ListingController(
     }
     
     [HttpGet("Dashboard")]
-    [Authorize(Policy = "ReadListing")]
+    //[Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgent(
         [FromQuery] ListingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -60,29 +60,13 @@ public class ListingController(
         if (userId == Guid.Empty)
             return Unauthorized();
         
-        var userRole = User.GetRole();
-        
-        switch (userRole)
+        try
         {
-            case "EstateAgent":
-                filterDto.AgentId = userId;
-                filterDto.AgencyId = null;
-                break;
-            case "SuperAdmin":
-            case "SupportAdmin":
-            {
-                var agencyId = User.GetAgencyId();
-                if (agencyId == Guid.Empty)
-                    return Unauthorized();
-                
-                filterDto.AgentId = null;
-                filterDto.AgencyId = agencyId;
-                break;
-            }
-            case "SystemAdmin":
-                filterDto.AgentId = null;
-                filterDto.AgencyId = null;
-                break;
+            filterDto.ApplyRoleFilters(User.GetRole(), User.GetUserId(), User.GetAgencyId());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
@@ -139,39 +123,23 @@ public class ListingController(
     }
 
     [HttpGet("GetAgentCounters")]
-    [Authorize(Policy = "ReadListing")]
+    //[Authorize(Policy = "ReadListing")]
     public async Task<IActionResult> GetAgentCounters()
     {
         var agentId = User.GetUserId();
+        
         if (agentId == Guid.Empty)
             return Unauthorized();
         
-        var userRole = User.FindFirst("role")?.Value;
-        
         ListingFilterDto filters = new();
-        switch (userRole)
+        
+        try
         {
-            case "EstateAgent":
-                filters.AgentId = agentId;
-                filters.AgencyId = null;
-                break;
-            case "SuperAdmin":
-            case "SupportAdmin":
-            {
-                var agencyId = User.GetAgencyId();
-                if (agencyId == Guid.Empty)
-                    return Unauthorized();
-                
-                filters.AgentId = null;
-                filters.AgencyId  = agencyId;
-                break;
-            }
-            case "SystemAdmin":
-                filters.AgentId = null;
-                filters.AgencyId = null;
-                break;
-            default:
-                return Unauthorized();
+            filters.ApplyRoleFilters(User.GetRole(), User.GetUserId(), User.GetAgencyId());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         
         var listings = await listingRepository.GetDetailedListingsAsync(filters);
@@ -347,10 +315,10 @@ public class ListingController(
         return NoContent();
     }
 
-    [HttpGet("GetReport/{agentId:guid}")]
-    public async Task<IActionResult> GetReport(Guid agentId)
+    [HttpGet("GetReport")]
+    public async Task<IActionResult> GetReport()
     {
-        IList<Listing> listings = (IList<Listing>)await listingRepository.GetListingsAsync(new ListingFilterDto(){AgentId = agentId});
+        IList<Listing> listings = (IList<Listing>)await listingRepository.GetDetailedListingsAsync(new ListingFilterDto(){AgentId = User.GetUserId()});
         var report = await excelService.GetReportForAgent(listings);
         
         return File(report, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report.xlsx"); 

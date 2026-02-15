@@ -59,6 +59,15 @@ public class Listing
 
     [Required]
     public bool Elevator { get; set; }
+    
+    [Required]
+    public bool Doorkeeper { get; set; }
+
+    [Required]
+    public bool AirConditioning { get; set; }
+    
+    [Required]
+    public bool ParkingSpace { get; set; }
 
     [Required]
     [MaxLength(2)]

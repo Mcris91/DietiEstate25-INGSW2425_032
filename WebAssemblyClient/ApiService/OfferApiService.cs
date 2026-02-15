@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.WebUtilities;
 using WebAssemblyClient.Data.Requests;
@@ -8,9 +9,17 @@ namespace WebAssemblyClient.ApiService;
 
 public class OfferApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
-    public async Task PostOfferAsync(OfferRequestDto offerDto)
+    public async Task<string?> PostOfferAsync(OfferRequestDto offerDto)
     {
-        await httpClient.PostAsJsonAsync("", offerDto);
+        var response = await httpClient.PostAsJsonAsync("", offerDto);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
     
     public async Task AcceptOrRejectOfferAsync(Guid offerId, bool accept)

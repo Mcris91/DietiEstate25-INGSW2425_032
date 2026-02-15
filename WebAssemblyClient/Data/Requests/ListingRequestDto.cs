@@ -47,12 +47,18 @@ public class ListingRequestDto
 
     public bool Available { get; set; } = true;
 
-    public bool Elevator { get; set; } = false;
+    public bool Elevator { get; set; }
+    
+    public bool Doorkeeper { get; set; }
+
+    public bool AirConditioning { get; set; }
+    
+    public bool ParkingSpace { get; set; }
 
     [Required(ErrorMessage = "Seleziona la classe energetica dell'immobile")]
     public string EnergyClass { get; set; } = string.Empty;
 
-    public int Views { get; set; } = 0;
+    public int Views { get; set; }
 
     public string OwnerEmail { get; set; } = string.Empty;
 

@@ -1,13 +1,8 @@
 namespace DietiEstate.Application.Dtos.Filters;
 
-public class ListingFilterDto
+public class ListingFilterDto : BaseFilterDto
 {
     public string TypeCode { get; init; } = string.Empty;
-    
-    public Guid? AgentId { get; set; }
-    
-    public Guid? AgencyId { get; set; }
-    
     public IReadOnlyList<string>? Tags { get; init; }
 
     public decimal? MinPrice { get; init; }

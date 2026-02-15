@@ -15,9 +15,9 @@
 @inject IJSRuntime JsRuntime
 
 @page "/agent/dashboard"
-<AuthorizeView Context="current_user">
+<AuthorizeView Context="currentUser">
   <Authorized>
-  @if (current_user.User.IsInRole("EstateAgent") || current_user.User.IsInRole("SystemAdmin") || current_user.User.IsInRole("SuperAdmin") || current_user.User.IsInRole("SupportAdmin"))
+  @if (currentUser.User.IsInRole("EstateAgent") || currentUser.User.IsInRole("SystemAdmin") || currentUser.User.IsInRole("SuperAdmin") || currentUser.User.IsInRole("SupportAdmin"))
   {
     <FluentGrid Spacing="2" Style="margin: 1rem 3rem;">
         <FluentGridItem xs="12" sm="12" md="8">
@@ -105,9 +105,9 @@
             </PagedDataGrid>
             
           </FluentTab>
-          @if (current_user.User.IsInRole("SuperAdmin") || current_user.User.IsInRole("SystemAdmin") || current_user.User.IsInRole("SupportAdmin"))
+          @if (currentUser.User.IsInRole("SuperAdmin") || currentUser.User.IsInRole("SystemAdmin") || currentUser.User.IsInRole("SupportAdmin"))
           {
-            <FluentTab Label="Dipendenti" Id="tab-employee">
+            <FluentTab Label=@(currentUser.User.IsInRole("SystemAdmin") ? "Utenti" : "Dipendenti") Id="tab-employee">
             
               <PagedDataGrid @ref="_employeeGrid"
                              TItem="UserResponseDto"
@@ -124,15 +124,19 @@
             </FluentTab>
           }
           <div slot="end">
-            @if (current_user.User.IsInRole("EstateAgent"))
+            @if (currentUser.User.IsInRole("EstateAgent"))
             {
               <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="@(() => { Navigation.NavigateTo("/listing/create"); })">Aggiungi Inserzione</FluentButton>
+              <FluentButton IconStart="new Icons.Regular.Size20.DocumentArrowDown()" OnClick="DownloadReport">Stampa Report</FluentButton>
             }
-            @if (current_user.User.IsInRole("SuperAdmin") || current_user.User.IsInRole("SupportAdmin"))
+            @if (currentUser.User.IsInRole("SupportAdmin"))
             {
-              <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="OpenCreateEmployeeDialog"> Aggiungi Agente</FluentButton>
+              <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="OpenCreateEmployeeDialog"> Aggiungi Agente immobiliare</FluentButton>
             }
-            <FluentButton IconStart="new Icons.Regular.Size20.DocumentArrowDown()" OnClick="DownloadReport">Stampa Report</FluentButton>
+            @if (currentUser.User.IsInRole("SuperAdmin"))
+            {
+              <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="OpenCreateEmployeeDialog"> Aggiungi Amministratore di supporto</FluentButton>
+            }
           </div>
         </FluentTabs>
       </FluentCard>
@@ -151,12 +155,12 @@
             <FluentGrid Spacing="1" Style="width: 100%;">
               <FluentGridItem xs="12">
                 <FluentButton Style="width: 100%;" IconStart="new Icons.Regular.Size20.Play()" 
-                              OnClick="@(() => { Navigation.NavigateTo($"View/{listing.Id}/"); })">
+                              OnClick="@(() => { Navigation.NavigateTo($"View/{listing.Id}/True"); })">
                   Visualizza
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="12">
-                <FluentButton Style="width: 100%;" Disabled="@(!listing.Available || !current_user.User.IsInRole("EstateAgent"))" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
+                <FluentButton Style="width: 100%;" Disabled="@(!listing.Available || !currentUser.User.IsInRole("EstateAgent"))" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
                               OnClick="@(() => { Navigation.NavigateTo($"/listing/update/{listing.Id}/"); })">
                   Modifica
                 </FluentButton>
@@ -170,24 +174,24 @@
                 </FluentButton>
               </FluentGridItem>
             </FluentGrid>
-          } else if (_loadedItem is OfferResponseDto offer)
+          } else if (_loadedItem is OfferResponseDto offer && offer.Status == OfferStatus.Pending)
           {
             <FluentGrid Spacing="1" Style="width: 100%;">
               <FluentGridItem xs="4">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
-                              OnClick="@(() => HandleOfferAction(offer.Id, true))" Disabled="@(!current_user.User.IsInRole("EstateAgent"))">
+                              OnClick="@(() => HandleOfferAction(offer.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
                   Accetta
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="4">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                              OnClick="@(() => HandleOfferAction(offer.Id, false))" Disabled="@(!current_user.User.IsInRole("EstateAgent"))">
+                              OnClick="@(() => HandleOfferAction(offer.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
                   Rifiuta
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="4">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
-                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{offer.Id}/"); })" Disabled="@(!current_user.User.IsInRole("EstateAgent"))">
+                              OnClick="@(() => { Navigation.NavigateTo($"/listing/create/{offer.Id}/"); })" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
                   Contro-Offerta
                 </FluentButton>
               </FluentGridItem>
@@ -197,13 +201,13 @@
             <FluentGrid Spacing="1" Style="width: 100%;">
               <FluentGridItem xs="6">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
-                              OnClick="@(() => HandleBookingAction(booking.Id, true))" Disabled="@(!current_user.User.IsInRole("EstateAgent"))">
+                              OnClick="@(() => HandleBookingAction(booking.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
                   Accetta
                 </FluentButton>
               </FluentGridItem>
               <FluentGridItem xs="6">
                 <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                              OnClick="@(() => HandleBookingAction(booking.Id, false))" Disabled="@(!current_user.User.IsInRole("EstateAgent"))">
+                              OnClick="@(() => HandleBookingAction(booking.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
                   Rifiuta
                 </FluentButton>
               </FluentGridItem>
@@ -222,15 +226,15 @@
 @code {
 
   private IJSObjectReference? _jsModule;
-  private PagedDataGrid<ListingResponseDto> _listingGrid;
-  private PagedDataGrid<OfferResponseDto> _offerGrid;
-  private PagedDataGrid<BookingResponseDto> _bookingGrid;
-  private PagedDataGrid<UserResponseDto> _employeeGrid;
+  private PagedDataGrid<ListingResponseDto>? _listingGrid;
+  private PagedDataGrid<OfferResponseDto>? _offerGrid;
+  private PagedDataGrid<BookingResponseDto>? _bookingGrid;
+  private PagedDataGrid<UserResponseDto>? _employeeGrid;
   
   ListingFilterDto _filters = new();
   OfferFilterDto _offerFilters = new();
   BookingFilterDto _bookingFilters = new();
-  UserFilterDto? _employeeFilters;
+  UserFilterDto _employeeFilters = new();
 
   private ListingAgentCountersResponseDto? _listingCounters;
   private OfferAgentCountersResponseDto? _offersCounters;
@@ -244,20 +248,13 @@
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
       if (!firstRender) return;
+      
       _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Dashboard.js");
       
       var user = await AuthStateProvider.GetAuthenticationStateAsync();
       var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
       if (userId == null) return;
       
-      var userRole = user.User.FindFirst("role")?.Value;
-
-      if (userRole == "SuperAdmin")
-      {
-        var agencyId = user.User.FindFirst("AgencyId")?.Value;
-        _employeeFilters = new UserFilterDto { AgencyId = Guid.Parse(agencyId) };
-        await _employeeGrid.LoadData(1, 10);
-      }
       
       _listingCounters = await ListingApiService.GetListingAgentCountersAsync();
       _offersCounters = await OfferApiService.GetOffersAgentCountersAsync();
@@ -285,11 +282,10 @@
     };
     _detailsCardBottomSection = new Dictionary<string, string>()
     {
-      { "Visualizzazioni", "350" },
-      { "Preferiti", "123" },
-      { "Offerenti", "75" },
-      { "Offerte", "24" },
-      { "Prenotazioni", "17" }
+      { "Visualizzazioni", listing.Views.ToString() },
+      { "Preferiti", listing.Views.ToString() },
+      { "Offerte", listing.Offers.ToString() },
+      { "Prenotazioni", listing.Bookings.ToString() }
     };
 
     _loadedItem = listing;
@@ -386,10 +382,13 @@
 
   private async Task DownloadReport()
   {
-    var file = await ListingApiService.GetReportAsync(_filters.AgentId);
-    var fileName = "Report.xlsx";
-    await _jsModule.InvokeVoidAsync("downloadFileFromStream", fileName, file);
-
+    if (_jsModule != null)
+    {
+      var file = await ListingApiService.GetReportAsync();
+      var fileName = "Report.xlsx";
+      await _jsModule.InvokeVoidAsync("downloadFileFromStream", fileName, file);
+    }
+    
   }
   
   private async Task OpenCreateEmployeeDialog()
@@ -411,12 +410,13 @@
       PreventScroll = true
     };
 
-    IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
-    DialogResult registerResult = await registerDialog.Result;
+    var registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+    var registerResult = await registerDialog.Result;
 
     if (registerResult.Data is not null && !registerResult.Cancelled)
     {
-      UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+      if (registerResult.Data is not UserRequestDto registerRequest) return;
+      
       await UserApiService.AddEmployee(registerRequest);
       ToastService.ShowSuccess("Agente registrato con successo!");
     }

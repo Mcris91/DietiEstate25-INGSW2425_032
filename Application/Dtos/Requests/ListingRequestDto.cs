@@ -30,11 +30,17 @@ public class ListingRequestDto
 
     public bool Available { get; init; } = true;
 
-    public bool Elevator { get; init; } = false;
+    public bool Elevator { get; set; }
+    
+    public bool Doorkeeper { get; set; }
+
+    public bool AirConditioning { get; set; }
+    
+    public bool ParkingSpace { get; set; }
 
     public string EnergyClass { get; init; } = string.Empty;
 
-    public int Views { get; init; } = 0;
+    public int Views { get; init; }
 
     public string OwnerEmail { get; init; } = string.Empty;
 

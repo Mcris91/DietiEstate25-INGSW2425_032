@@ -3,9 +3,8 @@ using DietiEstate.Core.Entities.UserModels;
 
 namespace DietiEstate.Application.Dtos.Filters;
 
-public class UserFilterDto
-{
-    public Guid? AgencyId { get; init;}
+public class UserFilterDto : BaseFilterDto
+{ 
     public string FirstName { get; init; } = string.Empty;
 
     public string LastName { get; init; } = string.Empty;

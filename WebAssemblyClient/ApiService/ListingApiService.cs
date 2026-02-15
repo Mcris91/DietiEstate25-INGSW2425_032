@@ -97,9 +97,9 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         return await GetAsync<ListingAgentCountersResponseDto>(uri);
     }
 
-    public async Task<byte[]> GetReportAsync(Guid? agentId)
+    public async Task<byte[]> GetReportAsync()
     {
-        var uri = $"GetReport/{agentId}";
+        var uri = "GetReport";
         var response = await httpClient.GetAsync(uri);
         return await response.Content.ReadAsByteArrayAsync();
     }

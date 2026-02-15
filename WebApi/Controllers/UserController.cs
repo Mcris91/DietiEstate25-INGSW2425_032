@@ -26,6 +26,9 @@ public class UserController(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
     {
+
+        filterDto.ApplyRoleFilters(User.GetRole(), User.GetUserId(), User.GetAgencyId());
+        
         if (pageNumber.HasValue ^ pageSize.HasValue) 
             return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
         if (pageNumber <= 0 || pageSize <= 0) 

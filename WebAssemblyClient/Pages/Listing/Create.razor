@@ -1,5 +1,4 @@
 ﻿@using AutoMapper
-@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using WebAssemblyClient.ApiService
 @using WebAssemblyClient.Extensions
 @inject HostAuthenticationStateProvider AuthStateProvider
@@ -70,7 +69,7 @@
                         <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
                             <FluentNumberField Name="Dimensions" @bind-Value="_listingRequestDto.Dimensions"
                                                Label="Dimensioni" Required
-                                               HideStep="true"autocomplete="off"
+                                               HideStep="true" autocomplete="off"
                                                Style="width: 100%;"/>
                             <FluentValidationMessage For="@(() => _listingRequestDto.Dimensions)"/>
                             
@@ -100,7 +99,12 @@
                                             Height="200px" Width="100%" Required/>
                         </FluentStack>
                     </FluentStack>
-                    
+                    <FluentStack Orientation="Orientation.Horizontal">
+                        <FluentSwitch Label="Ascensore" @bind-Value="_listingRequestDto.Elevator"></FluentSwitch>
+                        <FluentSwitch Label="Portineria" @bind-Value="_listingRequestDto.Doorkeeper"></FluentSwitch>
+                        <FluentSwitch Label="Posto Auto" @bind-Value="_listingRequestDto.ParkingSpace"></FluentSwitch>
+                        <FluentSwitch Label="Riscaldamento" @bind-Value="_listingRequestDto.AirConditioning"></FluentSwitch>
+                    </FluentStack>
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
                         <FluentTextArea Name="Description" Label="Descrizione" 
                                         @bind-Value="_listingRequestDto.Description" Required
@@ -349,7 +353,7 @@
 
     private async Task SearchAddress()
     {
-        if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address))
+        if (!string.IsNullOrWhiteSpace(_listingRequestDto.Address) && _jsModule != null)
         {
             var coords = await _jsModule.InvokeAsync<float[]?>("searchAddress", _listingRequestDto.Address);
             if (coords == null)

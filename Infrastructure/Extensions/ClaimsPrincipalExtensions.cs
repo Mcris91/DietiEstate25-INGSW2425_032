@@ -16,7 +16,7 @@ public static class ClaimsPrincipalExtensions
     public static Guid GetAgencyId(this ClaimsPrincipal principal)
     {
         var agencyId = principal.FindFirst("AgencyId")?.Value;
-        return agencyId is not null
+        return !string.IsNullOrEmpty(agencyId)
             ? Guid.Parse(agencyId)
             : Guid.Empty;
     }

@@ -64,7 +64,7 @@ public class OfferRepository(DietiEstateDbContext context) : IOfferRepository
     public async Task<bool> CheckExistingCustomerOffer(Guid userId, Guid listingId)
     {
         return await context.Offer
-            .Where(o => o.CustomerId == userId && o.ListingId == listingId)
+            .Where(o => o.CustomerId == userId && o.ListingId == listingId && o.Status == OfferStatus.Pending)
             .AnyAsync();
     }
 

@@ -5,7 +5,7 @@ using Microsoft.VisualBasic;
 
 namespace DietiEstate.Application.Dtos.Filters;
 
-public class BookingFilterDto
+public class BookingFilterDto : BaseFilterDto
 {
     public BookingStatus? Status { get; init; }
     
@@ -16,10 +16,6 @@ public class BookingFilterDto
     public Guid? ListingId { get; init;}
     
     public Guid? ClientId { get; init;}
-    
-    public Guid? AgentId { get; set;}
-    
-    public Guid? AgencyId { get; set; }
 
     public string SortOrder { get; init; } = "desc";
     

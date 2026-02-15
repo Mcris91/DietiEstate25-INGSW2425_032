@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using WebAssemblyClient.Data.Requests;
 using WebAssemblyClient.Data.Responses;
@@ -7,9 +8,17 @@ namespace WebAssemblyClient.ApiService;
 
 public class BookingApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
-    public async Task PostBookingAsync(BookingRequestDto bookingDto)
+    public async Task<string?> PostBookingAsync(BookingRequestDto bookingDto)
     {
-        await httpClient.PostAsJsonAsync("", bookingDto);
+        var response = await httpClient.PostAsJsonAsync("", bookingDto);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
     
     public async Task<PagedResponseDto<BookingResponseDto>> GetBookingsByAgentIdAsync(

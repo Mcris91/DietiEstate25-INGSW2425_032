@@ -55,28 +55,30 @@ else
     <FluentGrid Style="margin: 1rem 3rem;">
         <FluentGridItem xs="12" md="7">
             <div style="position: relative; width: 100%;">
-                <img src="@GetCurrentImageUrl()" 
-                     alt="ListingImage" 
-                     style="object-fit: cover; aspect-ratio: 16/9; width: 100%">
+                <img src="@GetCurrentImageUrl()" alt="ListingImage" style="object-fit: cover; aspect-ratio: 16/9; width: 100%; border-color: black; border-width: 3px; border-radius: 10px;">
                 
                 <AuthorizeView>
                     <Authorized>
-                        <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
-                            @if (!IsFavourite)
-                            {
-                                <FluentIcon Value="@(new Icons.Regular.Size24.Heart())" 
-                                            Color="Color.Neutral"
-                                            OnClick="@(() => AddToFavourites(ListingId, true))"
-                                            Style="cursor: pointer;" />
-                            }
-                            else
-                            {
-                                <FluentIcon Value="@(new Icons.Filled.Size24.Heart())" 
-                                            Color="Color.Error"
-                                            OnClick="@(() => AddToFavourites(ListingId, false))"
-                                            Style="cursor: pointer;" />
-                            }
-                        </div>
+                        @if (context.User.IsInRole("Client"))
+                        {
+                            <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
+                                @if (!IsFavourite)
+                                {
+                                    <FluentIcon Value="@(new Icons.Regular.Size24.Heart())"
+                                                Color="Color.Neutral"
+                                                OnClick="@(() => AddToFavourites(ListingId, true))"
+                                                Style="cursor: pointer;"/>
+                                }
+                                else
+                                {
+                                    <FluentIcon Value="@(new Icons.Filled.Size24.Heart())"
+                                                Color="Color.Error"
+                                                OnClick="@(() => AddToFavourites(ListingId, false))"
+                                                Style="cursor: pointer;"/>
+                                }
+                            </div>
+                        }
+                        
                     </Authorized>
                 </AuthorizeView>
                 
@@ -84,13 +86,13 @@ else
                 {
                     <div style="position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; transform: translateY(-50%); padding: 0 10px;">
                         <FluentButton Appearance="Appearance.Stealth" 
-                                      OnClick="PrevImage" 
+                                      OnClick="@PrevImage" 
                                       Style="border-radius: 50%; min-width: 40px; height: 40px;">
                             <FluentIcon Value="@(new Icons.Regular.Size24.ChevronLeft())" />
                         </FluentButton>
 
                         <FluentButton Appearance="Appearance.Stealth" 
-                                      OnClick="NextImage" 
+                                      OnClick="@NextImage" 
                                       Style="border-radius: 50%; min-width: 40px; height: 40px;">
                             <FluentIcon Value="@(new Icons.Regular.Size24.ChevronRight())" />
                         </FluentButton>
@@ -117,6 +119,8 @@ else
                             <FluentLabel Typo="Typography.H5"> Camere da letto</FluentLabel>
                             <FluentLabel Typo="Typography.H5"> Piano </FluentLabel>
                             <FluentLabel Typo="Typography.H5"> Ascensore </FluentLabel>
+                            <FluentLabel Typo="Typography.H5"> Portineria </FluentLabel>
+                            <FluentLabel Typo="Typography.H5"> Posto Auto </FluentLabel>
                             <FluentLabel Typo="Typography.H5"> Riscaldamento </FluentLabel>
                         </FluentStack>
 
@@ -126,7 +130,9 @@ else
                             <FluentLabel Typo="Typography.H5">@_listing.Rooms </FluentLabel>
                             <FluentLabel Typo="Typography.H5"> @_listing.Floor </FluentLabel>
                             <FluentLabel Typo="Typography.H5"> @(_listing.Elevator ? "Si" : "No") </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> No </FluentLabel>
+                            <FluentLabel Typo="Typography.H5"> @(_listing.Doorkeeper ? "Si" : "No") </FluentLabel>
+                            <FluentLabel Typo="Typography.H5"> @(_listing.ParkingSpace ? "Si" : "No") </FluentLabel>
+                            <FluentLabel Typo="Typography.H5"> @(_listing.AirConditioning ? "Si" : "No") </FluentLabel>
                         </FluentStack>
                     </FluentStack>
                 </FluentStack>
@@ -180,11 +186,11 @@ else
                         <AuthorizeView>
                             <Authorized>
                                 <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer || !context.User.IsInRole("Client"))" Style="width: 100%"
-                                              OnClick="OpenMakeOfferDialog">
+                                              OnClick="@OpenMakeOfferDialog">
                                     Fai un'offerta
                                 </FluentButton>
                                 <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking || !context.User.IsInRole("Client"))" Style="width: 100%"
-                                              OnClick="OpenMakeBookingDialog">
+                                              OnClick="@OpenMakeBookingDialog">
                                     Prenota un appuntamento
                                 </FluentButton>
                             </Authorized>
@@ -252,7 +258,6 @@ else
     [Parameter] public bool IsFavourite { get; set; }
 
     ListingResponseDto? _listing;
-    private bool _showAll;
     private bool _makeOffer;
     private bool _makeBooking;
     private IJSObjectReference? _jsModule;
@@ -310,45 +315,62 @@ else
         
         if (userId == null)
         {
-            OpenLoginDialogAsync();
+            await OpenLoginDialogAsync();
             return;
         }
-            
-            
-        OfferRequestDto offerRequest = new()
-        {
-            AgentId = _listing.Agent.Id,
-            ListingId =_listing.Id,
-            CustomerId = Guid.Parse(userId),
-            Value = 0
-        };
 
-        DialogParameters offerParameters = new()
-        {
-            Title = "Fai un'offerta",
-            TitleTypo = Typography.H2,
-            PrimaryAction = "Invia",
-            SecondaryAction = "Annulla",
-            Width = "500px",
-            PreventScroll = true 
-        };
-        offerParameters.Add("Name", _listing.Name);
-        offerParameters.Add("Address", _listing.Address);
-        offerParameters.Add("Price", _listing.Price);
 
-        IDialogReference offerDialog = await DialogService.ShowDialogAsync<MakeOfferDialog>(offerRequest, offerParameters);
-        DialogResult offerResult = await offerDialog.Result;
-
-        if (offerResult.Data is not null && !offerResult.Cancelled)
+        if (_listing != null)
         {
-            OfferRequestDto? _offer = offerResult.Data as OfferRequestDto;
-            if (_offer.Value <= 0 || _offer.Value > _listing.Price)
+            OfferRequestDto offerRequest = new()
             {
-                ToastService.ShowWarning("Valore dell'offerta non valido!");
-                return;
+                AgentId = _listing.Agent.Id,
+                ListingId =_listing.Id,
+                CustomerId = Guid.Parse(userId),
+                Value = 0
+            };
+
+            DialogParameters offerParameters = new()
+            {
+                Title = "Fai un'offerta",
+                TitleTypo = Typography.H2,
+                PrimaryAction = "Invia",
+                SecondaryAction = "Annulla",
+                Width = "500px",
+                PreventScroll = true 
+            };
+            offerParameters.Add("Name", _listing.Name);
+            offerParameters.Add("Address", _listing.Address);
+            offerParameters.Add("Price", _listing.Price);
+
+            var offerDialog = await DialogService.ShowDialogAsync<MakeOfferDialog>(offerRequest, offerParameters);
+            var offerResult = await offerDialog.Result;
+
+            if (offerResult.Data is not null && !offerResult.Cancelled)
+            {
+                if (offerResult.Data is not OfferRequestDto offer) return;
+            
+                if (offer.Value <= 0 || offer.Value > _listing.Price)
+                {
+                    ToastService.ShowWarning("Valore dell'offerta non valida!");
+                    return;
+                }
+                var response = await OfferApiService.PostOfferAsync(offer);
+            
+                switch (response)
+                {
+                    case "":
+                        ToastService.ShowSuccess("Offerta inviata con successo!");
+                        _makeOffer = true;
+                        break;
+                    case null:
+                        ToastService.ShowError("Si è verificato un errore imprevisto");
+                        break;
+                    default:
+                        ToastService.ShowWarning(response);
+                        break;
+                }
             }
-            await OfferApiService.PostOfferAsync(_offer);
-            ToastService.ShowSuccess("Offerta inviata con successo!");
         }
     }
     
@@ -359,36 +381,53 @@ else
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return;
 
-        BookingRequestDto bookingRequest = new()
+        if (_listing != null)
         {
-            AgentId = _listing.Agent.Id,
-            ListingId =_listing.Id, 
-            ClientId = Guid.Parse(userId), 
-            DateCreation = DateTime.Now, 
-            DateMeeting = DateTime.Now
-        };
+            BookingRequestDto bookingRequest = new()
+            {
+                AgentId = _listing.Agent.Id,
+                ListingId =_listing.Id, 
+                ClientId = Guid.Parse(userId), 
+                DateCreation = DateTime.Now, 
+                DateMeeting = DateTime.Now
+            };
 
-        DialogParameters offerParameters = new()
-        {
-            Title = "Prenota un appuntamento",
-            TitleTypo = Typography.H2,
-            PrimaryAction = "Invia",
-            SecondaryAction = "Annulla",
-            Width = "500px",
-            PreventScroll = true 
-        };
-        offerParameters.Add("Name", _listing.Name);
-        offerParameters.Add("Address", _listing.Address);
-        offerParameters.Add("Price", _listing.Price);
+            DialogParameters offerParameters = new()
+            {
+                Title = "Prenota un appuntamento",
+                TitleTypo = Typography.H2,
+                PrimaryAction = "Invia",
+                SecondaryAction = "Annulla",
+                Width = "500px",
+                PreventScroll = true 
+            };
+            offerParameters.Add("Name", _listing.Name);
+            offerParameters.Add("Address", _listing.Address);
+            offerParameters.Add("Price", _listing.Price);
 
-        IDialogReference bookingDialog = await DialogService.ShowDialogAsync<MakeBookingDialog>(bookingRequest, offerParameters);
-        DialogResult bookingResult = await bookingDialog.Result;
+            var bookingDialog = await DialogService.ShowDialogAsync<MakeBookingDialog>(bookingRequest, offerParameters);
+            var bookingResult = await bookingDialog.Result;
 
-        if (bookingResult.Data is not null && !bookingResult.Cancelled)
-        {
-            BookingRequestDto? _booking = bookingResult.Data as BookingRequestDto;
-            await BookingApiService.PostBookingAsync(_booking);
-            ToastService.ShowSuccess("Prenotazione inviata con successo!");
+            if (bookingResult.Data is not null && !bookingResult.Cancelled)
+            {
+                if (bookingResult.Data is not BookingRequestDto booking) return;
+
+                var response = await BookingApiService.PostBookingAsync(booking);
+            
+                switch (response)
+                {
+                    case "":
+                        ToastService.ShowSuccess("Prenotazione effettuata con successo!");
+                        _makeBooking = true;
+                        break;
+                    case null:
+                        ToastService.ShowError("Si è verificato un errore imprevisto");
+                        break;
+                    default:
+                        ToastService.ShowWarning(response);
+                        break;
+                }
+            }
         }
     }
     
@@ -421,8 +460,8 @@ else
             PreventScroll = true
         };
 
-        IDialogReference loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
-        DialogResult loginResult = await loginDialog.Result;
+        var loginDialog = await DialogService.ShowDialogAsync<LoginDialog>(loginUser, loginParameters);
+        var loginResult = await loginDialog.Result;
 
         if (loginResult.Data is not null && !loginResult.Cancelled)
         {
@@ -432,7 +471,7 @@ else
             }
             else
             {
-                LoginRequestDto? loginRequest = loginResult.Data as LoginRequestDto;
+                if (loginResult.Data is not LoginRequestDto loginRequest) return;
                 
                 var response = await AuthApiService.Login(loginRequest);
                 
@@ -463,12 +502,13 @@ else
             PreventScroll = true
         };
 
-        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
-        DialogResult registerResult = await registerDialog.Result;
+        var registerDialog = await DialogService.ShowDialogAsync<RegisterDialog>(registerUser, registerParameters);
+        var registerResult = await registerDialog.Result;
 
         if (registerResult.Data is not null && !registerResult.Cancelled)
         {
-            UserRequestDto? registerRequest = registerResult.Data as UserRequestDto;
+            if (registerResult.Data is not UserRequestDto registerRequest) return;
+            
             await AuthApiService.Register(registerRequest);
             ToastService.ShowSuccess("Registrazione effettuata con successo!");
         }
@@ -477,11 +517,9 @@ else
    
     private List<string> GetAllImages()
     {
+        if (_listing == null) return [];
         var images = new List<string> { _listing.FeaturedImage };
-        if (_listing.Images != null)
-        {
-            images.AddRange(_listing.Images.Select(img => img.Url));
-        }
+        images.AddRange(_listing.Images.Select(img => img.Url));
         return images;
     }
 

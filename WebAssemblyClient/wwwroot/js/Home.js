@@ -68,7 +68,7 @@ export async function searchAddress (address) {
     }
 }
 
-export function addMarker (elementId, lat, lon, title, listingId){
+export function addMarker (elementId, lat, lon, title, listingId, isFavourite){
     if (map) {
         const newMarker = L.marker([lat, lon]);
 
@@ -78,7 +78,7 @@ export function addMarker (elementId, lat, lon, title, listingId){
         });
 
         newMarker.on('click', function() {
-            window.location.href = `/View/${listingId}`;
+            window.location.href = `/View/${listingId}/${isFavourite}`;
         });
 
         newMarker.addTo(markerGroup);

@@ -41,7 +41,7 @@
     </Authorized>
 
     <NotAuthorized>
-        <FluentButton Appearance="Appearance.Stealth"
+        <FluentButton Appearance="Appearance.Outline"
                       @onclick="@OpenRegisterAgencyDialogAsync">Registra la tua azienda</FluentButton>
         <FluentButton IconStart="@(new Icons.Regular.Size20.PersonAccounts())"
                       Appearance="Appearance.Accent"
@@ -129,7 +129,7 @@
             switch (response)
             {
                 case "":
-                    ToastService.ShowSuccess("Azienda registrata con successo! Controlla la mail per le credenziali di accesso.");
+                    ToastService.ShowSuccess("Account registrato con successo!");
                     break;
                 case null:
                     ToastService.ShowError("Si è verificato un errore imprevisto");
@@ -166,7 +166,7 @@
 
         RegisterAgencyDto registerAgency = new()
         {
-            Name = "",
+            AgencyName = "",
             Email = "",
         };
 
@@ -174,14 +174,12 @@
         {
             Title = "Registra la tua azienda",
             TitleTypo = Typography.H2,
-            PrimaryAction = "Registra",
-            SecondaryAction = "Annulla",
             Width = "500px",
             PreventScroll = true
         };
 
-        IDialogReference registerDialog = await DialogService.ShowDialogAsync<RegisterAgencyDialog>(registerAgency, registerParameters);
-        DialogResult registerResult = await registerDialog.Result;
+        var registerDialog = await DialogService.ShowDialogAsync<RegisterAgencyDialog>(registerAgency, registerParameters);
+        var registerResult = await registerDialog.Result;
 
         if (registerResult.Data is not null && !registerResult.Cancelled)
         {
@@ -200,7 +198,6 @@
                     ToastService.ShowWarning(response);
                     break;
             }
-
         }
     }
 }

@@ -2,6 +2,10 @@
 
 public class RegisterAgencyDto
 {
-    public string Name { get; init; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
+    public string AgencyName { get; init; } = string.Empty;
     public string Email  { get; init; } = string.Empty;
 }

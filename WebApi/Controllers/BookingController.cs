@@ -72,32 +72,14 @@ public class BookingController(
         
         if (userId == Guid.Empty)
             return Unauthorized();
-        
-        var userRole = User.FindFirst("role")?.Value;
-        
-        switch (userRole)
+
+        try
         {
-            case "EstateAgent":
-                filterDto.AgentId = userId;
-                filterDto.AgencyId = null;
-                break;
-            case "SuperAdmin":
-            case "SupportAdmin":
-            {
-                var agencyId = User.GetAgencyId();
-                if (agencyId == Guid.Empty)
-                    return Unauthorized();
-                
-                filterDto.AgentId = null;
-                filterDto.AgencyId = agencyId;
-                break;
-            }
-            case "SystemAdmin":
-                filterDto.AgentId = null;
-                filterDto.AgencyId = null;
-                break;
-            default:
-                return Unauthorized();
+            filterDto.ApplyRoleFilters(User.GetRole(), User.GetUserId(), User.GetAgencyId());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         
         if (pageNumber.HasValue ^ pageSize.HasValue) 
@@ -167,32 +149,15 @@ public class BookingController(
         if (agentId == Guid.Empty)
             return Unauthorized();
         
-        var userRole = User.FindFirst("role")?.Value;
-        
         BookingFilterDto filters = new();
-        switch (userRole)
+        
+        try
         {
-            case "EstateAgent":
-                filters.AgentId = agentId;
-                filters.AgencyId = null;
-                break;
-            case "SuperAdmin":
-            case "SupportAdmin":
-            {
-                var agencyId = User.GetAgencyId();
-                if (agencyId == Guid.Empty)
-                    return Unauthorized();
-                
-                filters.AgentId = null;
-                filters.AgencyId  = agencyId;
-                break;
-            }
-            case "SystemAdmin":
-                filters.AgentId = null;
-                filters.AgencyId = null;
-                break;
-            default:
-                return Unauthorized();
+            filters.ApplyRoleFilters(User.GetRole(), User.GetUserId(), User.GetAgencyId());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized();
         }
         
         var bookings = await bookingRepository.GetTotalBookingsAsync(filters);

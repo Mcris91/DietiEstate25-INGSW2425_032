@@ -38,6 +38,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
             //.Include(l => l.ListingImages)
             .Include(l => l.ListingOffers)
             .Include(l => l.ListingBookings)
+            .Include(l => l.ListingFavourites)
             .Include(l => l.Agent)
             .ApplyFilters(filters)
             .ApplyNumericFilters(filters)

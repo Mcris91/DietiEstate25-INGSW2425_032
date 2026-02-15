@@ -72,7 +72,7 @@ public class AuthController(
         }
         catch (InvalidJwtException)
         {
-            return BadRequest("Invalid Google token.");
+            return BadRequest("Token errato o scaduto");
         }
     }
     
@@ -80,16 +80,18 @@ public class AuthController(
     public async Task<IActionResult> RegisterAgency([FromBody] RegisterAgencyDto request)
     {
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-            return BadRequest("Email already exists.");
+            return BadRequest("La mail è già in uso");
         
         var agency = new Agency()
         {
-            Name = request.Name
+            Name = request.AgencyName
         };
 
         var randomPassword = passwordService.GenerateRandomSecurePassword();
         var administrator = new User
         {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Email = request.Email.ToLowerInvariant(),
             Password = passwordService.HashPassword(randomPassword),
             AgencyId = agency.Id,

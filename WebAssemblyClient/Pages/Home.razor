@@ -69,29 +69,34 @@
                                 <FluentStack Orientation="Orientation.Vertical">
                                     <img src="@listing.FeaturedImage" alt="ListingImage" class="rounded-lg" style="object-fit: cover" width="100%">
                                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="5">
-                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
-                                            @foreach (var tag in listing.Tags)
-                                            {
-                                                <FluentBadge Circular="true">@tag.Text</FluentBadge>
-                                            }
+                                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5">
+                                                @foreach (var tag in listing.Tags)
+                                                {
+                                                    <FluentBadge Circular="true">@tag.Text</FluentBadge>
+                                                }
+                                            </FluentStack>
                                             <AuthorizeView>
                                                 <Authorized>
-                                                    <span @onclick:stopPropagation="true">
-                                                        @if (!_favouriteListings.Contains(listing.Id))
-                                                        {
-                                                            <FluentIcon Value="@(new Icons.Regular.Size24.Heart())" 
-                                                                        Color="Color.Neutral"
-                                                                        OnClick="@(() => AddToFavourites(listing.Id, true))"
-                                                                        Style="cursor: pointer;" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <FluentIcon Value="@(new Icons.Filled.Size24.Heart())" 
-                                                                        Color="Color.Error"
-                                                                        OnClick="@(() => AddToFavourites(listing.Id, false))"
-                                                                        Style="cursor: pointer;" />
-                                                        }
-                                                    </span>
+                                                    @if (context.User.IsInRole("Client"))
+                                                    {
+                                                        <span @onclick:stopPropagation="true">
+                                                            @if (!_favouriteListings.Contains(listing.Id))
+                                                            {
+                                                                <FluentIcon Value="@(new Icons.Regular.Size24.Heart())"
+                                                                            Color="Color.Neutral"
+                                                                            OnClick="@(() => AddToFavourites(listing.Id, true))"
+                                                                            Style="cursor: pointer;"/>
+                                                            }
+                                                            else
+                                                            {
+                                                                <FluentIcon Value="@(new Icons.Filled.Size24.Heart())"
+                                                                            Color="Color.Error"
+                                                                            OnClick="@(() => AddToFavourites(listing.Id, false))"
+                                                                            Style="cursor: pointer;"/>
+                                                            }
+                                                        </span>
+                                                    }
                                                 </Authorized>
                                             </AuthorizeView>
                                         </FluentStack>
@@ -153,31 +158,41 @@
     private double _lon = 12.4964;
     private readonly ListingFilterDto _filters = new();
     private IList<Guid> _favouriteListings = [];
+    private bool _isDisposed;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Home.js");
-            
-            var location = await _jsModule.InvokeAsync<double[]?>("getUserLocation");
-            if (location != null)
+            try
             {
-                _lat = location[0];
-                _lon = location[1];
-            }
-            _filters.Latitude = _lat;
-            _filters.Longitude = _lon;
+                _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Home.js");
+                
+                var location = await _jsModule.InvokeAsync<double[]?>("getUserLocation");
+                if (location != null)
+                {
+                    _lat = location[0];
+                    _lon = location[1];
+                }
+                _filters.Latitude = _lat;
+                _filters.Longitude = _lon;
 
-            _favouriteListings = await FavouritesApiService.GetFavouritesIdList();
-            _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
-            StateHasChanged();
-            
-            await _jsModule.InvokeVoidAsync("setupMap", "map", _lat, _lon);
-            
-             if (_listings != null)
-                 foreach (var listing in _listings.Items)
-                     await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id);
+                _favouriteListings = await FavouritesApiService.GetFavouritesIdList();
+                _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
+                
+                if (_isDisposed) return;
+                
+                StateHasChanged();
+                
+                await _jsModule.InvokeVoidAsync("setupMap", "map", _lat, _lon);
+                
+                 if (_listings != null)
+                     foreach (var listing in _listings.Items)
+                         await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id, _favouriteListings.Contains(listing.Id));
+            }
+            catch (Exception ex) when (ex is ObjectDisposedException || ex is TaskCanceledException)
+            {
+            }
         }
     }
     
@@ -191,7 +206,7 @@
     
     private async Task SearchAddress()
     {
-        if (!string.IsNullOrWhiteSpace(_searchAddress))
+        if (!string.IsNullOrWhiteSpace(_searchAddress) && _jsModule != null)
         {
             var location = await _jsModule.InvokeAsync<double[]?>("searchAddress", _searchAddress);
             if (location == null) return;
@@ -204,21 +219,6 @@
             
             _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
             StateHasChanged();
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_jsModule is not null)
-        {
-            try 
-            {
-                await _jsModule.InvokeAsync<bool>("clearExistingMap", "map");
-                await _jsModule.DisposeAsync();
-            } catch (JSDisconnectedException) 
-            {
-                
-            }
         }
     }
     
@@ -236,7 +236,8 @@
         
         if (filterResult.Data is not null && !filterResult.Cancelled)
         {
-            ListingFilterDto? filter = filterResult.Data as ListingFilterDto;
+            if (filterResult.Data is not ListingFilterDto filter || _jsModule == null) return;
+            
             _listings = await ListingApiService.GetListingsAsync(filter,1, PageSize);
             await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
              
@@ -254,19 +255,21 @@
         if (_listings != null && _listings.PageNumber != pageIndex)
         {
             _listings = await ListingApiService.GetListingsAsync(_filters,pageIndex, PageSize);
-            if (_listings != null)
+            if (_listings != null && _jsModule != null)
+            {
                 await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
 
                 foreach (var listing in _listings.Items)
                 {
                     await _jsModule.InvokeVoidAsync("addMarker", "map", listing.Latitude, listing.Longitude, listing.Name, listing.Id);
                 }
+            }
             StateHasChanged();
         }
     }
 
     private Appearance PageButtonAppearance(int pageIndex)
-        => _listings.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
+        => _listings?.PageNumber == pageIndex ? Appearance.Accent : Appearance.Neutral;
 
     private async Task AddToFavourites(Guid listingId, bool favourite)
     {
@@ -279,6 +282,23 @@
         {
             _favouriteListings.Remove(listingId);
             await FavouritesApiService.RemoveFavouriteAsync(listingId);
+        }
+    }
+    
+    
+    public async ValueTask DisposeAsync()
+    {
+        _isDisposed = true;
+        if (_jsModule is not null)
+        {
+            try 
+            {
+                await _jsModule.InvokeAsync<bool>("clearExistingMap", "map");
+                await _jsModule.DisposeAsync();
+            } catch (JSDisconnectedException) 
+            {
+                
+            }
         }
     }
 }

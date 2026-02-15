@@ -88,7 +88,13 @@ public class AutoMapperProfile : Profile
                 {
                     Id = image.Id,
                     Url = image.Url
-                }))); 
+                })))
+            .ForMember(listingDto => listingDto.Offers, opt =>
+                opt.MapFrom(src => src.ListingOffers.Count))
+            .ForMember(listingDto => listingDto.Bookings, opt =>
+                opt.MapFrom(src => src.ListingBookings.Count))
+            .ForMember(listingDto => listingDto.Favourites, opt =>
+                opt.MapFrom(src => src.ListingFavourites.Count)); 
         CreateMap<PropertyTypeRequestDto, PropertyType>();
         CreateMap<PropertyType, PropertyTypeResponseDto>();
         CreateMap<ListingTypeDto, PropertyType>();
