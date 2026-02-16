@@ -9,9 +9,17 @@ namespace WebAssemblyClient.ApiService;
 public class ListingApiService(HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions) : BaseApiService(httpClient, jsonSerializerOptions)
 {
 
-    public async Task CreateListingAsync(ListingRequestDto listingDto)
+    public async Task<string?> CreateListingAsync(ListingRequestDto listingDto)
     {
-        await httpClient.PostAsJsonAsync("", listingDto);
+        var response = await httpClient.PostAsJsonAsync("", listingDto);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
     public async Task<ListingResponseDto> GetListingByIdAsync(Guid listingId)
     {
@@ -104,9 +112,17 @@ public class ListingApiService(HttpClient httpClient, JsonSerializerOptions json
         return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public async Task UpdateListingAsync(Guid listingId, ListingRequestDto listing)
+    public async Task<string?> UpdateListingAsync(Guid listingId, ListingRequestDto listing)
     {
-        await httpClient.PatchAsJsonAsync($"{listingId}", listing);
+        var response = await httpClient.PatchAsJsonAsync($"{listingId}", listing);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
     }
 
     public async Task<string?> DeleteListingAsync(Guid listingId)

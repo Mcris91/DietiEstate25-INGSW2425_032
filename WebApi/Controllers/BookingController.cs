@@ -24,7 +24,7 @@ public class BookingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
-    [Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadBooking")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookings(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -41,7 +41,7 @@ public class BookingController(
     }
     
     [HttpGet("{bookingId:guid}")]
-   
+    [Authorize(Policy = "ReadBooking")]
     public async Task<IActionResult> GetBookingById(Guid bookingId) 
     {
         if (await bookingRepository.GetBookingByIdAsync(bookingId) is { } booking)
@@ -51,7 +51,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByListingId/{listingId:guid}")]
-    [Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadBooking")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByListingId(
         Guid listingId,
         [FromQuery] BookingFilterDto filterDto,
@@ -69,7 +69,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByAgentId")]
-    [Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadBooking")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByAgentId(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
@@ -99,7 +99,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByClientId")]
-    [Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadBooking")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByClientId(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
@@ -119,7 +119,7 @@ public class BookingController(
     }
 
     [HttpPost]
-    [Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "WriteBooking")]
     public async Task<IActionResult> PostBooking(
         [FromBody] BookingRequestDto request)
     {
@@ -145,6 +145,7 @@ public class BookingController(
     }
 
     [HttpDelete("{bookingId:guid}")]
+    [Authorize(Policy = "DeleteBooking")]
     public async Task<IActionResult> DeleteBooking(Guid bookingId)
     {
         if(await bookingRepository.GetBookingByIdAsync(bookingId) is not { } booking)
@@ -164,6 +165,7 @@ public class BookingController(
     }
     
     [HttpGet("GetTotalBookings")]
+    [Authorize(Policy = "ReadBooking")]
     public async Task<ActionResult> GetTotalBookings()
     {
         var agentId = User.GetUserId();
@@ -190,13 +192,17 @@ public class BookingController(
     }
     
     [HttpPut("AcceptOrRejectBooking/{bookingId:guid}/{accept:bool}")]
+    [Authorize(Policy = "WriteBooking")]
     public async Task<IActionResult> AcceptOrRejectOffer(Guid bookingId, bool accept)
     {
         var booking = await bookingRepository.GetBookingByIdAsync(bookingId);
         if (booking is null) return NotFound();
 
-        if (booking.Status != BookingStatus.Pending)
-            return Unauthorized();
+        if (booking.Status == BookingStatus.Accepted)
+            return BadRequest("La prenotazione è già stata accettata dal nostro agente");
+        
+        if (booking.Status == BookingStatus.Rejected)
+            return BadRequest("La prenotazione è già stata rifiutata dal nostro agente");
         
         booking.Status = accept ? BookingStatus.Accepted : BookingStatus.Rejected;
         

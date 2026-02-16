@@ -33,7 +33,7 @@
                 <FluentButton Appearance="Appearance.Accent"
                               OnClick="@SearchAddress"
                               IconStart="@(new Icons.Regular.Size20.Search())"
-                              Style="width: 100%">
+                              Style="width: 100%" Loading="_isSearching">
                     Cerca
                 </FluentButton>
             </FluentGridItem>
@@ -159,6 +159,7 @@
     private readonly ListingFilterDto _filters = new();
     private IList<Guid> _favouriteListings = [];
     private bool _isDisposed;
+    private bool _isSearching;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -206,10 +207,15 @@
     
     private async Task SearchAddress()
     {
+        _isSearching = true;
         if (!string.IsNullOrWhiteSpace(_searchAddress) && _jsModule != null)
         {
             var location = await _jsModule.InvokeAsync<double[]?>("searchAddress", _searchAddress);
-            if (location == null) return;
+            if (location == null)
+            {
+                _isSearching = false;
+                return;
+            }
             
             _lat = location[0]; 
             _lon = location[1];
@@ -220,10 +226,12 @@
             _listings = await ListingApiService.GetListingsAsync(_filters,1, PageSize);
             StateHasChanged();
         }
+        _isSearching = false;
     }
     
     private async Task OpenListingFilterDialogAsync()
     {
+        _isSearching = true;
         DialogParameters registerParameters = new() {
             Title = "Filtri",
             TitleTypo = Typography.H2,
@@ -236,8 +244,11 @@
         
         if (filterResult.Data is not null && !filterResult.Cancelled)
         {
-            if (filterResult.Data is not ListingFilterDto filter || _jsModule == null) return;
-            
+            if (filterResult.Data is not ListingFilterDto filter || _jsModule == null)
+            {
+                _isSearching = false;
+                return;
+            }
             _listings = await ListingApiService.GetListingsAsync(filter,1, PageSize);
             await _jsModule.InvokeVoidAsync("removeAllMarkers", "map");
              
@@ -248,6 +259,7 @@
                 }
             StateHasChanged();
         }
+        _isSearching = false;
     }
     
     private async Task GoToPageAsync(int pageIndex)
@@ -284,7 +296,6 @@
             await FavouritesApiService.RemoveFavouriteAsync(listingId);
         }
     }
-    
     
     public async ValueTask DisposeAsync()
     {

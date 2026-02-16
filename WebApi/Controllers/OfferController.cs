@@ -8,6 +8,7 @@ using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Enums;
 using DietiEstate.Infrastructure.Extensions;
 using Hangfire;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,8 +26,9 @@ public class OfferController(
     //RedisSessionService redisSessionService,
     IMapper mapper) : Controller
 {
-    //sia customer che agent
+    
     [HttpPost]
+    [Authorize(Policy="WriteOffer")]
     public async Task<IActionResult> PostOffer([FromBody] OfferRequestDto request)
     {
         var offer = mapper.Map<Offer>(request);
@@ -55,6 +57,9 @@ public class OfferController(
             if (firstOffer is null)
                 return BadRequest("Nessuna offerta trovata");
             
+            if (firstOffer.CustomerId == User.GetUserId() && string.Equals(User.GetRole(), "EstateAgent"))
+                return BadRequest("Non puoi inserire contro offerte per delle offerte esterne");
+            
             if (firstOffer.Id != firstOffer.FirstOfferId && string.Equals(User.GetRole(), "EstateAgent"))
                 return BadRequest("Non puoi inserire più contro offerte per la stessa offerta");
 
@@ -69,7 +74,7 @@ public class OfferController(
         return CreatedAtAction(nameof(GetOfferById), new { offerId = offer.Id }, mapper.Map<OfferResponseDto>(offer));
     }
 
-    //sia customer che agent
+    [Authorize(Policy = "ReadOffer")]
     [HttpGet]
     public async Task<IActionResult> GetOfferById(Guid offerId)
     {
@@ -78,18 +83,21 @@ public class OfferController(
         return NotFound();
     }
 
-    //agent
+    [Authorize(Policy="WriteOffer")]
     [HttpPut("AcceptOrRejectOffer/{offerId:guid}/{accept:bool}")]
     public async Task<IActionResult> AcceptOrRejectOffer(Guid offerId, bool accept)
     {
         var offer = await offerRepository.GetOfferByIdAsync(offerId);
         if (offer is null) return NotFound();
 
+        if (offer.AgentId != User.GetUserId())
+            return Unauthorized();
+        
         if (offer.Id != offer.FirstOfferId)
             return BadRequest("Non puoi accettare o rifiutare una contro offerta");
         
         if (offer.Status != OfferStatus.Pending)
-            return Unauthorized();
+            return BadRequest("L'offerta è già stata accettata/rifiutata");
         
         offer.Status = accept ? OfferStatus.Accepted : OfferStatus.Rejected;
         
@@ -99,7 +107,6 @@ public class OfferController(
         if (!listing.Available)
             return Unauthorized();
         
-        // Da inserire in una transaction
         await offerRepository.UpdateOfferAsync(offer);
         if (accept)
         {
@@ -113,7 +120,6 @@ public class OfferController(
             await listingRepository.UpdateListingAsync(listing, null);
         }
         // send email
-        await offerRepository.AddOfferAsync(offer);
         var user = await userRepository.GetUserByIdAsync(offer.CustomerId);
         if (user == null) return Ok();
         var emailData = await emailService.PrepareOfferStatusChangeAsync(user, listing.Name, offer.Status);
@@ -122,7 +128,7 @@ public class OfferController(
         return Ok();
     }
     
-    //client
+    [Authorize(Policy="WriteOffer")]
     [HttpPut("AcceptOrRejectCounterOffer/{counterOfferId:guid}/{accept:bool}")]
     public async Task<IActionResult> AcceptOrRejectCounterOffer(Guid counterOfferId, bool accept)
     {
@@ -140,7 +146,6 @@ public class OfferController(
         if (!listing.Available)
             return Unauthorized();
         
-        // Da inserire in una transaction
         await offerRepository.UpdateOfferAsync(offer);
         if (accept)
         {
@@ -157,7 +162,7 @@ public class OfferController(
         return Ok();
     }
     
-    //sia customer che agent
+    [Authorize(Policy="DeleteOffer")]
     [HttpDelete("{offerId:guid}")]
     public async Task<IActionResult> DeleteOffer(Guid offerId)
     {
@@ -177,7 +182,7 @@ public class OfferController(
         return NoContent();
     }
     
-    //agent
+    [Authorize(Policy="ReadOffer")]
     [HttpGet("GetByAgentId")]
     public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOffersByAgentId(
         [FromQuery] OfferFilterDto filterDto,
@@ -210,7 +215,7 @@ public class OfferController(
             pageSize, pageNumber));
     }
     
-    //customer
+    [Authorize(Policy="ReadOffer")]
     [HttpGet("GetByCustomerId")]
     public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOffersByCustomerId(
         [FromQuery] OfferFilterDto filterDto,
@@ -232,27 +237,8 @@ public class OfferController(
             pageSize, pageNumber));
     }
     
-    //sia customer che agent
-    [HttpGet("GetOfferHistory/{offerId:guid}")]
-    public async Task<ActionResult<PagedResponseDto<OfferResponseDto>>> GetOfferHistory(
-        Guid offerId,
-        [FromQuery] int? pageNumber,
-        [FromQuery] int? pageSize)
-    {
-        if (pageNumber.HasValue ^ pageSize.HasValue) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be provided for pagination."});
-        if (pageNumber <= 0 || pageSize <= 0) 
-            return BadRequest(new {error = "Both pageNumber and pageSize must be greater than zero."});
 
-        if (await offerRepository.GetOfferByIdAsync(offerId) is not { } offer) 
-            return NotFound();
-        
-        var offers = await offerRepository.GetOfferHistoryAsync(offer.FirstOfferId);
-        return Ok(new PagedResponseDto<OfferResponseDto>(
-            offers.ToList().Select(mapper.Map<OfferResponseDto>), 
-            pageSize, pageNumber));
-    }
-
+    [Authorize(Policy = "ReadOffer")]
     [HttpGet("GetTotalOffers")]
     public async Task<ActionResult> GetTotalOffers()
     {

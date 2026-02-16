@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reactive.Concurrency;
 using System.Security.Claims;
 using System.Text;
 using DietiEstate.Application.Interfaces.Services;
@@ -120,16 +121,30 @@ public class JwtService(JwtConfiguration jwtConfiguration) : IJwtService
                 break;
             case UserRole.SuperAdmin:
                 scopes.AddRange(UserScope.SupportAdmin.All);
+                scopes.AddRange(UserScope.ReadUser);
+                scopes.AddRange(UserScope.ReadListing);
+                scopes.AddRange(UserScope.ReadOffer);
+                scopes.AddRange(UserScope.ReadBooking);
+                scopes.AddRange(UserScope.WriteAgent);
                 break;
             case UserRole.SupportAdmin:
                 scopes.AddRange(UserScope.Agent.All);
+                scopes.AddRange(UserScope.ReadUser);
+                scopes.AddRange(UserScope.ReadListing);
+                scopes.AddRange(UserScope.ReadOffer);
+                scopes.AddRange(UserScope.ReadBooking);
                 break;
             case UserRole.EstateAgent:
                 scopes.AddRange(UserScope.Listing.All);
+                scopes.AddRange(UserScope.Offer.All);
+                scopes.AddRange(UserScope.Booking.All);
                 break;
             case UserRole.Client:
                 scopes.AddRange(UserScope.ReadListing);
                 scopes.AddRange(UserScope.ReadAgent);
+                scopes.AddRange(UserScope.Offer.All);
+                scopes.AddRange(UserScope.Booking.All);
+                scopes.AddRange(UserScope.Favourite.All);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(user.Role.ToString());

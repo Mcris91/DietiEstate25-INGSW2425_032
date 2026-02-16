@@ -30,9 +30,22 @@ public class UserApiService(HttpClient httpClient, JsonSerializerOptions jsonSer
         return await GetAsync<PagedResponseDto<UserResponseDto>>(uri);
     }
     
-    public async Task<string?> AddEmployee(UserRequestDto employee)
+    public async Task<string?> Creategent(UserRequestDto employee)
     {
         var response = await httpClient.PostAsJsonAsync("create-agent", employee);
+        
+        if (response.IsSuccessStatusCode)
+            return "";
+        
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadAsStringAsync();
+        
+        return null;
+    }
+    
+    public async Task<string?> CreateSupportAdmin(UserRequestDto employee)
+    {
+        var response = await httpClient.PostAsJsonAsync("create-support-admin", employee);
         
         if (response.IsSuccessStatusCode)
             return "";

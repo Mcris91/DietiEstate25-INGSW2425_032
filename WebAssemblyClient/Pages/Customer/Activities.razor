@@ -241,7 +241,7 @@
                         if (_loadedOffer.Id == _loadedOffer.FirstOfferId)
                         {
                             <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                          OnClick="@(() => DeleteOffer(_loadedOffer.Id))">
+                                          OnClick="@(() => DeleteOffer(_loadedOffer.Id))" Loading="_isDeletingOffer">
                                 Ritira offerta
                             </FluentButton>
                         }
@@ -250,13 +250,13 @@
                             <FluentGrid Spacing="1" Style="width: 100%;">
                                 <FluentGridItem xs="6">
                                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
-                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, true))">
+                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, true))" Loading="_isAcceptingCounterOffer">
                                         Accetta
                                     </FluentButton>
                                 </FluentGridItem>
                                 <FluentGridItem xs="6">
                                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, false))">
+                                                  OnClick="@(() => HandleOfferAction(_loadedOffer.Id, false))" Loading="_isRejectingCounterOffer">
                                         Rifiuta
                                     </FluentButton>
                                 </FluentGridItem>
@@ -295,7 +295,7 @@
                 @if (_loadedBooking.Status == BookingStatus.Pending)
                 {
                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                      OnClick="@(() => DeleteBooking(_loadedBooking.Id))">
+                                      OnClick="@(() => DeleteBooking(_loadedBooking.Id))" Loading="_isDeletingBooking">
                             Annulla prenotazione
                     </FluentButton>
                 }
@@ -323,6 +323,11 @@
     private Dictionary<string, string>? _detailsBookingCardTopSection;
     private Dictionary<string, string>? _detailsBookingCardBottomSection;
     private BookingResponseDto? _loadedBooking;
+
+    private bool _isDeletingOffer;
+    private bool _isDeletingBooking;
+    private bool _isAcceptingCounterOffer;
+    private bool _isRejectingCounterOffer;
 
     OfferFilterDto _offerFilters = new();
     BookingFilterDto _bookingFilters = new();
@@ -373,6 +378,11 @@
     
     private async Task HandleOfferAction(Guid offerId, bool accept)
     {
+        if (accept)
+            _isAcceptingCounterOffer = true;
+        else
+            _isRejectingCounterOffer = true;
+        
         var response = await OfferApiService.AcceptOrRejectCounterOfferAsync(offerId, accept);
         switch (response)
         {
@@ -389,6 +399,10 @@
                 ToastService.ShowWarning(response);
                 break;
         }
+        if (accept)
+            _isAcceptingCounterOffer = false;
+        else
+            _isRejectingCounterOffer = false;
         StateHasChanged();
     }
     
@@ -483,6 +497,8 @@
 
     private async Task DeleteOffer(Guid offerId)
     {
+        _isDeletingOffer = true;
+        
         var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler ritirare l'offerta?", title: "Conferma", primaryText:"Si");
         var confirmDialogResult = await confirmDialog.Result;
         if (!confirmDialogResult.Cancelled)
@@ -506,10 +522,13 @@
             }
             StateHasChanged();
         }
+        _isDeletingOffer = false;
     }
     
     private async Task DeleteBooking(Guid bookingId)
     {
+        _isDeletingBooking = true;
+        
         var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler annullare la prenotazione?", title: "Conferma", primaryText:"Si");
         var confirmDialogResult = await confirmDialog.Result;
         if (!confirmDialogResult.Cancelled)
@@ -533,6 +552,7 @@
             }
             StateHasChanged();
         }
+        _isDeletingBooking = false;
     }
     
     private string GetOfferStatus(OfferResponseDto offer)

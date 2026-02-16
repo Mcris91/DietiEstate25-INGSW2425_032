@@ -208,7 +208,7 @@ public class ListingController(
     }
 
     [HttpPatch("{listingId:guid}")]
-    [Authorize(Roles = "WriteListing")]
+    [Authorize(Policy = "WriteListing")]
     public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] ListingRequestDto listingDto)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -250,7 +250,6 @@ public class ListingController(
         
         foreach (var image in listingDto.Images)
         {
-            Console.WriteLine($"Url dell'immagine:{image.PreviewUrl}");
             if (image.Image.Length > 0)
             {
                 using var imageStream = new MemoryStream(image.Image);
@@ -308,7 +307,7 @@ public class ListingController(
     }
 
     [HttpDelete("{listingId:guid}")]
-    [Authorize(Roles = "WriteListing")]
+    [Authorize(Policy = "WriteListing")]
     public async Task<IActionResult> DeleteListing(Guid listingId)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -325,7 +324,7 @@ public class ListingController(
     }
 
     [HttpGet("GetReport")]
-    [AllowAnonymous]
+    [Authorize(Policy = "WriteListing")]
     public async Task<IActionResult> GetReport()
     {
         IList<Listing> listings = (IList<Listing>)await listingRepository.GetDetailedListingsAsync(new ListingFilterDto(){AgentId = User.GetUserId()});

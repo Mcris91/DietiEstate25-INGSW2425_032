@@ -129,15 +129,15 @@
               @if (currentUser.User.IsInRole("EstateAgent"))
               {
                 <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="@(() => { Navigation.NavigateTo("/listing/create"); })">Aggiungi Inserzione</FluentButton>
-                <FluentButton IconStart="new Icons.Regular.Size20.DocumentArrowDown()" OnClick="DownloadReport">Stampa Report</FluentButton>
+                <FluentButton IconStart="new Icons.Regular.Size20.DocumentArrowDown()" OnClick="DownloadReport" Loading="_isReportLoading">Stampa Report</FluentButton>
               }
-              @if (currentUser.User.IsInRole("SupportAdmin"))
+              @if (currentUser.User.IsInRole("SupportAdmin") || currentUser.User.IsInRole("SuperAdmin"))
               {
-                <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="OpenCreateEmployeeDialog"> Aggiungi Agente immobiliare</FluentButton>
+                <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="@(() =>OpenCreateEmployeeDialog(true))" Loading="_isCreatingEmployee"> Aggiungi Agente</FluentButton>
               }
               @if (currentUser.User.IsInRole("SuperAdmin"))
               {
-                <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="OpenCreateEmployeeDialog"> Aggiungi Amministratore di supporto</FluentButton>
+                <FluentButton IconStart="new Icons.Regular.Size20.Add()" OnClick="@(() =>OpenCreateEmployeeDialog(false))" Loading="_isCreatingEmployee"> Aggiungi Amministratore</FluentButton>
               }
             </div>
           </FluentTabs>
@@ -164,7 +164,7 @@
                   </FluentGridItem>
                   <FluentGridItem xs="6">
                     <FluentButton Style="width: 100%;" Disabled="@(!listing.Available || !currentUser.User.IsInRole("EstateAgent"))" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                  OnClick="@(() => DeleteListing(listing.Id))">
+                                  OnClick="@(() => DeleteListing(listing.Id))" Loading="_isDeletingListing">
                       Elimina
                     </FluentButton>
                   </FluentGridItem>
@@ -176,7 +176,7 @@
                   </FluentGridItem>
                   <FluentGridItem xs="6">
                     <FluentButton Style="width: 100%;" Disabled="@(!listing.Available || !currentUser.User.IsInRole("EstateAgent"))" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Add()"
-                                  OnClick="@(() => OpenMakeExternalOfferDialog(listing))">
+                                  OnClick="@(() => OpenMakeExternalOfferDialog(listing))" Loading="_isMakingExternalOffer">
                       Aggiungi offerta
                     </FluentButton>
                   </FluentGridItem>
@@ -186,20 +186,20 @@
                 <FluentGrid Spacing="1" Style="width: 100%;">
                   <FluentGridItem xs="4">
                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
-                                  OnClick="@(() => HandleOfferAction(offer.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                  OnClick="@(() => HandleOfferAction(offer.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isAcceptingOffer">
                       Accetta
                     </FluentButton>
                   </FluentGridItem>
                   <FluentGridItem xs="4">
                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                  OnClick="@(() => HandleOfferAction(offer.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                  OnClick="@(() => HandleOfferAction(offer.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isRejectingOffer">
                       Rifiuta
                     </FluentButton>
                   </FluentGridItem>
                   @if(offer.Id == offer.FirstOfferId){
                     <FluentGridItem xs="4">
                       <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
-                                    OnClick="@(() => OpenCounterMakeOfferDialog((OfferResponseDto)_loadedItem))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                    OnClick="@(() => OpenCounterMakeOfferDialog((OfferResponseDto)_loadedItem))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isMakingCounterOffer">
                         Contro-Offerta
                       </FluentButton>
                     </FluentGridItem>
@@ -208,7 +208,7 @@
                   {
                     <FluentGridItem xs="4">
                       <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Edit()"
-                                    OnClick="@(() => DeleteOffer(offer.Id))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                    OnClick="@(() => DeleteOffer(offer.Id))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isDeletingOffer">
                         Ritira contro offerta
                       </FluentButton>
                     </FluentGridItem>
@@ -219,13 +219,13 @@
                 <FluentGrid Spacing="1" Style="width: 100%;">
                   <FluentGridItem xs="6">
                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Checkmark()"
-                                  OnClick="@(() => HandleBookingAction(booking.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                  OnClick="@(() => HandleBookingAction(booking.Id, true))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isAcceptingBooking">
                       Accetta
                     </FluentButton>
                   </FluentGridItem>
                   <FluentGridItem xs="6">
                     <FluentButton Style="width: 100%;" Appearance="Appearance.Accent" IconStart="new Icons.Regular.Size20.Dismiss()"
-                                  OnClick="@(() => HandleBookingAction(booking.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))">
+                                  OnClick="@(() => HandleBookingAction(booking.Id, false))" Disabled="@(!currentUser.User.IsInRole("EstateAgent"))" Loading="_isRejectingBooking">
                       Rifiuta
                     </FluentButton>
                   </FluentGridItem>
@@ -266,6 +266,19 @@
     private Dictionary<string, string>? _detailsCardTopSection;
     private Dictionary<string, string>? _detailsCardBottomSection;
     private object? _loadedItem;
+
+    private bool _isAcceptingOffer;
+    private bool _isRejectingOffer;
+    private bool _isMakingCounterOffer;
+    private bool _isMakingExternalOffer;
+    private bool _isReportLoading;
+    private bool _isDeletingOffer;
+    private bool _isDeletingListing;
+    
+    
+    private bool _isAcceptingBooking;
+    private bool _isRejectingBooking;
+    private bool _isCreatingEmployee;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -291,13 +304,6 @@
 
     private void OnListingRowClick(ListingResponseDto listing)
     {
-      if (_loadedItem is ListingResponseDto loaded && loaded.Id == listing.Id)
-      {
-        _detailsCardBottomSection = null;
-        _detailsCardTopSection = null;
-        return;
-      }
-      
       _isDetailsCardLoading = true;
       _detailsCardTopSection = new Dictionary<string, string>()
       {
@@ -329,13 +335,6 @@
     
     private void OnOfferRowClick(OfferResponseDto offer)
     {
-    if (_loadedItem is OfferResponseDto loaded && loaded.Id == offer.Id)
-      {
-        _detailsCardBottomSection = null;
-        _detailsCardTopSection = null;
-        return;
-      }
-      
       _isDetailsCardLoading = true;
       _detailsCardTopSection = new Dictionary<string, string>()
       {
@@ -359,13 +358,6 @@
     
     private void OnBookingRowClick(BookingResponseDto booking)
     {
-    if (_loadedItem is BookingResponseDto loaded && loaded.Id == booking.Id)
-      {
-        _detailsCardBottomSection = null;
-        _detailsCardTopSection = null;
-        return;
-      }
-      
       _isDetailsCardLoading = true;
       _detailsCardTopSection = new Dictionary<string, string>()
       {
@@ -388,13 +380,6 @@
     
     private void OnEmployeeRowClick(UserResponseDto employee)
     {
-      if (_loadedItem is UserResponseDto loaded && loaded.Id == employee.Id)
-      {
-        _detailsCardBottomSection = null;
-        _detailsCardTopSection = null;
-        return;
-      }
-      
       _isDetailsCardLoading = true;
       _detailsCardTopSection = new Dictionary<string, string>()
       {
@@ -410,6 +395,11 @@
 
     private async Task HandleOfferAction(Guid offerId, bool accept)
     {
+      if (accept)
+        _isAcceptingOffer = true;
+      else
+        _isRejectingOffer = true;
+      
       var response = await OfferApiService.AcceptOrRejectOfferAsync(offerId, accept);
       
       switch (response)
@@ -431,11 +421,19 @@
           ToastService.ShowWarning(response);
           break;
       }
-      StateHasChanged();
+      if (accept)
+        _isAcceptingOffer = false;
+      else
+        _isRejectingOffer = false;
     }
     
     private async Task HandleBookingAction(Guid bookingId, bool accept)
     {
+      if (accept)
+        _isAcceptingBooking = false;
+      else
+        _isRejectingBooking = false;
+      
       var response = await BookingApiService.AcceptOrRejectBookingAsync(bookingId, accept);
       
       switch (response)
@@ -456,23 +454,28 @@
           ToastService.ShowWarning(response);
           break;
       }
-      StateHasChanged();
+      if (accept)
+        _isAcceptingBooking = false;
+      else
+        _isRejectingBooking = false;
     }
 
     private async Task DownloadReport()
     {
       if (_jsModule != null)
       {
+        _isReportLoading = true;
         var file = await ListingApiService.GetReportAsync();
         var fileName = "Report.xlsx";
         await _jsModule.InvokeVoidAsync("downloadFileFromStream", fileName, file);
+        _isReportLoading = false;
       }
       
     }
     
-    private async Task OpenCreateEmployeeDialog()
+    private async Task OpenCreateEmployeeDialog(bool _isAgent)
     {
-
+      _isCreatingEmployee = true;
       UserRequestDto registerUser = new()
       {
         FirstName = "",
@@ -496,7 +499,11 @@
       {
         if (registerResult.Data is not UserRequestDto registerRequest) return;
         
-        var response = await UserApiService.AddEmployee(registerRequest);
+        string? response;
+        if (_isAgent)
+          response = await UserApiService.Creategent(registerRequest);
+        else 
+          response = await UserApiService.CreateSupportAdmin(registerRequest);
         switch (response)
         {
           case "":
@@ -513,11 +520,12 @@
             break;
         }
       }
+      _isCreatingEmployee = false;
     }
     
     private async Task OpenCounterMakeOfferDialog(OfferResponseDto firstOffer)
     {
-      {
+        _isMakingCounterOffer = true;
         OfferRequestDto offerRequest = new()
         {
           FirstOfferId = firstOffer.Id,
@@ -546,7 +554,6 @@
         if (offerResult.Data is not null && !offerResult.Cancelled)
         {
           if (offerResult.Data is not OfferRequestDto offer) return;
-          
           var response = await OfferApiService.PostOfferAsync(offer);
               
           switch (response)
@@ -565,12 +572,13 @@
               break;
           }
         }
-      }
+        _isMakingCounterOffer = false;
     }
     
     private async Task OpenMakeExternalOfferDialog(ListingResponseDto listing)
     {
-      {
+        _isMakingExternalOffer = true;
+      
         OfferRequestDto offerRequest = new()
         {
           AgentId = listing.Agent.Id,
@@ -597,31 +605,32 @@
 
         if (offerResult.Data is not null && !offerResult.Cancelled)
         {
-          if (offerResult.Data is not OfferRequestDto offer) return;
-          
-          var response = await OfferApiService.PostOfferAsync(offer);
+            if (offerResult.Data is not OfferRequestDto offer) return;
+            
+            var response = await OfferApiService.PostOfferAsync(offer);
               
-          switch (response)
-          {
-            case "":
-              ToastService.ShowSuccess("Offerta registrata con successo!");
-              _detailsCardTopSection = null;
-              _detailsCardBottomSection = null;
-              await _offerGrid.LoadData(1,10);
-              break;
-            case null:
-              ToastService.ShowError("Si è verificato un errore imprevisto");
-              break;
-            default:
-              ToastService.ShowWarning(response);
-              break;
-          }
+            switch (response)
+            {
+              case "":
+                ToastService.ShowSuccess("Offerta registrata con successo!");
+                _detailsCardTopSection = null;
+                _detailsCardBottomSection = null;
+                await _offerGrid.LoadData(1,10);
+                break;
+              case null:
+                ToastService.ShowError("Si è verificato un errore imprevisto");
+                break;
+              default:
+                ToastService.ShowWarning(response);
+                break;
+            }
         }
-      }
+        _isMakingExternalOffer = false;
     }
     
     private async Task DeleteOffer(Guid offerId)
     {
+      _isDeletingOffer = true;
       var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler ritirare la contro offerta?", title: "Conferma", primaryText:"Si");
       var confirmDialogResult = await confirmDialog.Result;
       if (!confirmDialogResult.Cancelled)
@@ -646,10 +655,13 @@
         }
         StateHasChanged();
       }
+      _isDeletingOffer = false;
     }
     
     private async Task DeleteListing(Guid listingId)
     {
+      _isDeletingListing = true;
+      
       var confirmDialog = await DialogService.ShowConfirmationAsync( message:"Sicuro di voler eliminare l'annuncio?", title: "Conferma", primaryText:"Si");
       var confirmDialogResult = await confirmDialog.Result;
       if (!confirmDialogResult.Cancelled)
@@ -678,6 +690,8 @@
         }
         StateHasChanged();
       }
+
+      _isDeletingListing = false;
     }
     
     private string GetOfferStatus(OfferResponseDto offer)

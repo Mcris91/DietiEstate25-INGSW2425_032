@@ -152,7 +152,7 @@
     
                         <FluentButton Id="cover-upload" 
                                       Appearance="Appearance.Accent"
-                                      IconStart="@(new Icons.Regular.Size20.Image())">
+                                      IconStart="@(new Icons.Regular.Size20.Image())" Loading="_isSelectingCover">
                             Scegli immagine di copertina
                         </FluentButton>
                     }
@@ -176,7 +176,7 @@
                                              OnCompleted="@OnGalleryFilesUploaded"/>
                             
                             <FluentButton Id="gallery-upload" 
-                                          IconStart="@(new Icons.Regular.Size20.ImageMultiple())">
+                                          IconStart="@(new Icons.Regular.Size20.ImageMultiple())" Loading="_isSelectingImages">
                                 Aggiungi altre immagini
                             </FluentButton>
                             
@@ -210,7 +210,7 @@
             
             <FluentCard>
                 <FluentButton Appearance="Appearance.Accent" Style="width: 100%;"
-                              OnClick="@SaveListingAsync">Salva</FluentButton>
+                              OnClick="@SaveListingAsync" Loading="_isSaving">Salva</FluentButton>
             </FluentCard>
         </FluentStack>
     </FluentGridItem>
@@ -228,12 +228,16 @@
     private IJSObjectReference? _jsModule; 
     private EditContext _editContext = default!;
     private bool _imageIsMissing;
+    private bool _isSelectingCover;
+    private bool _isSelectingImages;
+    private bool _isSaving;
 
 
     private ListingRequestDto _listingRequestDto = new();
 
     private async Task OnGalleryFilesUploaded(IEnumerable<FluentInputFileEventArgs> files)
     {
+        _isSelectingImages = true;
         foreach (var file in files)
         {
             using var memoryStream = new MemoryStream();
@@ -249,6 +253,7 @@
             });
 
         }
+        _isSelectingImages = false;
         StateHasChanged();
     }
 
@@ -307,6 +312,7 @@
     
     private async Task OnCoverFileUploadComplete(IEnumerable<FluentInputFileEventArgs> files)
     {
+        _isSelectingCover = true;
         var file = files.FirstOrDefault();
         if (file?.Stream == null) return;
     
@@ -316,38 +322,70 @@
 
         _coverFile = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}";
         _listingRequestDto.FeaturedImage = bytes;
+        _isSelectingCover = false;
         _isCoverUploaded = true;
     }
 
     private async Task SaveListingAsync()
     {
+        _isSaving = true;
         _imageIsMissing = !_isCoverUploaded;
 
-        if (!_editContext.Validate() || _imageIsMissing) return;
-        
+        if (!_editContext.Validate() || _imageIsMissing)
+        {
+            _isSaving = false;
+            return;
+        }
+
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var userEmail = user.User.FindFirst("email")?.Value;
         
-        if (userId == null || userEmail == null) return;
+        if (userId == null || userEmail == null)
+        {
+            _isSaving = false;
+            return;
+        }
         
-
         if (ListingId == Guid.Empty)
         {
             _listingRequestDto.AgentUserId = Guid.Parse(userId);
             _listingRequestDto.OwnerEmail = userEmail;
-            await ListingApiService.CreateListingAsync(_listingRequestDto);
-            ToastService.ShowSuccess("Inserzione aggiunta con successo!");
+            var response = await ListingApiService.CreateListingAsync(_listingRequestDto);
+            switch (response)
+            {
+                case "":
+                    ToastService.ShowSuccess("Inserzione aggiunta con successo!");
+                    break;
+                case null:
+                    ToastService.ShowError("Si è verificato un errore imprevisto");
+                    break;
+                default:
+                    ToastService.ShowWarning(response);
+                    break;
+            }
             Navigation.NavigateTo("/agent/dashboard");
         }
         else
         {
-          _listingRequestDto.AgentUserId = Guid.Parse(userId);
-          _listingRequestDto.OwnerEmail = userEmail;
-          await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
-          ToastService.ShowSuccess("Inserzione modificata con successo!");
-          Navigation.NavigateTo("/agent/dashboard");
+            _listingRequestDto.AgentUserId = Guid.Parse(userId);
+            _listingRequestDto.OwnerEmail = userEmail;
+            var response = await ListingApiService.UpdateListingAsync(ListingId, _listingRequestDto);
+            switch (response)
+            {
+                case "":
+                    ToastService.ShowSuccess("Inserzione aggiunta con successo!");
+                    break;
+                case null:
+                    ToastService.ShowError("Si è verificato un errore imprevisto");
+                    break;
+                default:
+                    ToastService.ShowWarning(response);
+                    break;
+            }
+            Navigation.NavigateTo("/agent/dashboard");
         }
+        _isSaving = false;
     }
 
     private async Task HandleKeyUp(KeyboardEventArgs e)

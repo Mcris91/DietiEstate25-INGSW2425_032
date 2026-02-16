@@ -51,7 +51,9 @@ public class GeoapifyService(
                 Longitude = coords[0].GetDouble(),
                 Latitude = coords[1].GetDouble()
             };
-        }).ToList();
+        })
+        .Where(s => s.Name.Length <= 50)
+        .ToList();
         
         return services;
     }

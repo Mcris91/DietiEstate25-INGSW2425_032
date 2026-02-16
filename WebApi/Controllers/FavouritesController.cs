@@ -4,6 +4,7 @@ using DietiEstate.Application.Interfaces.Repositories;
 using DietiEstate.Application.Interfaces.Services;
 using DietiEstate.Core.Entities.FavouritesModels;
 using DietiEstate.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ public class FavouritesController(
     IFavouritesRepository favouritesRepository) : Controller
 {
     [HttpGet]
+    [Authorize(Policy = "ReadFavourite")]
     public async Task<ActionResult<PagedResponseDto<UserFavouritesResponseDto>>> GetFavourites(
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
@@ -45,6 +47,7 @@ public class FavouritesController(
     }
     
     [HttpGet("get-user-favourite/{listingId:guid}")]
+    [Authorize(Policy = "ReadFavourite")]
     public async Task<ActionResult<bool>> GetFavouriteByListingId(
         [FromRoute] Guid listingId)
     {
@@ -55,6 +58,7 @@ public class FavouritesController(
     }
 
     [HttpPost("{listingId:guid}")]
+    [Authorize(Policy = "WriteFavourite")]
     public async Task<ActionResult> CreateFavourite([FromRoute] Guid listingId)
     {
         var userId = User.GetUserId();
@@ -70,6 +74,7 @@ public class FavouritesController(
     
     
     [HttpDelete("{listingId:guid}")]
+    [Authorize(Policy = "DeleteFavourite")]
     public async Task<ActionResult> DeleteFavourite([FromRoute] Guid listingId)
     {
         var userId = User.GetUserId();
@@ -81,6 +86,7 @@ public class FavouritesController(
     }
 
     [HttpGet("favourites-list")]
+    [Authorize(Policy = "ReadFavourite")]
     public async Task<IActionResult> GetFavouritesIdList()
     {
         var userId = User.GetUserId();

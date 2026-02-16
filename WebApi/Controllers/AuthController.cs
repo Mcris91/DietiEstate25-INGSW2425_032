@@ -171,7 +171,7 @@ public class AuthController(
     public async Task<IActionResult> SignUp([FromBody] UserRequestDto request)
     {
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-            return BadRequest("Email already exists.");
+            return BadRequest("La mail è già in uso");
         
         var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (!string.IsNullOrWhiteSpace(passwordValidation))

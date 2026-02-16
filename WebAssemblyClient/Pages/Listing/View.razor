@@ -112,30 +112,48 @@ else
             <FluentCard>
                 <FluentStack Orientation="Orientation.Vertical" Style="height: 100%; width: 100%">
                     <FluentLabel Typo="Typography.H4">Caratteristiche</FluentLabel>
-                    <FluentStack Orientation="Orientation.Horizontal" Style="width: 100%; height: 100%; justify-content: space-between;">
-                        <FluentStack Orientation="Orientation.Vertical" Style="flex-grow: 1; justify-content: space-between">
-                            <FluentLabel Typo="Typography.H5"> Quadratura</FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Classe energetica</FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Camere da letto</FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Piano </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Ascensore </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Portineria </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Posto Auto </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> Riscaldamento </FluentLabel>
-                        </FluentStack>
-
-                        <FluentStack Orientation="Orientation.Vertical" Style="flex-grow: 1; justify-content: space-between">
-                            <FluentLabel Typo="Typography.H5">@_listing.Dimensions Mq</FluentLabel>
-                            <FluentLabel Typo="Typography.H5">@_listing.EnergyClass </FluentLabel>
-                            <FluentLabel Typo="Typography.H5">@_listing.Rooms </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> @_listing.Floor </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> @(_listing.Elevator ? "Si" : "No") </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> @(_listing.Doorkeeper ? "Si" : "No") </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> @(_listing.ParkingSpace ? "Si" : "No") </FluentLabel>
-                            <FluentLabel Typo="Typography.H5"> @(_listing.AirConditioning ? "Si" : "No") </FluentLabel>
-                        </FluentStack>
+                    
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Quadratura</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@_listing.Dimensions Mq</FluentLabel>
                     </FluentStack>
-                </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Classe energetica</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@_listing.EnergyClass</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Camere da letto</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@_listing.Rooms</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Piano</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@_listing.Floor</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Ascensore</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@(_listing.Elevator ? "Sì" : "No")</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Portineria</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@(_listing.Doorkeeper ? "Sì" : "No")</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Posto Auto</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@(_listing.ParkingSpace ? "Sì" : "No")</FluentLabel>
+                    </FluentStack>
+
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
+                        <FluentLabel Typo="Typography.H5">Riscaldamento</FluentLabel>
+                        <FluentLabel Typo="Typography.Body" Style="font-weight: bold;">@(_listing.AirConditioning ? "Sì" : "No")</FluentLabel>
+                    </FluentStack>    
+                    
+                    </FluentStack>
             </FluentCard>
         </FluentGridItem>
         
@@ -184,11 +202,11 @@ else
                             </FluentStack>
                         </FluentCard>
                             <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.Edit())" Disabled="@(!_listing.Available || _makeOffer)" Style="width: 100%"
-                                          OnClick="@OpenMakeOfferDialog">
+                                          OnClick="@OpenMakeOfferDialog" Loading="_isMakingOffer">
                                 Fai un'offerta
                             </FluentButton>
                             <FluentButton Appearance="Appearance.Neutral" IconStart="@(new Icons.Regular.Size20.Calendar())" Disabled="@(!_listing.Available || _makeBooking)" Style="width: 100%"
-                                          OnClick="@OpenMakeBookingDialog">
+                                          OnClick="@OpenMakeBookingDialog" Loading="_isMakingBooking">
                                 Prenota un appuntamento
                             </FluentButton>
                     </FluentStack>
@@ -198,7 +216,7 @@ else
 
         <FluentGridItem xs="12" md="5">
             <FluentCard>
-                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8" Width="100%">
                     <FluentLabel Typo="Typography.H4">Servizi nelle vicinanze</FluentLabel>
                     @{
                         var servicesPerTag = _listing.Tags
@@ -211,15 +229,15 @@ else
 
                     @foreach (var tag in servicesPerTag)
                     {
-                        <div style="margin-bottom: 10px;">
+                        <div style="margin-bottom: 10px; width: 100%">
                             <FluentLabel Typo="Typography.H5" Style=" margin-bottom: 8px; text-transform: capitalize;">
                                 @tag.TagName
                             </FluentLabel>
 
-                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                            <FluentStack Orientation="Orientation.Vertical" VerticalGap="4" Width="100%">
                                 @foreach (var service in tag.Services)
                                 {
-                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" Width="100%">
                                         <FluentLabel Typo="Typography.Body">@service.Name</FluentLabel>
                                         <FluentLabel Typo="Typography.Body">
                                             @((int)service.Distance) m
@@ -259,6 +277,8 @@ else
     private IJSObjectReference? _jsModule;
     private bool _isInitialized;
     private int _currentImage;
+    private bool _isMakingOffer;
+    private bool _isMakingBooking;
     
     protected override async Task OnInitializedAsync()
     {
@@ -268,14 +288,12 @@ else
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
         var userRole = user.User.FindFirst("role")?.Value;
 
-        if (!string.IsNullOrEmpty(userRole) && !string.Equals(userRole, "EstateAgent") && !string.Equals(userRole, "Client"))
+        if (!string.IsNullOrEmpty(userRole) && !string.Equals(userRole, "Client"))
         {
             _makeOffer = true;
             _makeBooking = true;
         }
-            
-        
-      
+       
         var shouldIncreaseViews = await JsRuntime.InvokeAsync<bool>("shouldUpdateView", userId, ListingId.ToString());
         if (shouldIncreaseViews)
         {
@@ -315,12 +333,14 @@ else
 
     private async Task OpenMakeOfferDialog()
     {
+        _isMakingOffer = true;
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         
         if (userId == null)
         {
             await OpenLoginDialogAsync();
+            _isMakingOffer = false;
             return;
         }
         
@@ -375,18 +395,20 @@ else
                         break;
                 }
             }
+            _isMakingOffer = false;
         }
     }
     
     private async Task OpenMakeBookingDialog()
     {
-        
+        _isMakingBooking = true;
         var user = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = user.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         if (userId == null)
         {
             await OpenLoginDialogAsync();
+            _isMakingBooking = false;
             return;
         }
         
@@ -437,6 +459,7 @@ else
                         break;
                 }
             }
+            _isMakingBooking = false;
         }
     }
     

@@ -21,6 +21,7 @@ public class UserController(
     IUserRepository userRepository) : Controller
 {
     [HttpGet]
+    [Authorize(Policy = "ReadUser")]
     public async Task<ActionResult<PagedResponseDto<UserResponseDto>>> GetUsers(
         [FromQuery] UserFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -41,6 +42,7 @@ public class UserController(
     }
 
     [HttpGet("{userId:guid}")]
+    [Authorize(Policy = "ReadUser")]
     public async Task<ActionResult<UserResponseDto>> GetUserById(Guid userId)
     {
         var user = await userRepository.GetUserByIdAsync(userId);
@@ -51,11 +53,12 @@ public class UserController(
     }
     
     [HttpPost("create-support-admin")]
-    [Authorize(Roles = "SuperAdminOnly")]
+    [Authorize(Policy = "WriteSupportAdmin")]
     public async Task<ActionResult> CreateSupportAdminUser(UserRequestDto request)
     {
-        if (request.Role != UserRole.SupportAdmin)
-            return BadRequest("Puoi creare solo amministratori di supporto");
+        var agencyId = User.GetAgencyId();
+        if (agencyId == Guid.Empty)
+            return Unauthorized();
 
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
             return BadRequest("La mail è gia in uso");
@@ -67,47 +70,37 @@ public class UserController(
         var user = mapper.Map<User>(request);
         user.Email = user.Email.ToLowerInvariant();
         user.Password = passwordService.HashPassword(request.Password);
-        await userRepository.AddUserAsync(user);
-
-        return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
-    }
-
-    [HttpPost("create-agent")]
-    //[Authorize(Roles = "SupportAdminOnly")]
-    public async Task<ActionResult> CreateAgentUser([FromBody] UserRequestDto request)
-    {
-        var agencyId = User.GetAgencyId();
-        if (agencyId == Guid.Empty)
-            return Unauthorized();
-        
-        if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-            return BadRequest("La mail è già in uso");
-        
-        var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
-        if (passwordValidation != "")
-            return BadRequest(new {error = passwordValidation});
-
-        UserRole newEmployeeRole;
-        
-        if (User.GetRole() == "SuperAdmin")
-            newEmployeeRole = UserRole.SupportAdmin;
-        
-        else if (User.GetRole() == "SupportAdmin")
-            newEmployeeRole = UserRole.EstateAgent;
-
-        else return Unauthorized();
-        
-        var user = mapper.Map<User>(request);
-        user.Email = user.Email.ToLowerInvariant();
-        user.Password = passwordService.HashPassword(request.Password);
-        user.Role = newEmployeeRole;
+        user.Role = UserRole.SupportAdmin;
         user.AgencyId = agencyId;
         await userRepository.AddUserAsync(user);
 
         return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
     }
 
-    [HttpPut("userId:Guid")]
+    [HttpPost("create-agent")]
+    [Authorize(Policy = "WriteAgent")]
+    public async Task<ActionResult> CreateAgentUser([FromBody] UserRequestDto request)
+    {
+        var agencyId = User.GetAgencyId();
+        if (agencyId == Guid.Empty)
+            return Unauthorized();
+        
+        var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
+        if (passwordValidation != "")
+            return BadRequest(new {error = passwordValidation});
+        
+        var user = mapper.Map<User>(request);
+        user.Email = user.Email.ToLowerInvariant();
+        user.Password = passwordService.HashPassword(request.Password);
+        user.Role = UserRole.EstateAgent;
+        user.AgencyId = agencyId;
+        await userRepository.AddUserAsync(user);
+
+        return CreatedAtAction(nameof(GetUserById), new { userId = user.Id }, mapper.Map<UserResponseDto>(user));
+    }
+
+    [HttpPut("{userId:Guid}")]
+    [Authorize(Policy = "WriteUser")]
     public async Task<IActionResult> PutUser(Guid userId, [FromBody] UserRequestDto request)
     {
         if (await userRepository.GetUserByIdAsync(userId) is not { } existingUser)
@@ -118,6 +111,7 @@ public class UserController(
     }
 
     [HttpDelete]
+    [Authorize(Policy="DeleteUser")]
     public async Task<ActionResult> DeleteUser(Guid userId)
     {
         var user = await userRepository.GetUserByIdAsync(userId);
@@ -129,6 +123,7 @@ public class UserController(
     }
 
     [HttpPut("change-password")]
+    [AllowAnonymous]
     public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordRequestDto request)
     {
         var userId = User.GetUserId();

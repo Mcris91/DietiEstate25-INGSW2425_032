@@ -33,8 +33,6 @@
                                       Items="@(Enum.GetValues<DesignThemeModes>())"
                                       @bind-SelectedOption="@Mode"/>
                     </FluentGridItem>
-                    <FluentSpacer/>
-                    <FluentAnchor Href="/user/profile" Appearance="Appearance.Hypertext">View Profile</FluentAnchor>
                 </FluentStack>
             </FooterTemplate>
         </FluentProfileMenu>
@@ -42,15 +40,18 @@
 
     <NotAuthorized>
         <FluentButton Appearance="Appearance.Outline"
-                      @onclick="@OpenRegisterAgencyDialogAsync">Registra la tua azienda</FluentButton>
+                      @onclick="@OpenRegisterAgencyDialogAsync" Loading="_isRegisteringAgency">Registra la tua azienda</FluentButton>
         <FluentButton IconStart="@(new Icons.Regular.Size20.PersonAccounts())"
                       Appearance="Appearance.Accent"
-                      @onclick="@OpenLoginDialogAsync">Accedi</FluentButton>
+                      @onclick="@OpenLoginDialogAsync" Loading="_isSigningIn">Accedi</FluentButton>
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
     private DesignThemeModes Mode { get; set; }
+    private bool _isSigningIn;
+    private bool _isRegisteringAgency;
+    
     private async Task SignOut()
     {
         await AuthApiService.Logout();
@@ -60,6 +61,8 @@
 
     private async Task OpenLoginDialogAsync()
     {
+        _isSigningIn = true;
+        
         LoginRequestDto loginUser = new() { Email = "", Password = "" };
 
         DialogParameters loginParameters = new()
@@ -97,11 +100,12 @@
                     ToastService.ShowError("Credenziali non corrette!");
             }
         }
+
+        _isSigningIn = false;
     }
 
     private async Task OpenRegisterDialogAsync()
     {
-
         UserRequestDto registerUser = new()
         {
             FirstName = "",
@@ -163,7 +167,8 @@
     
     private async Task OpenRegisterAgencyDialogAsync()
     {
-
+        _isRegisteringAgency = true;
+        
         RegisterAgencyDto registerAgency = new()
         {
             AgencyName = "",
@@ -199,5 +204,7 @@
                     break;
             }
         }
+
+        _isRegisteringAgency = false;
     }
 }
