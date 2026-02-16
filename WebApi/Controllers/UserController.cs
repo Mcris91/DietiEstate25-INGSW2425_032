@@ -55,10 +55,10 @@ public class UserController(
     public async Task<ActionResult> CreateSupportAdminUser(UserRequestDto request)
     {
         if (request.Role != UserRole.SupportAdmin)
-            return BadRequest(new { error = "Only support admins can be created." });
+            return BadRequest("Puoi creare solo amministratori di supporto");
 
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-            return BadRequest(new { error = "Email already exists." });
+            return BadRequest("La mail è gia in uso");
 
         var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (passwordValidation != "")
@@ -81,7 +81,7 @@ public class UserController(
             return Unauthorized();
         
         if (await userRepository.GetUserByEmailAsync(request.Email) is not null)
-            return BadRequest(new {error = "Email already exists."});
+            return BadRequest("La mail è già in uso");
         
         var passwordValidation = passwordService.ValidatePasswordStrength(request.Password);
         if (passwordValidation != "")
@@ -138,7 +138,7 @@ public class UserController(
             return NotFound();
 
         if (!passwordService.VerifyPassword(request.OldPassword, user.Password))
-            return BadRequest("Incorrect password.");
+            return BadRequest("Password errata");
         
         user.Password = passwordService.HashPassword(request.NewPassword);
         await userRepository.UpdateUserAsync(user);
