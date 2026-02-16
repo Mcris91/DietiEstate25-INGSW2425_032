@@ -15,7 +15,8 @@ namespace DietiEstate.Infrastructure.Services;
 public class EmailService(ILogger<EmailService> logger) : IEmailService
 {
     private readonly Assembly _assembly = Assembly.GetExecutingAssembly();
-
+    private readonly string _templateFileName = "base.html";
+    
     private async Task<string> GetTemplateText(string fileName)
     {
         var resourceName = $"DietiEstate.Infrastructure.Templates.Email.{fileName}";
@@ -29,7 +30,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("welcome.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
@@ -47,7 +48,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("welcome-agency.html");
         bodyText = bodyText.Replace("{{nome_agenzia}}", agencyName);
         bodyText = bodyText.Replace("{{temp_password}}", randomPassword);
@@ -65,7 +66,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("forgot-password.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
@@ -84,7 +85,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("new-offer.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
@@ -103,7 +104,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("new-appointment.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
@@ -126,7 +127,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
     {
         var emailData = new EmailData();
         
-        var templateText = await GetTemplateText("base.html");
+        var templateText = await GetTemplateText(_templateFileName);
         var bodyText = await GetTemplateText("new-appointment.html");
         bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
         bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);

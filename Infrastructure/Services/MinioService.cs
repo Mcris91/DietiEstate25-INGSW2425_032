@@ -11,7 +11,7 @@ public class MinioService(IMinioClient minioClient, MinioConfiguration minioConf
     public async Task<string> UploadImageAsync(Stream picture, Guid listingId, Guid imageId)
     {
         var mimeType = IsImage(picture);
-        if (mimeType == null) throw new Exception("Il file che stai caricando non è un'immagine!");
+        if (mimeType == null) throw new FileFormatException("Il file che stai caricando non è un'immagine!");
 
         var fileName = $"{listingId}/{imageId}.jpg";
 
@@ -27,27 +27,27 @@ public class MinioService(IMinioClient minioClient, MinioConfiguration minioConf
         return fileName;
     }
 
-    public async Task<string> GeneratePresignedUrl(string objectKey)
+    public async Task<string> GeneratePresignedUrl(string pictureUrl)
     {
         var args = new PresignedGetObjectArgs()
             .WithBucket(minioConfiguration.Bucket)
-            .WithObject(objectKey)
+            .WithObject(pictureUrl)
             .WithExpiry(3600);
 
         return await minioClient.PresignedGetObjectAsync(args);
     }
 
-    public string? IsImage(Stream stream)
+    public string? IsImage(Stream picture)
     {
         try
         {
-            using var image = Image.Load(stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            using var image = Image.Load(picture);
+            picture.Seek(0, SeekOrigin.Begin);
             return image.Metadata.DecodedImageFormat?.DefaultMimeType;
         }
         catch
         {
-            stream.Seek(0, SeekOrigin.Begin);
+            picture.Seek(0, SeekOrigin.Begin);
             return null;
         }
     }

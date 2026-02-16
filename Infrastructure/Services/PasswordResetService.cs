@@ -50,7 +50,7 @@ public class PasswordResetService(
     public async Task InvalidateResetTokenAsync(string email)
     {
         await _redis.KeyDeleteAsync($"password_reset_request:{email}");
-        logger.LogInformation("Invalidated session {email}", email);
+        logger.LogInformation("Invalidated Session {email}", email);
     }
     
     public async Task<bool> ValidateResetTokenAsync(string email, int token)

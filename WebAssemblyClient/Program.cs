@@ -37,9 +37,6 @@ builder.Services.AddApiService<BookingApiService>(apiBaseUrl, "Booking");
 builder.Services.AddApiService<AuthApiService>(apiBaseUrl, "Auth");
 builder.Services.AddApiService<UserApiService>(apiBaseUrl, "User");
 
-
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
-
-var app = builder.Build();
 
 await builder.Build().RunAsync();

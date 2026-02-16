@@ -38,9 +38,8 @@ public class OfferController(
         if (listing is { Available: false }) 
             return BadRequest("L'immobile è già stato venduto");
         
-        if (string.Equals(User.GetRole(),"Client"))
-            if (await offerRepository.CheckExistingCustomerOffer(offer.CustomerId, listing.Id))
-                return BadRequest("Hai già un'offerta in sospeso per questo immobile");
+        if (string.Equals(User.GetRole(),"Client") && await offerRepository.CheckExistingCustomerOffer(offer.CustomerId, listing.Id))
+            return BadRequest("Hai già un'offerta in sospeso per questo immobile");
 
         if (offer.Value <= 0 || offer.Value > listing.Price) 
             return BadRequest("Valore dell'offerta non valido");

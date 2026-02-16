@@ -35,7 +35,7 @@ public class AcceptOrRejectBookingTests(CustomWebApplicationFactory<Program> fac
     
         var response = await _client.PutAsync(url, emptyBody);
 
-        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
     
     [Fact]

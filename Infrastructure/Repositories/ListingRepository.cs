@@ -79,7 +79,7 @@ public class ListingRepository(DietiEstateDbContext context) : IListingRepositor
         }
         
         await context.Database.BeginTransactionAsync();
-        //context.Listing.Update(listing);
+        context.Listing.Update(listing);
         await context.SaveChangesAsync();
         await context.Database.CommitTransactionAsync();
     }

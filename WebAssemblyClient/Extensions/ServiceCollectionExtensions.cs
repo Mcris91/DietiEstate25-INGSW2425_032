@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
             if (!baseUrl.EndsWith('/')) baseUrl += "/";
             client.BaseAddress = new Uri($"{baseUrl}{controllerPath}/");
         })
-        .AddHttpMessageHandler<CookieHandler>();;
+        .AddHttpMessageHandler<CookieHandler>();
 
         return services;
     }
