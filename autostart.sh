@@ -15,6 +15,7 @@ if command -v docker &> /dev/null; then
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Fatto! I container sono in esecuzione.${NC}"
+        echo -e "${GREEN}Il client e' raggiungibile all'indirizzo http://localhost:8080 (se la porta di default non e' stata modificata)."
     else
         echo -e "${RED}Si è verificato un errore durante l'avvio di Docker Compose.${NC}"
     fi

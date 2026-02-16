@@ -27,6 +27,7 @@ docker compose up -d --build
 echo.
 if %errorlevel% equ 0 (
     echo Fatto! I container sono stati avviati correttamente.
+    echo Il client e' raggiungibile all'indirizzo http://localhost:8080 (se la porta di default non e' stata modificata).
 ) else (
     color 0C
     echo Si e' verificato un errore durante l'avvio (Docker Desktop e' aperto?).
