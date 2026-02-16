@@ -48,7 +48,7 @@ public class ListingController(
     }
     
     [HttpGet("Dashboard")]
-    //[Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<ListingResponseDto>>> GetListingsByAgent(
         [FromQuery] ListingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -87,6 +87,7 @@ public class ListingController(
     }
 
     [HttpGet("RecentListings")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<IActionResult> GetRecentListings([FromQuery] List<Guid> listingIdsList,
         [FromQuery] int? pageNumber,
         [FromQuery] int? pageSize)
@@ -123,7 +124,7 @@ public class ListingController(
     }
 
     [HttpGet("GetAgentCounters")]
-    //[Authorize(Policy = "ReadListing")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<IActionResult> GetAgentCounters()
     {
         var agentId = User.GetUserId();
@@ -207,7 +208,7 @@ public class ListingController(
     }
 
     [HttpPatch("{listingId:guid}")]
-    //[Authorize(Roles = "SupportAdminOnly")]
+    [Authorize(Roles = "WriteListing")]
     public async Task<IActionResult> PatchListing(Guid listingId, [FromBody] ListingRequestDto listingDto)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -292,6 +293,7 @@ public class ListingController(
     }
 
     [HttpPatch("IncrementViews/{listingId:guid}")]
+    [AllowAnonymous]
     public async Task<IActionResult> IncrementListingViews(Guid listingId)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -306,7 +308,7 @@ public class ListingController(
     }
 
     [HttpDelete("{listingId:guid}")]
-    //[Authorize(Roles = "SupportAdminOnly")]
+    [Authorize(Roles = "WriteListing")]
     public async Task<IActionResult> DeleteListing(Guid listingId)
     {
         if (await listingRepository.GetListingByIdAsync(listingId) is not { } listing)
@@ -323,6 +325,7 @@ public class ListingController(
     }
 
     [HttpGet("GetReport")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetReport()
     {
         IList<Listing> listings = (IList<Listing>)await listingRepository.GetDetailedListingsAsync(new ListingFilterDto(){AgentId = User.GetUserId()});

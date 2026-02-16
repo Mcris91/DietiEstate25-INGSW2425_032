@@ -24,6 +24,7 @@ public class BookingController(
     IMapper mapper) : Controller
 {
     [HttpGet]
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookings(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery] int? pageNumber,
@@ -50,7 +51,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByListingId/{listingId:guid}")]
-
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByListingId(
         Guid listingId,
         [FromQuery] BookingFilterDto filterDto,
@@ -68,6 +69,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByAgentId")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByAgentId(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
@@ -97,6 +99,7 @@ public class BookingController(
     }
 
     [HttpGet("GetByClientId")]
+    [Authorize(Policy = "ReadListing")]
     public async Task<ActionResult<PagedResponseDto<BookingResponseDto>>> GetBookingByClientId(
         [FromQuery] BookingFilterDto filterDto,
         [FromQuery]  int? pageNumber,
@@ -116,6 +119,7 @@ public class BookingController(
     }
 
     [HttpPost]
+    [Authorize(Policy = "ReadListing")]
     public async Task<IActionResult> PostBooking(
         [FromBody] BookingRequestDto request)
     {
