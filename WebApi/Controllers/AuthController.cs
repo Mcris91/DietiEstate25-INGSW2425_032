@@ -130,7 +130,8 @@ public class AuthController(
             HttpOnly = false,
             Secure = true, // https only, uncomment in production
             SameSite = SameSiteMode.Lax,
-            MaxAge = TimeSpan.FromDays(30)
+            MaxAge = TimeSpan.FromDays(30),
+            //Domain = ".simosrv.net"
         };
         Response.Cookies.Append("session_id", sessionId, cookieOptions);
         Response.Cookies.Append("id_token", idToken, cookieOptions);

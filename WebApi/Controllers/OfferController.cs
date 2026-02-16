@@ -65,7 +65,7 @@ public class OfferController(
         offer.Date = offer.Date.UtcDateTime;
         await offerRepository.AddOfferAsync(offer);
         var user = await userRepository.GetUserByIdAsync(offer.AgentId);
-        var emailData = await emailService.PrepareNewBookingEmailAsync(user, listing.Name);
+        var emailData = await emailService.PrepareNewOfferEmailAsync(user, listing.Name);
         jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
         return CreatedAtAction(nameof(GetOfferById), new { offerId = offer.Id }, mapper.Map<OfferResponseDto>(offer));
     }
@@ -83,12 +83,6 @@ public class OfferController(
     [HttpPut("AcceptOrRejectOffer/{offerId:guid}/{accept:bool}")]
     public async Task<IActionResult> AcceptOrRejectOffer(Guid offerId, bool accept)
     {
-        // offerId - CE1: esiste valido, CE2: non esiste non valido, CE3: null non valido
-        // accept - CE4: true valido, CE5 false valido // accept non può essere null
-        
-        // Test1 - CE1, CE4
-        // Test2 - CE2, CE5
-        
         var offer = await offerRepository.GetOfferByIdAsync(offerId);
         if (offer is null) return NotFound();
 
@@ -119,9 +113,15 @@ public class OfferController(
             listing.Available = false;
             await listingRepository.UpdateListingAsync(listing, null);
         }
+        // send email
+        await offerRepository.AddOfferAsync(offer);
+        var user = await userRepository.GetUserByIdAsync(offer.CustomerId);
+        if (user == null) return Ok();
+        var emailData = await emailService.PrepareOfferStatusChangeAsync(user, listing.Name, offer.Status);
+        jobClient.Enqueue(() => emailService.SendEmailAsync(emailData));
+
         return Ok();
     }
-
     
     //client
     [HttpPut("AcceptOrRejectCounterOffer/{counterOfferId:guid}/{accept:bool}")]
@@ -154,6 +154,7 @@ public class OfferController(
             listing.Available = false;
             await listingRepository.UpdateListingAsync(listing, null);
         }
+        // send email
         return Ok();
     }
     

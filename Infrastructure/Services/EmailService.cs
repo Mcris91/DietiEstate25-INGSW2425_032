@@ -1,7 +1,9 @@
 using System.Reflection;
 using DietiEstate.Application.Interfaces.Services;
+using DietiEstate.Core.Entities.OfferModels;
 using DietiEstate.Core.Entities.UserModels;
 using DietiEstate.Core.Entities.Worker;
+using DietiEstate.Core.Enums;
 using DietiEstate.Core.ValueObjects;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
@@ -90,7 +92,30 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         templateText = templateText.Replace("{{email_body}}", bodyText);
         
         emailData.Body = templateText;
-        emailData.Subject = "Recupero password";
+        emailData.Subject = $"Nuova offerta per l'immobile {listingName}";
+        emailData.ToEmail = toUser.Email;
+        emailData.ToName = toUser.FirstName;
+        
+        return emailData;
+    }
+
+    public async Task<EmailData> PrepareOfferStatusChangeAsync(User toUser, string listingName, OfferStatus status)
+    {
+        var emailData = new EmailData();
+        
+        var templateText = await GetTemplateText("base.html");
+        var bodyText = await GetTemplateText("new-appointment.html");
+        bodyText = bodyText.Replace("{{nome}}", toUser.FirstName);
+        bodyText = bodyText.Replace("{{cognome}}", toUser.LastName);
+        bodyText = bodyText.Replace(
+            "{{stato_offerta}}", 
+            status == OfferStatus.Accepted 
+                ? "accettata"
+                : "rifiutata");
+        templateText = templateText.Replace("{{email_body}}", bodyText);
+        
+        emailData.Body = templateText;
+        emailData.Subject = $"Nuovo appuntamento per l'immobile {listingName}";
         emailData.ToEmail = toUser.Email;
         emailData.ToName = toUser.FirstName;
         
@@ -109,7 +134,7 @@ public class EmailService(ILogger<EmailService> logger) : IEmailService
         templateText = templateText.Replace("{{email_body}}", bodyText);
         
         emailData.Body = templateText;
-        emailData.Subject = "Recupero password";
+        emailData.Subject = $"Nuovo appuntamento per l'immobile {listingName}";
         emailData.ToEmail = toUser.Email;
         emailData.ToName = toUser.FirstName;
         

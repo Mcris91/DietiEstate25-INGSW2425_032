@@ -13,6 +13,8 @@ public interface IEmailService
     Task<EmailData> PreparePasswordResetEmailAsync(User toUser, int token);
     
     Task<EmailData> PrepareNewOfferEmailAsync(User toUser, string listingName);
+
+    Task<EmailData> PrepareOfferStatusChangeAsync(User toUser, string listingName, OfferStatus status);
     
     Task<EmailData> PrepareNewBookingEmailAsync(User toUser, string listingName);
     
