@@ -181,6 +181,30 @@ public class Program
                 .AddPolicy("WriteSupportAdmin", policy =>
                     policy.RequireAssertion( _ => true))
                 .AddPolicy("DeleteSupportAdmin", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadUser", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteUser", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteUser", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadOffer", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteOffer", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteOffer", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadBooking", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteBooking", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteBooking", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("ReadFavourite", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("WriteFavourite", policy =>
+                    policy.RequireAssertion( _ => true))
+                .AddPolicy("DeleteFavourite", policy =>
                     policy.RequireAssertion( _ => true));
         }
         else
@@ -205,7 +229,31 @@ public class Program
                 .AddPolicy("WriteSupportAdmin", policy =>
                     policy.RequireClaim("scope", UserScope.WriteSupportAdmin))
                 .AddPolicy("DeleteSupportAdmin", policy =>
-                    policy.RequireClaim("scope", UserScope.DeleteSupportAdmin));
+                    policy.RequireClaim("scope", UserScope.DeleteSupportAdmin))
+                .AddPolicy("ReadUser", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadUser))
+                .AddPolicy("WriteUser", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteUser))
+                .AddPolicy("DeleteUser", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteUser))
+                .AddPolicy("ReadOffer", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadOffer))
+                .AddPolicy("WriteOffer", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteOffer))
+                .AddPolicy("DeleteOffer", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteOffer))
+                .AddPolicy("ReadBooking", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadBooking))
+                .AddPolicy("WriteBooking", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteBooking))
+                .AddPolicy("DeleteBooking", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteBooking))
+                .AddPolicy("ReadFavourite", policy =>
+                    policy.RequireClaim("scope", UserScope.ReadFavourite))
+                .AddPolicy("WriteFavourite", policy =>
+                    policy.RequireClaim("scope", UserScope.WriteFavourite))
+                .AddPolicy("DeleteFavourite", policy =>
+                    policy.RequireClaim("scope", UserScope.DeleteFavourite));
         }
     }
     
